@@ -580,11 +580,12 @@
   /* ── STORAGE (Firebase Realtime Database) ── */
   async function storageSave(data) {
     try {
+      // Simpan snapshot lokal dulu agar listener tidak trigger re-render
+      tasks = data;
       await getDb().ref(FB_PATH).set(data);
       return true;
     } catch(e) {
       console.error('Firebase save error:', e);
-      // fallback ke localStorage
       localStorage.setItem('tasks_monitoring_v3', JSON.stringify(data));
       return false;
     }
@@ -592,30 +593,62 @@
   async function storageLoad() {
     try {
       const snap = await getDb().ref(FB_PATH).get();
-      return snap.exists() ? snap.val() : [];
+      if (!snap.exists()) return [];
+      const val = snap.val();
+      return Array.isArray(val) ? val : (val ? Object.values(val) : []);
     } catch(e) {
       console.error('Firebase load error:', e);
-      // fallback ke localStorage
       const raw = localStorage.getItem('tasks_monitoring_v3');
       return raw ? JSON.parse(raw) : [];
     }
   }
 
   // Real-time listener — update otomatis saat ada perubahan dari seksi lain
+  let _realtimeActive = false;
+  let _pollingInterval = null;
+
+  function applyRemoteData(newTasks) {
+    if (!Array.isArray(newTasks)) newTasks = newTasks ? Object.values(newTasks) : [];
+    if (JSON.stringify(newTasks) !== JSON.stringify(tasks)) {
+      tasks = newTasks;
+      render();
+      if (rekapOpen) renderActivePanel();
+    }
+    document.getElementById('syncInfo').textContent = 'Sinkron · ' + new Date().toLocaleTimeString('id-ID');
+  }
+
+  function startPolling() {
+    if (_pollingInterval) return;
+    console.log('Menggunakan polling setiap 5 detik sebagai fallback.');
+    _pollingInterval = setInterval(async () => {
+      try {
+        const snap = await getDb().ref(FB_PATH).get();
+        const data = snap.exists() ? snap.val() : [];
+        applyRemoteData(data);
+      } catch(e) { console.warn('Polling error:', e); }
+    }, 5000);
+  }
+
   function startRealtimeSync() {
     try {
-      getDb().ref(FB_PATH).on('value', (snap) => {
-        const newTasks = snap.exists() ? snap.val() : [];
-        // Hindari re-render jika data sama persis
-        if (JSON.stringify(newTasks) !== JSON.stringify(tasks)) {
-          tasks = newTasks;
-          render();
-          if (rekapOpen) renderActivePanel();
-          document.getElementById('syncInfo').textContent = 'Sinkron · ' + new Date().toLocaleTimeString('id-ID');
+      const db = getDb();
+      db.ref(FB_PATH).on('value',
+        (snap) => {
+          _realtimeActive = true;
+          if (_pollingInterval) { clearInterval(_pollingInterval); _pollingInterval = null; }
+          const data = snap.exists() ? snap.val() : [];
+          applyRemoteData(data);
+        },
+        (err) => {
+          console.warn('Firebase listener error, beralih ke polling:', err);
+          _realtimeActive = false;
+          startPolling();
         }
-      });
+      );
+      setTimeout(() => { if (!_realtimeActive) startPolling(); }, 4000);
     } catch(e) {
-      console.warn('Real-time sync tidak tersedia, menggunakan polling.', e);
+      console.warn('Firebase tidak tersedia, menggunakan polling:', e);
+      startPolling();
     }
   }
 
@@ -994,14 +1027,14 @@
   async function loadTasks() {
     try {
       document.getElementById('syncInfo').textContent = 'Memuat...';
-      tasks=await storageLoad(); render();
-      if(rekapOpen) renderActivePanel();
-      document.getElementById('syncInfo').textContent='Diperbarui · '+new Date().toLocaleTimeString('id-ID');
+      const data = await storageLoad();
+      applyRemoteData(data);
     } catch(e) { document.getElementById('syncInfo').textContent='Gagal memuat'; console.error(e); }
   }
   async function saveTasks() {
     try {
       document.getElementById('syncInfo').textContent = 'Menyimpan...';
+      render(); // Langsung render lokal dulu agar terasa responsif
       await storageSave(tasks);
       document.getElementById('syncInfo').textContent='Tersimpan · '+new Date().toLocaleTimeString('id-ID');
     } catch(e) { document.getElementById('syncInfo').textContent='Gagal menyimpan'; console.error(e); }
