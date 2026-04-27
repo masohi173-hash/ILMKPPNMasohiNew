@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Papan Monitoring Pekerjaan</title>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -501,23 +504,74 @@
 </div>
 
 <script>
-  const STORAGE_KEY = 'tasks_monitoring_v3';
   const BULAN_NAMA  = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
   const HARI_NAMA   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
   const SEKSI_CLASS = { 'Seksi MSKI':'seksi-mski','Seksi Vera':'seksi-vera','Seksi Bank':'seksi-bank','Subbag Umum':'seksi-umum','Seksi PD':'seksi-pd' };
 
   let tasks = [], filter = 'semua', seksiFilter = '', rekapOpen = false, activeTab = 'bulanan';
 
-  /* ── STORAGE ── */
+  /* ── FIREBASE CONFIG ── */
+  // Ganti nilai di bawah ini dengan konfigurasi Firebase project Anda
+  const FIREBASE_CONFIG = {
+    apiKey:            "AIzaSyB67V5LrszRktaNUJx6oCPIkm2wWZlfxhU",
+    authDomain:        "ilm-kppn-masohi.firebaseapp.com",
+    databaseURL:       "https://ilm-kppn-masohi-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId:         "ilm-kppn-masohi",
+    storageBucket:     "ilm-kppn-masohi.firebasestorage.app",
+    messagingSenderId: "251955286094",
+    appId:             "1:251955286094:web:b3b3a5a84e16b52359731f"
+  };
+  const FB_PATH = 'tasks_monitoring_v3';
+
+  // Inisialisasi Firebase
+  let _db = null;
+  function getDb() {
+    if (_db) return _db;
+    if (!firebase.apps || firebase.apps.length === 0) firebase.initializeApp(FIREBASE_CONFIG);
+    _db = firebase.database();
+    return _db;
+  }
+
+  /* ── STORAGE (Firebase Realtime Database) ── */
   async function storageSave(data) {
-    if (typeof window.storage !== 'undefined') { await window.storage.set(STORAGE_KEY, JSON.stringify(data), true); return; }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    try {
+      await getDb().ref(FB_PATH).set(data);
+      return true;
+    } catch(e) {
+      console.error('Firebase save error:', e);
+      // fallback ke localStorage
+      localStorage.setItem('tasks_monitoring_v3', JSON.stringify(data));
+      return false;
+    }
   }
   async function storageLoad() {
-    if (typeof window.storage !== 'undefined') {
-      try { const r = await window.storage.get(STORAGE_KEY, true); return r ? JSON.parse(r.value) : []; } catch { return []; }
+    try {
+      const snap = await getDb().ref(FB_PATH).get();
+      return snap.exists() ? snap.val() : [];
+    } catch(e) {
+      console.error('Firebase load error:', e);
+      // fallback ke localStorage
+      const raw = localStorage.getItem('tasks_monitoring_v3');
+      return raw ? JSON.parse(raw) : [];
     }
-    const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : [];
+  }
+
+  // Real-time listener — update otomatis saat ada perubahan dari seksi lain
+  function startRealtimeSync() {
+    try {
+      getDb().ref(FB_PATH).on('value', (snap) => {
+        const newTasks = snap.exists() ? snap.val() : [];
+        // Hindari re-render jika data sama persis
+        if (JSON.stringify(newTasks) !== JSON.stringify(tasks)) {
+          tasks = newTasks;
+          render();
+          if (rekapOpen) renderActivePanel();
+          document.getElementById('syncInfo').textContent = 'Sinkron · ' + new Date().toLocaleTimeString('id-ID');
+        }
+      });
+    } catch(e) {
+      console.warn('Real-time sync tidak tersedia, menggunakan polling.', e);
+    }
   }
 
   /* ── UTILS ── */
@@ -847,16 +901,18 @@
   /* ── LOAD / SAVE ── */
   async function loadTasks() {
     try {
+      document.getElementById('syncInfo').textContent = 'Memuat...';
       tasks=await storageLoad(); render();
       if(rekapOpen) renderActivePanel();
       document.getElementById('syncInfo').textContent='Diperbarui · '+new Date().toLocaleTimeString('id-ID');
-    } catch { document.getElementById('syncInfo').textContent='Gagal memuat'; }
+    } catch(e) { document.getElementById('syncInfo').textContent='Gagal memuat'; console.error(e); }
   }
   async function saveTasks() {
     try {
+      document.getElementById('syncInfo').textContent = 'Menyimpan...';
       await storageSave(tasks);
       document.getElementById('syncInfo').textContent='Tersimpan · '+new Date().toLocaleTimeString('id-ID');
-    } catch { document.getElementById('syncInfo').textContent='Gagal menyimpan'; }
+    } catch(e) { document.getElementById('syncInfo').textContent='Gagal menyimpan'; console.error(e); }
   }
 
   /* ── ADD TASK ── */
@@ -902,10 +958,9 @@
   document.getElementById('f-deadline').value=todayStr();
   document.getElementById('rekapBulan').value=now.getMonth();
   document.getElementById('rekapTahun').value=now.getFullYear();
-  // Set default notula date to today
   document.getElementById('notulaDate').value=todayStr();
-  loadTasks();
-  setInterval(loadTasks,15000);
+  // Muat data awal, lalu aktifkan real-time sync
+  loadTasks().then(() => startRealtimeSync());
 </script>
 </body>
 </html>
