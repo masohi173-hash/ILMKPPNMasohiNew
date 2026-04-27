@@ -208,6 +208,25 @@
     .creator-info { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
     .timestamp-info { font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-style: italic; }
 
+    /* SORT CONTROLS */
+    .sort-select {
+      border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
+      padding: 4px 10px; font-size: 12px; font-family: var(--font);
+      background: var(--bg-primary); color: var(--text-primary); cursor: pointer; height: 30px;
+    }
+    .sort-select:focus { outline: none; border-color: var(--accent); }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { color: var(--accent); }
+    th.sortable .sort-icon { margin-left: 4px; opacity: 0.5; }
+    th.sortable.sort-asc .sort-icon::after  { content: ' ↑'; opacity: 1; }
+    th.sortable.sort-desc .sort-icon::after { content: ' ↓'; opacity: 1; }
+
+    /* URAIAN PREVIEW */
+    .uraian-preview {
+      font-size: 12px; color: var(--text-secondary); margin-top: 4px;
+      line-height: 1.5; word-break: break-word;
+    }
+
     /* URAIAN COLLAPSIBLE */
     .uraian-toggle {
       display: inline-flex; align-items: center; gap: 5px;
@@ -264,6 +283,7 @@
       .rekap-section { display: block !important; border: none; padding: 0; }
       .rekap-table-wrap { border: 1px solid #ccc; }
       .notula-wrap { border: 1px solid #ccc; }
+      .rekap-table td { font-size: 11px; }
     }
   </style>
 </head>
@@ -286,7 +306,7 @@
   <div class="add-form">
     <div class="edit-indicator" id="editIndicator">✏️ Mode Edit — mengubah pekerjaan yang sudah ada</div>
     <div class="form-title" id="formTitle">Tambah Pekerjaan Baru</div>
-    <div class="form-grid">
+    <div class="form-grid" style="grid-template-columns: 1fr 2fr 2fr 1fr 1fr auto;">
       <div class="form-field">
         <label for="f-seksi">Seksi / Subbag *</label>
         <select id="f-seksi">
@@ -301,6 +321,10 @@
       <div class="form-field">
         <label for="f-nama">Nama pekerjaan *</label>
         <input type="text" id="f-nama" placeholder="Tulis nama tugas / pekerjaan..." />
+      </div>
+      <div class="form-field">
+        <label for="f-dasar">Dasar <span style="color:var(--text-secondary);font-style:italic">(Nota Dinas/Surat/Lainnya)</span></label>
+        <input type="text" id="f-dasar" placeholder="Contoh: Nota Dinas No. 001/2025..." />
       </div>
       <div class="form-field">
         <label for="f-deadline">Batas waktu *</label>
@@ -325,19 +349,79 @@
     </div>
   </div>
 
+  <!-- REKAP / NOTULA MINGGUAN — dipindah ke bawah tabel -->
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <span class="filter-label">Status:</span>
+      <div class="filter-group" id="statusFilters">
+        <button class="filter-btn active" onclick="setFilter('semua',this)">Semua</button>
+        <button class="filter-btn" onclick="setFilter('proses',this)">Berjalan</button>
+        <button class="filter-btn" onclick="setFilter('terlambat',this)">Terlambat</button>
+        <button class="filter-btn" onclick="setFilter('selesai',this)">Selesai</button>
+      </div>
+      <div class="divider"></div>
+      <span class="filter-label">Seksi:</span>
+      <div class="filter-group" id="seksiFilters">
+        <button class="filter-btn active" onclick="setSeksiFilter('',this)">Semua</button>
+        <button class="filter-btn" onclick="setSeksiFilter('Seksi MSKI',this)">MSKI</button>
+        <button class="filter-btn" onclick="setSeksiFilter('Seksi Vera',this)">Vera</button>
+        <button class="filter-btn" onclick="setSeksiFilter('Seksi Bank',this)">Bank</button>
+        <button class="filter-btn" onclick="setSeksiFilter('Subbag Umum',this)">Umum</button>
+        <button class="filter-btn" onclick="setSeksiFilter('Seksi PD',this)">PD</button>
+      </div>
+      <div class="divider"></div>
+      <span class="filter-label">Urut:</span>
+      <select class="sort-select" id="sortSelect" onchange="setSortMode(this.value)">
+        <option value="status">Status (Default)</option>
+        <option value="nama_az">Nama A → Z</option>
+        <option value="nama_za">Nama Z → A</option>
+        <option value="seksi_az">Seksi A → Z</option>
+        <option value="deadline_asc">Batas Waktu ↑</option>
+        <option value="deadline_desc">Batas Waktu ↓</option>
+        <option value="nomor_asc">Nomor Urut ↑ (Terlama)</option>
+        <option value="nomor_desc">Nomor Urut ↓ (Terbaru)</option>
+      </select>
+    </div>
+    <div class="sync-info">
+      <span id="syncInfo">Memuat...</span>
+      <button class="btn-refresh" onclick="loadTasks()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- TABLE UTAMA -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Seksi</th><th>Nama Pekerjaan</th><th>Dasar</th><th>Batas Waktu</th>
+          <th>Prioritas</th><th>Status</th><th>Tindak Lanjut</th>
+          <th>Keterangan Penyelesaian</th><th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="taskBody"><tr class="empty-row"><td colspan="10">Memuat data...</td></tr></tbody>
+    </table>
+  </div>
+
   <!-- REKAP / NOTULA MINGGUAN -->
+  <div style="margin-top:1.5rem">
+    <div style="display:flex;gap:10px;margin-bottom:1rem">
+      <button class="btn-rekap" id="btnRekap" onclick="toggleRekap()">📋 Rekap & Notula</button>
+    </div>
+  </div>
+
+  <!-- REKAP / NOTULA MINGGUAN — di bawah tabel -->
   <div class="rekap-section" id="rekapSection">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div class="rekap-title" id="rekapJudul">Rekap & Notula</div>
       <button class="btn-print" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
     </div>
-
-    <!-- Tab switcher -->
     <div class="rekap-tabs">
       <button class="rekap-tab active" id="tabBulanan" onclick="switchTab('bulanan')">📅 Rekap Bulanan</button>
       <button class="rekap-tab" id="tabMingguan" onclick="switchTab('mingguan')">📋 Notula Mingguan</button>
     </div>
-
     <!-- Panel Bulanan -->
     <div id="panelBulanan">
       <div class="rekap-controls">
@@ -373,7 +457,7 @@
         <table class="rekap-table">
           <thead>
             <tr>
-              <th>Seksi</th><th>Nama Pekerjaan</th><th>Tgl Upload</th><th>Batas Waktu</th>
+              <th>Seksi</th><th>Nama Pekerjaan</th><th>Dasar</th><th>Uraian</th><th>Tgl Upload</th><th>Batas Waktu</th>
               <th>Prioritas</th><th>Status</th><th>Tindak Lanjut</th><th>Keterangan Penyelesaian</th>
             </tr>
           </thead>
@@ -381,7 +465,6 @@
         </table>
       </div>
     </div>
-
     <!-- Panel Mingguan / Notula -->
     <div id="panelMingguan" style="display:none">
       <div class="rekap-controls">
@@ -403,48 +486,6 @@
       </div>
       <div id="notulaContent"></div>
     </div>
-  </div>
-
-  <!-- TOOLBAR -->
-  <div class="toolbar">
-    <div class="toolbar-left">
-      <span class="filter-label">Status:</span>
-      <div class="filter-group" id="statusFilters">
-        <button class="filter-btn active" onclick="setFilter('semua',this)">Semua</button>
-        <button class="filter-btn" onclick="setFilter('proses',this)">Berjalan</button>
-        <button class="filter-btn" onclick="setFilter('terlambat',this)">Terlambat</button>
-        <button class="filter-btn" onclick="setFilter('selesai',this)">Selesai</button>
-      </div>
-      <div class="divider"></div>
-      <span class="filter-label">Seksi:</span>
-      <div class="filter-group" id="seksiFilters">
-        <button class="filter-btn active" onclick="setSeksiFilter('',this)">Semua</button>
-        <button class="filter-btn" onclick="setSeksiFilter('Seksi MSKI',this)">MSKI</button>
-        <button class="filter-btn" onclick="setSeksiFilter('Seksi Vera',this)">Vera</button>
-        <button class="filter-btn" onclick="setSeksiFilter('Seksi Bank',this)">Bank</button>
-        <button class="filter-btn" onclick="setSeksiFilter('Subbag Umum',this)">Umum</button>
-        <button class="filter-btn" onclick="setSeksiFilter('Seksi PD',this)">PD</button>
-      </div>
-    </div>
-    <div class="sync-info">
-      <button class="btn-notula" id="btnRekap" onclick="toggleRekap()">📋 Rekap & Notula</button>
-      <span id="syncInfo">Memuat...</span>
-      <button class="btn-refresh" onclick="loadTasks()">↻ Refresh</button>
-    </div>
-  </div>
-
-  <!-- TABLE UTAMA -->
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Seksi</th><th>Nama Pekerjaan</th><th>Batas Waktu</th>
-          <th>Prioritas</th><th>Status</th><th>Tindak Lanjut</th>
-          <th>Keterangan Penyelesaian</th><th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="taskBody"><tr class="empty-row"><td colspan="8">Memuat data...</td></tr></tbody>
-    </table>
   </div>
 
 </div>
@@ -478,6 +519,10 @@
         <label>Nama Pekerjaan *</label>
         <input type="text" id="m-nama" placeholder="Nama pekerjaan..." />
       </div>
+      <div class="form-field modal-field-full">
+        <label>Dasar <span style="color:var(--text-secondary);font-style:italic">(Nota Dinas/Surat/Lainnya)</span></label>
+        <input type="text" id="m-dasar" placeholder="Contoh: Nota Dinas No. 001/2025..." />
+      </div>
       <div class="form-field">
         <label>Batas Waktu *</label>
         <input type="date" id="m-deadline" />
@@ -508,18 +553,18 @@
   const HARI_NAMA   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
   const SEKSI_CLASS = { 'Seksi MSKI':'seksi-mski','Seksi Vera':'seksi-vera','Seksi Bank':'seksi-bank','Subbag Umum':'seksi-umum','Seksi PD':'seksi-pd' };
 
-  let tasks = [], filter = 'semua', seksiFilter = '', rekapOpen = false, activeTab = 'bulanan';
+  let tasks = [], filter = 'semua', seksiFilter = '', rekapOpen = false, activeTab = 'bulanan', sortMode = 'status';
 
   /* ── FIREBASE CONFIG ── */
   // Ganti nilai di bawah ini dengan konfigurasi Firebase project Anda
   const FIREBASE_CONFIG = {
-    apiKey:            "AIzaSyB67V5LrszRktaNUJx6oCPIkm2wWZlfxhU",
-    authDomain:        "ilm-kppn-masohi.firebaseapp.com",
-    databaseURL:       "https://ilm-kppn-masohi-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId:         "ilm-kppn-masohi",
-    storageBucket:     "ilm-kppn-masohi.firebasestorage.app",
-    messagingSenderId: "251955286094",
-    appId:             "1:251955286094:web:b3b3a5a84e16b52359731f"
+    apiKey:            "GANTI_DENGAN_API_KEY_ANDA",
+    authDomain:        "GANTI_DENGAN_PROJECT_ID.firebaseapp.com",
+    databaseURL:       "https://GANTI_DENGAN_PROJECT_ID-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId:         "GANTI_DENGAN_PROJECT_ID",
+    storageBucket:     "GANTI_DENGAN_PROJECT_ID.appspot.com",
+    messagingSenderId: "GANTI_DENGAN_SENDER_ID",
+    appId:             "GANTI_DENGAN_APP_ID"
   };
   const FB_PATH = 'tasks_monitoring_v3';
 
@@ -635,29 +680,60 @@
     return '<span class="seksi-badge '+cls+'">'+esc(s)+'</span>';
   }
 
+  /* ── SORT ── */
+  function setSortMode(mode) { sortMode = mode; render(); }
+
+  function applySort(list) {
+    switch(sortMode) {
+      case 'nama_az':       return list.sort((a,b)=>a.nama.localeCompare(b.nama,'id'));
+      case 'nama_za':       return list.sort((a,b)=>b.nama.localeCompare(a.nama,'id'));
+      case 'seksi_az':      return list.sort((a,b)=>a.seksi.localeCompare(b.seksi,'id'));
+      case 'deadline_asc':  return list.sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
+      case 'deadline_desc': return list.sort((a,b)=>new Date(b.deadline)-new Date(a.deadline));
+      case 'nomor_asc':     return list.sort((a,b)=>parseInt(a.id)-parseInt(b.id));
+      case 'nomor_desc':    return list.sort((a,b)=>parseInt(b.id)-parseInt(a.id));
+      default: // 'status' — selesai ke bawah, lalu deadline
+        return list.sort((a,b)=>{ if(a.done!==b.done) return a.done?1:-1; return new Date(a.deadline)-new Date(b.deadline); });
+    }
+  }
+
+  /* Render uraian dengan preview 100 karakter + collapsible jika panjang */
+  function renderUraian(uraian, id) {
+    if (!uraian) return '<div class="uraian-none">Tidak ada uraian</div>';
+    const LIMIT = 100;
+    if (uraian.length <= LIMIT) {
+      return `<div class="uraian-preview">${esc(uraian)}</div>`;
+    }
+    const preview = esc(uraian.slice(0, LIMIT));
+    const full    = esc(uraian);
+    return `
+      <div class="uraian-preview" id="up-${id}">${preview}<span id="uellipsis-${id}">… </span><button class="uraian-toggle" style="display:inline-flex;margin-top:0;padding:2px 8px" onclick="toggleUraianId('${id}')"><i class="arrow" id="uarrow-${id}">▶</i> Selengkapnya</button></div>
+      <div class="uraian-body" id="ub-${id}" style="display:none">${full}</div>`;
+  }
+
   /* ── RENDER MAIN TABLE ── */
   function render() {
-    let list=[...tasks].sort((a,b)=>{ if(a.done!==b.done) return a.done?1:-1; return new Date(a.deadline)-new Date(b.deadline); });
-    if (filter==='selesai')     list=list.filter(t=>t.done);
-    else if(filter==='proses')  list=list.filter(t=>!t.done&&diffDays(t.deadline)>=0);
+    let list=[...tasks];
+    if (filter==='selesai')       list=list.filter(t=>t.done);
+    else if(filter==='proses')    list=list.filter(t=>!t.done&&diffDays(t.deadline)>=0);
     else if(filter==='terlambat') list=list.filter(t=>!t.done&&diffDays(t.deadline)<0);
     if (seksiFilter) list=list.filter(t=>t.seksi===seksiFilter);
+    applySort(list);
 
     const body=document.getElementById('taskBody');
     body.innerHTML = !list.length
-      ? '<tr class="empty-row"><td colspan="8">Tidak ada data ditemukan.</td></tr>'
-      : list.map(t=>`
+      ? '<tr class="empty-row"><td colspan="10">Tidak ada data ditemukan.</td></tr>'
+      : list.map((t,idx)=>`
         <tr class="${t.done?'row-done':''}">
+          <td style="color:var(--text-secondary);font-size:12px;text-align:center;min-width:32px">${idx+1}</td>
           <td>${seksiBadge(t.seksi)}</td>
           <td>
             <div style="font-weight:500">${esc(t.nama)}</div>
             <div class="timestamp-info">📤 Upload: ${formatTS(t.uploadedAt||t.createdAt)}</div>
             ${t.editedAt ? '<div class="timestamp-info">✏️ Diedit: '+formatTS(t.editedAt)+'</div>' : ''}
-            ${t.uraian
-              ? `<button class="uraian-toggle" onclick="toggleUraian(this)"><i class="arrow">▶</i> Lihat Uraian</button>
-                 <div class="uraian-body">${esc(t.uraian)}</div>`
-              : '<div class="uraian-none">Tidak ada uraian</div>'}
+            ${renderUraian(t.uraian, t.id)}
           </td>
+          <td style="font-size:12px;color:var(--text-secondary)">${esc(t.dasar||'—')}</td>
           <td>${formatDate(t.deadline)}</td>
           <td>${prioBadge(t.priority)}</td>
           <td>${statusBadge(t)}</td>
@@ -684,12 +760,22 @@
     document.getElementById('st-done').textContent    = tasks.filter(t=>t.done).length;
   }
 
+  function toggleUraianId(id) {
+    const body    = document.getElementById('ub-'+id);
+    const arrow   = document.getElementById('uarrow-'+id);
+    const ellipsis= document.getElementById('uellipsis-'+id);
+    const isOpen  = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'block';
+    if (arrow) arrow.textContent = isOpen ? '▶' : '▼';
+    if (ellipsis) ellipsis.style.display = isOpen ? '' : 'none';
+  }
+
   function toggleUraian(btn) {
     btn.classList.toggle('open');
-    const body = btn.nextElementSibling;
-    body.classList.toggle('open');
-    btn.querySelector('.arrow').textContent = body.classList.contains('open') ? '▼' : '▶';
-    btn.childNodes[1].textContent = body.classList.contains('open') ? ' Sembunyikan' : ' Lihat Uraian';
+    const bodyEl = btn.nextElementSibling;
+    bodyEl.classList.toggle('open');
+    btn.querySelector('.arrow').textContent = bodyEl.classList.contains('open') ? '▼' : '▶';
+    btn.childNodes[1].textContent = bodyEl.classList.contains('open') ? ' Sembunyikan' : ' Lihat Uraian';
   }
 
   /* ── MODAL EDIT ── */
@@ -698,6 +784,7 @@
     document.getElementById('m-id').value        = t.id;
     document.getElementById('m-seksi').value     = t.seksi;
     document.getElementById('m-nama').value      = t.nama;
+    document.getElementById('m-dasar').value     = t.dasar||'';
     document.getElementById('m-deadline').value  = t.deadline;
     document.getElementById('m-priority').value  = t.priority||'medium';
     document.getElementById('m-followUp').value  = t.followUp||'';
@@ -715,6 +802,7 @@
     const id   = document.getElementById('m-id').value;
     const seksi= document.getElementById('m-seksi').value;
     const nama = document.getElementById('m-nama').value.trim();
+    const dasar= document.getElementById('m-dasar').value.trim();
     const dl   = document.getElementById('m-deadline').value;
     const prio = document.getElementById('m-priority').value;
     const fu   = document.getElementById('m-followUp').value;
@@ -724,6 +812,7 @@
     const t = tasks.find(x=>x.id===id); if(!t) return;
     t.seksi     = seksi;
     t.nama      = nama;
+    t.dasar     = dasar;
     t.deadline  = dl;
     t.priority  = prio;
     t.followUp  = fu;
@@ -785,10 +874,12 @@
 
     list.sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
     document.getElementById('rekapBody').innerHTML=!list.length
-      ? '<tr><td colspan="8" style="text-align:center;padding:1.5rem;color:var(--text-secondary)">Tidak ada data pada periode ini.</td></tr>'
+      ? '<tr><td colspan="10" style="text-align:center;padding:1.5rem;color:var(--text-secondary)">Tidak ada data pada periode ini.</td></tr>'
       : list.map(t=>`<tr>
           <td>${seksiBadge(t.seksi)}</td>
           <td>${esc(t.nama)}</td>
+          <td style="font-size:12px">${esc(t.dasar||'—')}</td>
+          <td style="font-size:12px;white-space:pre-wrap;max-width:200px;word-break:break-word">${esc(t.uraian||'—')}</td>
           <td style="font-size:12px;white-space:nowrap">${formatTSShort(t.uploadedAt||t.createdAt)}</td>
           <td>${formatDate(t.deadline)}</td>
           <td>${prioBadge(t.priority)}</td>
@@ -874,7 +965,8 @@
               </div>
               ${t.followUp ? '<div style="font-size:12px;margin-top:4px;color:var(--text-secondary)">Tindak lanjut: '+esc(t.followUp)+'</div>' : ''}
               ${t.resolution ? '<div style="font-size:12px;margin-top:2px;color:var(--text-secondary)">Penyelesaian: '+esc(t.resolution)+'</div>' : ''}
-              ${t.uraian ? '<div style="font-size:12px;margin-top:2px;color:var(--text-secondary)">Uraian: '+esc(t.uraian.length>120?t.uraian.slice(0,120)+'...':t.uraian)+'</div>' : ''}
+              ${t.dasar ? '<div style="font-size:12px;margin-top:4px;color:var(--text-secondary)">Dasar: <strong>'+esc(t.dasar)+'</strong></div>' : ''}
+              ${t.uraian ? '<div style="font-size:12px;margin-top:4px;color:var(--text-secondary);white-space:pre-wrap;word-break:break-word">Uraian: '+esc(t.uraian)+'</div>' : ''}
             </div>
           </div>`;
           globalNum++;
@@ -919,19 +1011,21 @@
   async function submitForm() {
     const seksi=document.getElementById('f-seksi').value;
     const nama=document.getElementById('f-nama').value.trim();
+    const dasar=document.getElementById('f-dasar').value.trim();
     const deadline=document.getElementById('f-deadline').value;
     const priority=document.getElementById('f-prioritas').value;
     const uraian=document.getElementById('f-uraian').value.trim();
     if(!seksi||!nama||!deadline){ alert('Seksi, nama pekerjaan, dan batas waktu wajib diisi!'); return; }
     const now = nowISO();
     tasks.unshift({
-      id: Date.now().toString(), seksi, nama, deadline, priority, uraian,
+      id: Date.now().toString(), seksi, nama, dasar, deadline, priority, uraian,
       uploadedAt: now, createdAt: todayStr(),
       followUp:'', followUpBy:'', resolution:'', resolvedBy:'', done:false
     });
     await saveTasks(); render();
     document.getElementById('f-seksi').value='';
     document.getElementById('f-nama').value='';
+    document.getElementById('f-dasar').value='';
     document.getElementById('f-deadline').value=todayStr();
     document.getElementById('f-uraian').value='';
     if(rekapOpen) renderActivePanel();
