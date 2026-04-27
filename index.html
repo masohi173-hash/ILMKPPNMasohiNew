@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Papan Monitoring Pekerjaan</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f5f3;
+      --bg-tertiary: #eeecea;
+      --text-primary: #1a1a18;
+      --text-secondary: #6b6b67;
+      --border-light: rgba(0,0,0,0.12);
+      --border-mid: rgba(0,0,0,0.22);
+      --border-strong: rgba(0,0,0,0.35);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --font: 'Segoe UI', system-ui, sans-serif;
+      --accent: #185fa5;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-primary: #1e1e1c;
+        --bg-secondary: #2a2a28;
+        --bg-tertiary: #141412;
+        --text-primary: #f0ede8;
+        --text-secondary: #9a9993;
+        --border-light: rgba(255,255,255,0.10);
+        --border-mid: rgba(255,255,255,0.18);
+        --border-strong: rgba(255,255,255,0.28);
+      }
+    }
+
+    body { font-family: var(--font); background: var(--bg-tertiary); color: var(--text-primary); min-height: 100vh; padding: 2rem 1rem; }
+    .container { max-width: 1300px; margin: 0 auto; }
+    .header { margin-bottom: 1.5rem; }
+    .header-title { font-size: 22px; font-weight: 600; color: var(--text-primary); }
+    .header-sub { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+
+    /* STATS */
+    .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 1.5rem; }
+    @media (max-width:600px) { .stats { grid-template-columns: repeat(2,1fr); } }
+    .stat-card { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-md); padding: .85rem 1rem; }
+    .stat-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+    .stat-val { font-size: 24px; font-weight: 600; }
+    .stat-val.total   { color: var(--text-primary); }
+    .stat-val.danger  { color: #a32d2d; }
+    .stat-val.warning { color: #854f0b; }
+    .stat-val.success { color: #3b6d11; }
+
+    /* FORM */
+    .add-form { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.25rem; }
+    .form-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 2fr 1fr 1fr auto; gap: 10px; align-items: end; }
+    @media (max-width:900px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width:500px) { .form-grid { grid-template-columns: 1fr; } }
+    .form-field { display: flex; flex-direction: column; gap: 4px; }
+    .form-field label { font-size: 12px; color: var(--text-secondary); }
+    .form-field input, .form-field select {
+      border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
+      padding: 8px 10px; font-size: 13px; font-family: var(--font);
+      background: var(--bg-primary); color: var(--text-primary); height: 36px;
+    }
+    .form-field input:focus, .form-field select:focus { outline: none; border-color: var(--accent); }
+    .form-actions { display: flex; gap: 8px; }
+    .btn-add {
+      background: var(--accent); color: #fff; border: none; border-radius: var(--radius-md);
+      padding: 0 20px; font-size: 13px; font-family: var(--font); cursor: pointer;
+      font-weight: 500; height: 36px; white-space: nowrap;
+    }
+    .btn-add:hover { opacity: .88; }
+    .btn-cancel-edit {
+      background: transparent; color: var(--text-secondary); border: 0.5px solid var(--border-mid);
+      border-radius: var(--radius-md); padding: 0 16px; font-size: 13px; font-family: var(--font);
+      cursor: pointer; font-weight: 500; height: 36px; white-space: nowrap; display: none;
+    }
+    .btn-cancel-edit:hover { background: var(--bg-secondary); }
+    .edit-indicator { display: none; font-size: 12px; color: #854f0b; background: #faeeda; padding: 4px 10px; border-radius: var(--radius-md); margin-bottom: 10px; }
+
+    /* MODAL EDIT */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 1000; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--bg-primary); border-radius: var(--radius-lg); padding: 1.5rem;
+      width: 90%; max-width: 600px; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .modal-title { font-size: 15px; font-weight: 600; margin-bottom: 1rem; }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+    @media (max-width:500px) { .modal-grid { grid-template-columns: 1fr; } }
+    .modal-grid .form-field input,
+    .modal-grid .form-field select { height: 38px; }
+    .modal-field-full { grid-column: 1 / -1; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .btn-modal-save {
+      background: var(--accent); color: #fff; border: none; border-radius: var(--radius-md);
+      padding: 8px 20px; font-size: 13px; font-family: var(--font); cursor: pointer; font-weight: 500;
+    }
+    .btn-modal-save:hover { opacity: .88; }
+    .btn-modal-cancel {
+      background: transparent; color: var(--text-secondary); border: 0.5px solid var(--border-mid);
+      border-radius: var(--radius-md); padding: 8px 16px; font-size: 13px; font-family: var(--font); cursor: pointer;
+    }
+    .btn-modal-cancel:hover { background: var(--bg-secondary); }
+
+    /* REKAP MINGGUAN */
+    .rekap-section { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.25rem; display: none; }
+    .rekap-section.open { display: block; }
+    .rekap-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+    .rekap-controls { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1rem; }
+    .rekap-controls select, .rekap-controls input {
+      border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
+      padding: 6px 10px; font-size: 13px; font-family: var(--font);
+      background: var(--bg-primary); color: var(--text-primary);
+    }
+    .rc-field { display: flex; flex-direction: column; gap: 4px; }
+    .rc-field label { font-size: 12px; color: var(--text-secondary); }
+    .rekap-tabs { display: flex; gap: 6px; margin-bottom: 1rem; }
+    .rekap-tab { background: transparent; border: 0.5px solid var(--border-light); border-radius: 99px; padding: 5px 14px; font-size: 12px; color: var(--text-secondary); cursor: pointer; font-family: var(--font); }
+    .rekap-tab.active { background: var(--bg-secondary); border-color: var(--border-strong); color: var(--text-primary); font-weight: 500; }
+    .rekap-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); gap: 8px; margin-bottom: 1rem; }
+    .rekap-card { background: var(--bg-secondary); border-radius: var(--radius-md); padding: .75rem 1rem; }
+    .rekap-card-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 3px; }
+    .rekap-card-val { font-size: 20px; font-weight: 600; color: var(--text-primary); }
+    .rekap-table-wrap { overflow-x: auto; border: 0.5px solid var(--border-light); border-radius: var(--radius-md); }
+    .rekap-table { width: 100%; border-collapse: collapse; min-width: 750px; }
+    .rekap-table th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-secondary); text-align: left; padding: 8px 12px; border-bottom: 0.5px solid var(--border-light); background: var(--bg-secondary); white-space: nowrap; }
+    .rekap-table td { font-size: 13px; color: var(--text-primary); padding: 8px 12px; border-bottom: 0.5px solid var(--border-light); vertical-align: top; }
+    .rekap-table tr:last-child td { border-bottom: none; }
+    .btn-print { background: transparent; border: 0.5px solid var(--border-mid); border-radius: var(--radius-md); padding: 6px 14px; font-size: 12px; color: var(--text-primary); cursor: pointer; font-family: var(--font); }
+    .btn-print:hover { background: var(--bg-secondary); }
+
+    /* NOTULA MINGGUAN */
+    .notula-wrap { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 1.25rem; border: 0.5px solid var(--border-light); }
+    .notula-header { margin-bottom: 1rem; border-bottom: 1px solid var(--border-light); padding-bottom: .75rem; }
+    .notula-judul { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .notula-sub { font-size: 12px; color: var(--text-secondary); }
+    .notula-week-block { margin-bottom: 1.25rem; }
+    .notula-week-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text-secondary); margin-bottom: 8px; border-bottom: 0.5px solid var(--border-light); padding-bottom: 4px; }
+    .notula-item { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; border-bottom: 0.5px dashed var(--border-light); }
+    .notula-item:last-child { border-bottom: none; }
+    .notula-num { font-size: 12px; color: var(--text-secondary); min-width: 22px; font-weight: 600; padding-top: 1px; }
+    .notula-content { flex: 1; }
+    .notula-nama { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+    .notula-meta { font-size: 11px; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 8px; }
+    .notula-ts { font-style: italic; }
+    .notula-status-done { color: #3b6d11; }
+    .notula-status-late { color: #a32d2d; }
+    .notula-status-ok { color: #854f0b; }
+    .notula-empty { text-align: center; padding: 2rem; color: var(--text-secondary); font-size: 14px; }
+    .notula-week-selector { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+
+    /* TOOLBAR */
+    .toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
+    .toolbar-left { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filter-label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+    .filter-btn { background: transparent; border: 0.5px solid var(--border-light); border-radius: 99px; padding: 5px 14px; font-size: 12px; color: var(--text-secondary); cursor: pointer; font-family: var(--font); }
+    .filter-btn.active { background: var(--bg-secondary); border-color: var(--border-strong); color: var(--text-primary); font-weight: 500; }
+    .divider { width: 1px; height: 20px; background: var(--border-light); margin: 0 4px; }
+    .sync-info { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
+    .btn-refresh { background: transparent; border: 0.5px solid var(--border-light); border-radius: var(--radius-md); padding: 5px 12px; font-size: 12px; color: var(--text-secondary); cursor: pointer; font-family: var(--font); }
+    .btn-refresh:hover { background: var(--bg-secondary); }
+    .btn-rekap { background: transparent; border: 0.5px solid var(--border-mid); border-radius: var(--radius-md); padding: 5px 14px; font-size: 12px; color: var(--text-primary); cursor: pointer; font-family: var(--font); font-weight: 500; }
+    .btn-rekap.active { background: var(--bg-secondary); }
+    .btn-notula { background: #185fa5; color: #fff; border: none; border-radius: var(--radius-md); padding: 5px 14px; font-size: 12px; cursor: pointer; font-family: var(--font); font-weight: 500; }
+    .btn-notula:hover { opacity: .88; }
+    .btn-notula.active { background: #0e3f72; }
+
+    /* TABLE */
+    .table-wrap { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+    th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-secondary); text-align: left; padding: 10px 14px; border-bottom: 0.5px solid var(--border-light); background: var(--bg-secondary); white-space: nowrap; }
+    td { font-size: 13px; color: var(--text-primary); padding: 10px 14px; border-bottom: 0.5px solid var(--border-light); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr.row-done td { opacity: .5; }
+    tr:hover td { background: var(--bg-secondary); }
+
+    /* BADGES */
+    .badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
+    .badge-overdue { background: #fcebeb; color: #a32d2d; }
+    .badge-today   { background: #faeeda; color: #854f0b; }
+    .badge-soon    { background: #e1f5ee; color: #0f6e56; }
+    .badge-active  { background: #f1efe8; color: #5f5e5a; }
+    .badge-done    { background: #eaf3de; color: #3b6d11; }
+    .badge-high    { background: #fcebeb; color: #a32d2d; }
+    .badge-medium  { background: #faeeda; color: #854f0b; }
+    .badge-low     { background: #eaf3de; color: #3b6d11; }
+    .seksi-badge   { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
+    .seksi-mski    { background: #eeedfe; color: #3c3489; }
+    .seksi-vera    { background: #fbeaf0; color: #72243e; }
+    .seksi-bank    { background: #e6f1fb; color: #0c447c; }
+    .seksi-umum    { background: #f1efe8; color: #444441; }
+    .seksi-pd      { background: #e1f5ee; color: #085041; }
+
+    .inline-area { width: 100%; border: none; background: transparent; font-size: 13px; font-family: var(--font); color: var(--text-primary); resize: none; min-height: 36px; line-height: 1.5; }
+    .inline-area:focus { outline: none; background: var(--bg-tertiary); border-radius: 4px; padding: 4px 6px; margin: -4px -6px; }
+    .by-tag { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+    .creator-info { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+    .timestamp-info { font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-style: italic; }
+
+    /* URAIAN COLLAPSIBLE */
+    .uraian-toggle {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; color: var(--accent); cursor: pointer;
+      background: #e8f0fb; border: none; border-radius: 99px;
+      padding: 3px 10px; margin-top: 5px; font-family: var(--font);
+      font-weight: 500; transition: background .15s;
+    }
+    .uraian-toggle:hover { background: #d0e4f7; }
+    .uraian-toggle .arrow { display: inline-block; transition: transform .2s; font-style: normal; }
+    .uraian-toggle.open .arrow { transform: rotate(90deg); }
+    .uraian-body {
+      display: none; margin-top: 8px;
+      background: var(--bg-secondary); border-radius: var(--radius-md);
+      border-left: 3px solid var(--accent);
+      padding: 8px 12px; font-size: 12px; color: var(--text-primary);
+      line-height: 1.6; white-space: pre-wrap; word-break: break-word;
+    }
+    .uraian-body.open { display: block; }
+    .uraian-none { font-size: 11px; color: var(--text-secondary); font-style: italic; margin-top: 4px; }
+
+    /* URAIAN TEXTAREA IN FORM */
+    .form-uraian { margin-top: 10px; }
+    .form-uraian textarea {
+      width: 100%; border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
+      padding: 8px 10px; font-size: 13px; font-family: var(--font);
+      background: var(--bg-primary); color: var(--text-primary);
+      resize: vertical; min-height: 72px; line-height: 1.5;
+    }
+    .form-uraian textarea:focus { outline: none; border-color: var(--accent); }
+    .form-uraian label { font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px; }
+
+    /* MODAL TEXTAREA */
+    .modal-grid textarea {
+      width: 100%; border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
+      padding: 8px 10px; font-size: 13px; font-family: var(--font);
+      background: var(--bg-primary); color: var(--text-primary);
+      resize: vertical; min-height: 80px; line-height: 1.5;
+    }
+    .modal-grid textarea:focus { outline: none; border-color: var(--accent); }
+
+    .btn-done { display: block; width: 100%; background: transparent; border: 0.5px solid var(--border-light); border-radius: 99px; padding: 4px 10px; font-size: 11px; font-family: var(--font); color: var(--text-secondary); cursor: pointer; text-align: center; margin-bottom: 5px; }
+    .btn-done:hover { border-color: var(--border-strong); color: var(--text-primary); }
+    .btn-done.is-done { background: #eaf3de; color: #3b6d11; border-color: #c0dd97; }
+    .btn-edit-row { display: block; width: 100%; background: transparent; border: 0.5px solid var(--border-light); border-radius: 99px; padding: 4px 10px; font-size: 11px; font-family: var(--font); color: var(--accent); cursor: pointer; text-align: center; margin-bottom: 5px; }
+    .btn-edit-row:hover { border-color: var(--accent); background: #e8f0fb; }
+    .btn-del { display: block; width: 100%; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 12px; font-family: var(--font); text-align: center; padding: 3px; border-radius: 4px; }
+    .btn-del:hover { color: #a32d2d; background: #fcebeb; }
+    .empty-row td { text-align: center; padding: 2.5rem; color: var(--text-secondary); font-size: 14px; }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .add-form, .toolbar, .table-wrap, .header, .stats, .btn-print, .btn-rekap, .rekap-controls, .rekap-tabs, .modal-overlay { display: none !important; }
+      .rekap-section { display: block !important; border: none; padding: 0; }
+      .rekap-table-wrap { border: 1px solid #ccc; }
+      .notula-wrap { border: 1px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-title">Papan Monitoring Pekerjaan</div>
+    <div class="header-sub">Semua seksi dapat melihat, mengisi, dan memperbarui data</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card"><div class="stat-label">Total tugas</div><div class="stat-val total" id="st-total">0</div></div>
+    <div class="stat-card"><div class="stat-label">Terlambat</div><div class="stat-val danger" id="st-overdue">0</div></div>
+    <div class="stat-card"><div class="stat-label">Sedang berjalan</div><div class="stat-val warning" id="st-ongoing">0</div></div>
+    <div class="stat-card"><div class="stat-label">Selesai</div><div class="stat-val success" id="st-done">0</div></div>
+  </div>
+
+  <!-- FORM TAMBAH -->
+  <div class="add-form">
+    <div class="edit-indicator" id="editIndicator">✏️ Mode Edit — mengubah pekerjaan yang sudah ada</div>
+    <div class="form-title" id="formTitle">Tambah Pekerjaan Baru</div>
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="f-seksi">Seksi / Subbag *</label>
+        <select id="f-seksi">
+          <option value="">-- Pilih Seksi --</option>
+          <option value="Seksi MSKI">Seksi MSKI</option>
+          <option value="Seksi Vera">Seksi Vera</option>
+          <option value="Seksi Bank">Seksi Bank</option>
+          <option value="Subbag Umum">Subbag Umum</option>
+          <option value="Seksi PD">Seksi PD</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="f-nama">Nama pekerjaan *</label>
+        <input type="text" id="f-nama" placeholder="Tulis nama tugas / pekerjaan..." />
+      </div>
+      <div class="form-field">
+        <label for="f-deadline">Batas waktu *</label>
+        <input type="date" id="f-deadline" />
+      </div>
+      <div class="form-field">
+        <label for="f-prioritas">Prioritas</label>
+        <select id="f-prioritas">
+          <option value="high">Tinggi</option>
+          <option value="medium" selected>Sedang</option>
+          <option value="low">Rendah</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn-add" id="btnSubmit" onclick="submitForm()">+ Tambah</button>
+        <button class="btn-cancel-edit" id="btnCancelEdit" onclick="cancelEdit()">✕ Batal</button>
+      </div>
+    </div>
+    <div class="form-uraian">
+      <label for="f-uraian">Uraian Pekerjaan <span style="color:var(--text-secondary);font-style:italic">(opsional)</span></label>
+      <textarea id="f-uraian" placeholder="Tuliskan uraian / deskripsi detail pekerjaan ini..."></textarea>
+    </div>
+  </div>
+
+  <!-- REKAP / NOTULA MINGGUAN -->
+  <div class="rekap-section" id="rekapSection">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div class="rekap-title" id="rekapJudul">Rekap & Notula</div>
+      <button class="btn-print" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+    </div>
+
+    <!-- Tab switcher -->
+    <div class="rekap-tabs">
+      <button class="rekap-tab active" id="tabBulanan" onclick="switchTab('bulanan')">📅 Rekap Bulanan</button>
+      <button class="rekap-tab" id="tabMingguan" onclick="switchTab('mingguan')">📋 Notula Mingguan</button>
+    </div>
+
+    <!-- Panel Bulanan -->
+    <div id="panelBulanan">
+      <div class="rekap-controls">
+        <div class="rc-field">
+          <label>Bulan</label>
+          <select id="rekapBulan" onchange="renderRekap()">
+            <option value="0">Januari</option><option value="1">Februari</option>
+            <option value="2">Maret</option><option value="3">April</option>
+            <option value="4">Mei</option><option value="5">Juni</option>
+            <option value="6">Juli</option><option value="7">Agustus</option>
+            <option value="8">September</option><option value="9">Oktober</option>
+            <option value="10">November</option><option value="11">Desember</option>
+          </select>
+        </div>
+        <div class="rc-field">
+          <label>Tahun</label>
+          <input type="number" id="rekapTahun" min="2020" max="2099" style="width:90px" onchange="renderRekap()" />
+        </div>
+        <div class="rc-field">
+          <label>Filter Seksi</label>
+          <select id="rekapSeksi" onchange="renderRekap()">
+            <option value="">Semua Seksi</option>
+            <option value="Seksi MSKI">Seksi MSKI</option>
+            <option value="Seksi Vera">Seksi Vera</option>
+            <option value="Seksi Bank">Seksi Bank</option>
+            <option value="Subbag Umum">Subbag Umum</option>
+            <option value="Seksi PD">Seksi PD</option>
+          </select>
+        </div>
+      </div>
+      <div class="rekap-grid" id="rekapGrid"></div>
+      <div class="rekap-table-wrap">
+        <table class="rekap-table">
+          <thead>
+            <tr>
+              <th>Seksi</th><th>Nama Pekerjaan</th><th>Tgl Upload</th><th>Batas Waktu</th>
+              <th>Prioritas</th><th>Status</th><th>Tindak Lanjut</th><th>Keterangan Penyelesaian</th>
+            </tr>
+          </thead>
+          <tbody id="rekapBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Panel Mingguan / Notula -->
+    <div id="panelMingguan" style="display:none">
+      <div class="rekap-controls">
+        <div class="rc-field">
+          <label>Pilih Minggu (pilih salah satu hari dalam minggu)</label>
+          <input type="date" id="notulaDate" onchange="renderNotula()" style="width:180px" />
+        </div>
+        <div class="rc-field">
+          <label>Filter Seksi</label>
+          <select id="notulaSeksi" onchange="renderNotula()">
+            <option value="">Semua Seksi</option>
+            <option value="Seksi MSKI">Seksi MSKI</option>
+            <option value="Seksi Vera">Seksi Vera</option>
+            <option value="Seksi Bank">Seksi Bank</option>
+            <option value="Subbag Umum">Subbag Umum</option>
+            <option value="Seksi PD">Seksi PD</option>
+          </select>
+        </div>
+      </div>
+      <div id="notulaContent"></div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <span class="filter-label">Status:</span>
+      <div class="filter-group" id="statusFilters">
+        <button class="filter-btn active" onclick="setFilter('semua',this)">Semua</button>
+        <button class="filter-btn" onclick="setFilter('proses',this)">Berjalan</button>
+        <button class="filter-btn" onclick="setFilter('terlambat',this)">Terlambat</button>
+        <button class="filter-btn" onclick="setFilter('selesai',this)">Selesai</button>
+      </div>
+      <div class="divider"></div>
+      <span class="filter-label">Seksi:</span>
+      <div class="filter-group" id="seksiFilters">
+        <button class="filter-btn active" onclick="setSeksiFilter('',this)">Semua</button>
+        <button class="filter-btn" onclick="setSeksiFilter('Seksi MSKI',this)">MSKI</button>
+        <button class="filter-btn" onclick="setSeksiFilter('Seksi Vera',this)">Vera</button>
+        <button class="filter-btn" onclick="setSeksiFilter('Seksi Bank',this)">Bank</button>
+        <button class="filter-btn" onclick="setSeksiFilter('Subbag Umum',this)">Umum</button>
+        <button class="filter-btn" onclick="setSeksiFilter('Seksi PD',this)">PD</button>
+      </div>
+    </div>
+    <div class="sync-info">
+      <button class="btn-notula" id="btnRekap" onclick="toggleRekap()">📋 Rekap & Notula</button>
+      <span id="syncInfo">Memuat...</span>
+      <button class="btn-refresh" onclick="loadTasks()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- TABLE UTAMA -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Seksi</th><th>Nama Pekerjaan</th><th>Batas Waktu</th>
+          <th>Prioritas</th><th>Status</th><th>Tindak Lanjut</th>
+          <th>Keterangan Penyelesaian</th><th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="taskBody"><tr class="empty-row"><td colspan="8">Memuat data...</td></tr></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- MODAL EDIT -->
+<div class="modal-overlay" id="modalEdit">
+  <div class="modal-box">
+    <div class="modal-title">✏️ Edit Pekerjaan</div>
+    <input type="hidden" id="m-id" />
+    <div class="modal-grid">
+      <div class="form-field">
+        <label>Seksi / Subbag *</label>
+        <select id="m-seksi">
+          <option value="">-- Pilih Seksi --</option>
+          <option value="Seksi MSKI">Seksi MSKI</option>
+          <option value="Seksi Vera">Seksi Vera</option>
+          <option value="Seksi Bank">Seksi Bank</option>
+          <option value="Subbag Umum">Subbag Umum</option>
+          <option value="Seksi PD">Seksi PD</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Prioritas</label>
+        <select id="m-priority">
+          <option value="high">Tinggi</option>
+          <option value="medium">Sedang</option>
+          <option value="low">Rendah</option>
+        </select>
+      </div>
+      <div class="form-field modal-field-full">
+        <label>Nama Pekerjaan *</label>
+        <input type="text" id="m-nama" placeholder="Nama pekerjaan..." />
+      </div>
+      <div class="form-field">
+        <label>Batas Waktu *</label>
+        <input type="date" id="m-deadline" />
+      </div>
+      <div class="form-field">
+        <label>Tindak Lanjut</label>
+        <input type="text" id="m-followUp" placeholder="Tindak lanjut..." />
+      </div>
+      <div class="form-field modal-field-full">
+        <label>Keterangan Penyelesaian</label>
+        <input type="text" id="m-resolution" placeholder="Keterangan..." />
+      </div>
+      <div class="form-field modal-field-full">
+        <label>Uraian Pekerjaan</label>
+        <textarea id="m-uraian" placeholder="Uraian / deskripsi detail pekerjaan..."></textarea>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text-secondary);margin-bottom:1rem;" id="m-info"></div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeModal()">Batal</button>
+      <button class="btn-modal-save" onclick="saveModal()">💾 Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'tasks_monitoring_v3';
+  const BULAN_NAMA  = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const HARI_NAMA   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const SEKSI_CLASS = { 'Seksi MSKI':'seksi-mski','Seksi Vera':'seksi-vera','Seksi Bank':'seksi-bank','Subbag Umum':'seksi-umum','Seksi PD':'seksi-pd' };
+
+  let tasks = [], filter = 'semua', seksiFilter = '', rekapOpen = false, activeTab = 'bulanan';
+
+  /* ── STORAGE ── */
+  async function storageSave(data) {
+    if (typeof window.storage !== 'undefined') { await window.storage.set(STORAGE_KEY, JSON.stringify(data), true); return; }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+  async function storageLoad() {
+    if (typeof window.storage !== 'undefined') {
+      try { const r = await window.storage.get(STORAGE_KEY, true); return r ? JSON.parse(r.value) : []; } catch { return []; }
+    }
+    const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : [];
+  }
+
+  /* ── UTILS ── */
+  function todayStr() { return new Date().toISOString().slice(0,10); }
+  function nowISO()   { return new Date().toISOString(); }
+  function diffDays(d) {
+    const n=new Date(); n.setHours(0,0,0,0);
+    const dl=new Date(d); dl.setHours(0,0,0,0);
+    return Math.round((dl-n)/86400000);
+  }
+  function formatDate(d) { if(!d) return '-'; const [y,m,dd]=d.split('-'); return dd+'/'+m+'/'+y; }
+  function formatTS(iso) {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) + ' ' +
+           d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+  }
+  function formatTSShort(iso) {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}) + ' ' +
+           d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+  }
+  function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  /* Get Monday of the week for a given date */
+  function getMondayOf(date) {
+    const d = new Date(date);
+    const day = d.getDay(); // 0=Sun
+    const diff = (day === 0) ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    d.setHours(0,0,0,0);
+    return d;
+  }
+  function getSundayOf(monday) {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + 6);
+    d.setHours(23,59,59,999);
+    return d;
+  }
+  function dateToStr(d) { return d.toISOString().slice(0,10); }
+  function formatWeekLabel(monday, sunday) {
+    return `Minggu ${monday.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})} — ${sunday.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})}`;
+  }
+
+  /* ── BADGES ── */
+  function statusBadge(t) {
+    if (t.done) return '<span class="badge badge-done">Selesai</span>';
+    const d=diffDays(t.deadline);
+    if (d<0)  return '<span class="badge badge-overdue">Terlambat '+Math.abs(d)+' hari</span>';
+    if (d===0) return '<span class="badge badge-today">Hari ini</span>';
+    if (d<=3)  return '<span class="badge badge-soon">Segera ('+d+' hari)</span>';
+    return '<span class="badge badge-active">Aktif</span>';
+  }
+  function prioBadge(p) {
+    const m={high:['badge-high','Tinggi'],medium:['badge-medium','Sedang'],low:['badge-low','Rendah']};
+    const [c,l]=m[p]||m.medium; return '<span class="badge '+c+'">'+l+'</span>';
+  }
+  function seksiBadge(s) {
+    const cls=SEKSI_CLASS[s]||'seksi-umum';
+    return '<span class="seksi-badge '+cls+'">'+esc(s)+'</span>';
+  }
+
+  /* ── RENDER MAIN TABLE ── */
+  function render() {
+    let list=[...tasks].sort((a,b)=>{ if(a.done!==b.done) return a.done?1:-1; return new Date(a.deadline)-new Date(b.deadline); });
+    if (filter==='selesai')     list=list.filter(t=>t.done);
+    else if(filter==='proses')  list=list.filter(t=>!t.done&&diffDays(t.deadline)>=0);
+    else if(filter==='terlambat') list=list.filter(t=>!t.done&&diffDays(t.deadline)<0);
+    if (seksiFilter) list=list.filter(t=>t.seksi===seksiFilter);
+
+    const body=document.getElementById('taskBody');
+    body.innerHTML = !list.length
+      ? '<tr class="empty-row"><td colspan="8">Tidak ada data ditemukan.</td></tr>'
+      : list.map(t=>`
+        <tr class="${t.done?'row-done':''}">
+          <td>${seksiBadge(t.seksi)}</td>
+          <td>
+            <div style="font-weight:500">${esc(t.nama)}</div>
+            <div class="timestamp-info">📤 Upload: ${formatTS(t.uploadedAt||t.createdAt)}</div>
+            ${t.editedAt ? '<div class="timestamp-info">✏️ Diedit: '+formatTS(t.editedAt)+'</div>' : ''}
+            ${t.uraian
+              ? `<button class="uraian-toggle" onclick="toggleUraian(this)"><i class="arrow">▶</i> Lihat Uraian</button>
+                 <div class="uraian-body">${esc(t.uraian)}</div>`
+              : '<div class="uraian-none">Tidak ada uraian</div>'}
+          </td>
+          <td>${formatDate(t.deadline)}</td>
+          <td>${prioBadge(t.priority)}</td>
+          <td>${statusBadge(t)}</td>
+          <td>
+            <textarea class="inline-area" rows="2" placeholder="Isi tindak lanjut..."
+              onchange="updateField('${t.id}','followUp',this.value)">${esc(t.followUp||'')}</textarea>
+            ${t.followUpBy?'<div class="by-tag">oleh '+esc(t.followUpBy)+'</div>':''}
+          </td>
+          <td>
+            <textarea class="inline-area" rows="2" placeholder="Keterangan penyelesaian..."
+              onchange="updateField('${t.id}','resolution',this.value)">${esc(t.resolution||'')}</textarea>
+            ${t.resolvedBy?'<div class="by-tag">oleh '+esc(t.resolvedBy)+'</div>':''}
+          </td>
+          <td>
+            <button class="btn-done ${t.done?'is-done':''}" onclick="toggleDone('${t.id}')">${t.done?'✓ Selesai':'Tandai Selesai'}</button>
+            <button class="btn-edit-row" onclick="openModal('${t.id}')">✏️ Edit</button>
+            <button class="btn-del" onclick="deleteTask('${t.id}')">Hapus</button>
+          </td>
+        </tr>`).join('');
+
+    document.getElementById('st-total').textContent   = tasks.length;
+    document.getElementById('st-overdue').textContent = tasks.filter(t=>!t.done&&diffDays(t.deadline)<0).length;
+    document.getElementById('st-ongoing').textContent = tasks.filter(t=>!t.done&&diffDays(t.deadline)>=0).length;
+    document.getElementById('st-done').textContent    = tasks.filter(t=>t.done).length;
+  }
+
+  function toggleUraian(btn) {
+    btn.classList.toggle('open');
+    const body = btn.nextElementSibling;
+    body.classList.toggle('open');
+    btn.querySelector('.arrow').textContent = body.classList.contains('open') ? '▼' : '▶';
+    btn.childNodes[1].textContent = body.classList.contains('open') ? ' Sembunyikan' : ' Lihat Uraian';
+  }
+
+  /* ── MODAL EDIT ── */
+  function openModal(id) {
+    const t = tasks.find(x=>x.id===id); if(!t) return;
+    document.getElementById('m-id').value        = t.id;
+    document.getElementById('m-seksi').value     = t.seksi;
+    document.getElementById('m-nama').value      = t.nama;
+    document.getElementById('m-deadline').value  = t.deadline;
+    document.getElementById('m-priority').value  = t.priority||'medium';
+    document.getElementById('m-followUp').value  = t.followUp||'';
+    document.getElementById('m-resolution').value= t.resolution||'';
+    document.getElementById('m-uraian').value    = t.uraian||'';
+    document.getElementById('m-info').textContent =
+      '📤 Upload: ' + formatTS(t.uploadedAt||t.createdAt) +
+      (t.editedAt ? '  |  ✏️ Terakhir diedit: ' + formatTS(t.editedAt) : '');
+    document.getElementById('modalEdit').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('modalEdit').classList.remove('open');
+  }
+  async function saveModal() {
+    const id   = document.getElementById('m-id').value;
+    const seksi= document.getElementById('m-seksi').value;
+    const nama = document.getElementById('m-nama').value.trim();
+    const dl   = document.getElementById('m-deadline').value;
+    const prio = document.getElementById('m-priority').value;
+    const fu   = document.getElementById('m-followUp').value;
+    const res  = document.getElementById('m-resolution').value;
+    const uraian = document.getElementById('m-uraian').value;
+    if(!seksi||!nama||!dl){ alert('Seksi, nama pekerjaan, dan batas waktu wajib diisi!'); return; }
+    const t = tasks.find(x=>x.id===id); if(!t) return;
+    t.seksi     = seksi;
+    t.nama      = nama;
+    t.deadline  = dl;
+    t.priority  = prio;
+    t.followUp  = fu;
+    t.resolution= res;
+    t.uraian    = uraian;
+    t.editedAt  = nowISO();
+    await saveTasks(); render();
+    if(rekapOpen) renderActivePanel();
+    closeModal();
+  }
+  // Close modal on overlay click
+  document.getElementById('modalEdit').addEventListener('click', function(e){
+    if(e.target===this) closeModal();
+  });
+
+  /* ── TAB REKAP ── */
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('tabBulanan').classList.toggle('active', tab==='bulanan');
+    document.getElementById('tabMingguan').classList.toggle('active', tab==='mingguan');
+    document.getElementById('panelBulanan').style.display  = tab==='bulanan'  ? '' : 'none';
+    document.getElementById('panelMingguan').style.display = tab==='mingguan' ? '' : 'none';
+    renderActivePanel();
+  }
+  function renderActivePanel() {
+    if (activeTab==='bulanan') renderRekap();
+    else renderNotula();
+  }
+
+  function toggleRekap() {
+    rekapOpen=!rekapOpen;
+    document.getElementById('rekapSection').classList.toggle('open',rekapOpen);
+    document.getElementById('btnRekap').classList.toggle('active',rekapOpen);
+    if (rekapOpen) renderActivePanel();
+  }
+
+  /* ── REKAP BULANAN ── */
+  function renderRekap() {
+    const bulan=parseInt(document.getElementById('rekapBulan').value);
+    const tahun=parseInt(document.getElementById('rekapTahun').value);
+    const seksi=document.getElementById('rekapSeksi').value;
+    document.getElementById('rekapJudul').textContent=
+      'Rekap & Notula — '+BULAN_NAMA[bulan]+' '+tahun+(seksi?' — '+seksi:' — Semua Seksi');
+
+    let list=tasks.filter(t=>{ const d=new Date(t.deadline); return d.getMonth()===bulan&&d.getFullYear()===tahun; });
+    if (seksi) list=list.filter(t=>t.seksi===seksi);
+
+    const total=list.length, selesai=list.filter(t=>t.done).length;
+    const belum=list.filter(t=>!t.done&&diffDays(t.deadline)>=0).length;
+    const telat=list.filter(t=>!t.done&&diffDays(t.deadline)<0).length;
+    const persen=total?Math.round(selesai/total*100):0;
+
+    document.getElementById('rekapGrid').innerHTML=`
+      <div class="rekap-card"><div class="rekap-card-label">Total tugas</div><div class="rekap-card-val">${total}</div></div>
+      <div class="rekap-card"><div class="rekap-card-label">Selesai</div><div class="rekap-card-val" style="color:#3b6d11">${selesai}</div></div>
+      <div class="rekap-card"><div class="rekap-card-label">Belum selesai</div><div class="rekap-card-val" style="color:#854f0b">${belum}</div></div>
+      <div class="rekap-card"><div class="rekap-card-label">Terlambat</div><div class="rekap-card-val" style="color:#a32d2d">${telat}</div></div>
+      <div class="rekap-card"><div class="rekap-card-label">% Penyelesaian</div><div class="rekap-card-val">${persen}%</div></div>`;
+
+    list.sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
+    document.getElementById('rekapBody').innerHTML=!list.length
+      ? '<tr><td colspan="8" style="text-align:center;padding:1.5rem;color:var(--text-secondary)">Tidak ada data pada periode ini.</td></tr>'
+      : list.map(t=>`<tr>
+          <td>${seksiBadge(t.seksi)}</td>
+          <td>${esc(t.nama)}</td>
+          <td style="font-size:12px;white-space:nowrap">${formatTSShort(t.uploadedAt||t.createdAt)}</td>
+          <td>${formatDate(t.deadline)}</td>
+          <td>${prioBadge(t.priority)}</td>
+          <td>${statusBadge(t)}</td>
+          <td style="font-size:12px">${esc(t.followUp||'—')}</td>
+          <td style="font-size:12px">${esc(t.resolution||'—')}</td>
+        </tr>`).join('');
+  }
+
+  /* ── NOTULA MINGGUAN ── */
+  function renderNotula() {
+    const dateVal = document.getElementById('notulaDate').value;
+    const seksi   = document.getElementById('notulaSeksi').value;
+    const container = document.getElementById('notulaContent');
+
+    if (!dateVal) {
+      container.innerHTML = '<div class="notula-empty">Pilih tanggal untuk menampilkan notula minggu tersebut.</div>';
+      return;
+    }
+
+    const monday = getMondayOf(new Date(dateVal+'T12:00:00'));
+    const sunday = getSundayOf(monday);
+    const weekLabel = formatWeekLabel(monday, sunday);
+
+    // Filter tasks uploaded in this week
+    let list = tasks.filter(t => {
+      const ts = new Date(t.uploadedAt || t.createdAt);
+      return ts >= monday && ts <= sunday;
+    });
+    if (seksi) list = list.filter(t => t.seksi === seksi);
+
+    // Group by day
+    const groups = {};
+    list.forEach(t => {
+      const ts = new Date(t.uploadedAt || t.createdAt);
+      const dayKey = dateToStr(ts);
+      if (!groups[dayKey]) groups[dayKey] = [];
+      groups[dayKey].push(t);
+    });
+
+    const sortedDays = Object.keys(groups).sort();
+    const total   = list.length;
+    const selesai = list.filter(t=>t.done).length;
+    const telat   = list.filter(t=>!t.done&&diffDays(t.deadline)<0).length;
+
+    let html = `
+      <div class="notula-wrap">
+        <div class="notula-header">
+          <div class="notula-judul">📋 NOTULA PEKERJAAN MINGGUAN</div>
+          <div class="notula-sub">${weekLabel}</div>
+          ${seksi ? '<div class="notula-sub" style="margin-top:2px">Seksi: '+esc(seksi)+'</div>' : ''}
+          <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">
+            <span style="font-size:12px">Total diposting: <strong>${total}</strong></span>
+            <span style="font-size:12px;color:#3b6d11">Selesai: <strong>${selesai}</strong></span>
+            <span style="font-size:12px;color:#a32d2d">Terlambat: <strong>${telat}</strong></span>
+          </div>
+        </div>`;
+
+    if (!sortedDays.length) {
+      html += '<div class="notula-empty">Tidak ada pekerjaan yang diupload pada minggu ini.</div>';
+    } else {
+      let globalNum = 1;
+      sortedDays.forEach(dayKey => {
+        const items = groups[dayKey].sort((a,b)=>new Date(a.uploadedAt||a.createdAt)-new Date(b.uploadedAt||b.createdAt));
+        const dayDate = new Date(dayKey+'T12:00:00');
+        const dayLabel = HARI_NAMA[dayDate.getDay()] + ', ' + dayDate.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+        html += `<div class="notula-week-block">
+          <div class="notula-week-title">${dayLabel} — ${items.length} pekerjaan</div>`;
+        items.forEach(t => {
+          const statusClass = t.done ? 'notula-status-done' : (diffDays(t.deadline)<0 ? 'notula-status-late' : 'notula-status-ok');
+          const statusText  = t.done ? 'Selesai' : (diffDays(t.deadline)<0 ? 'Terlambat '+Math.abs(diffDays(t.deadline))+' hari' : 'Berjalan');
+          html += `<div class="notula-item">
+            <div class="notula-num">${globalNum}.</div>
+            <div class="notula-content">
+              <div class="notula-nama">${esc(t.nama)}</div>
+              <div class="notula-meta">
+                <span>${seksiBadge(t.seksi)}</span>
+                <span>${prioBadge(t.priority)}</span>
+                <span class="${statusClass}" style="font-size:11px;font-weight:500">${statusText}</span>
+                <span class="notula-ts">Upload: ${formatTS(t.uploadedAt||t.createdAt)}</span>
+                <span>Deadline: ${formatDate(t.deadline)}</span>
+                ${t.editedAt ? '<span class="notula-ts" style="color:#854f0b">Diedit: '+formatTS(t.editedAt)+'</span>' : ''}
+              </div>
+              ${t.followUp ? '<div style="font-size:12px;margin-top:4px;color:var(--text-secondary)">Tindak lanjut: '+esc(t.followUp)+'</div>' : ''}
+              ${t.resolution ? '<div style="font-size:12px;margin-top:2px;color:var(--text-secondary)">Penyelesaian: '+esc(t.resolution)+'</div>' : ''}
+              ${t.uraian ? '<div style="font-size:12px;margin-top:2px;color:var(--text-secondary)">Uraian: '+esc(t.uraian.length>120?t.uraian.slice(0,120)+'...':t.uraian)+'</div>' : ''}
+            </div>
+          </div>`;
+          globalNum++;
+        });
+        html += '</div>';
+      });
+    }
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  /* ── FILTERS ── */
+  function setFilter(f,btn) {
+    filter=f;
+    document.getElementById('statusFilters').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); render();
+  }
+  function setSeksiFilter(s,btn) {
+    seksiFilter=s;
+    document.getElementById('seksiFilters').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); render();
+  }
+
+  /* ── LOAD / SAVE ── */
+  async function loadTasks() {
+    try {
+      tasks=await storageLoad(); render();
+      if(rekapOpen) renderActivePanel();
+      document.getElementById('syncInfo').textContent='Diperbarui · '+new Date().toLocaleTimeString('id-ID');
+    } catch { document.getElementById('syncInfo').textContent='Gagal memuat'; }
+  }
+  async function saveTasks() {
+    try {
+      await storageSave(tasks);
+      document.getElementById('syncInfo').textContent='Tersimpan · '+new Date().toLocaleTimeString('id-ID');
+    } catch { document.getElementById('syncInfo').textContent='Gagal menyimpan'; }
+  }
+
+  /* ── ADD TASK ── */
+  async function submitForm() {
+    const seksi=document.getElementById('f-seksi').value;
+    const nama=document.getElementById('f-nama').value.trim();
+    const deadline=document.getElementById('f-deadline').value;
+    const priority=document.getElementById('f-prioritas').value;
+    const uraian=document.getElementById('f-uraian').value.trim();
+    if(!seksi||!nama||!deadline){ alert('Seksi, nama pekerjaan, dan batas waktu wajib diisi!'); return; }
+    const now = nowISO();
+    tasks.unshift({
+      id: Date.now().toString(), seksi, nama, deadline, priority, uraian,
+      uploadedAt: now, createdAt: todayStr(),
+      followUp:'', followUpBy:'', resolution:'', resolvedBy:'', done:false
+    });
+    await saveTasks(); render();
+    document.getElementById('f-seksi').value='';
+    document.getElementById('f-nama').value='';
+    document.getElementById('f-deadline').value=todayStr();
+    document.getElementById('f-uraian').value='';
+    if(rekapOpen) renderActivePanel();
+  }
+  function cancelEdit() {}
+
+  async function updateField(id,field,val) {
+    const t=tasks.find(x=>x.id===id); if(!t) return;
+    t[field]=val; await saveTasks();
+  }
+  async function toggleDone(id) {
+    const t=tasks.find(x=>x.id===id); if(!t) return;
+    t.done=!t.done; await saveTasks(); render();
+    if(rekapOpen) renderActivePanel();
+  }
+  async function deleteTask(id) {
+    if(!confirm('Hapus pekerjaan ini?')) return;
+    tasks=tasks.filter(x=>x.id!==id); await saveTasks(); render();
+    if(rekapOpen) renderActivePanel();
+  }
+
+  /* ── INIT ── */
+  const now=new Date();
+  document.getElementById('f-deadline').value=todayStr();
+  document.getElementById('rekapBulan').value=now.getMonth();
+  document.getElementById('rekapTahun').value=now.getFullYear();
+  // Set default notula date to today
+  document.getElementById('notulaDate').value=todayStr();
+  loadTasks();
+  setInterval(loadTasks,15000);
+</script>
+</body>
+</html>
