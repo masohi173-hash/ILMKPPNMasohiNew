@@ -4,286 +4,358 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>I Love Monday KPPN Masohi</title>
-  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
+      /* Modern & Clean Color Palette */
       --bg-primary: #ffffff;
-      --bg-secondary: #f5f5f3;
-      --bg-tertiary: #eeecea;
-      --text-primary: #1a1a18;
-      --text-secondary: #6b6b67;
-      --border-light: rgba(0,0,0,0.12);
-      --border-mid: rgba(0,0,0,0.22);
-      --border-strong: rgba(0,0,0,0.35);
-      --radius-md: 8px;
-      --radius-lg: 12px;
-      --font: 'Segoe UI', system-ui, sans-serif;
-      --accent: #185fa5;
+      --bg-secondary: #f8fafc;
+      --bg-tertiary: #f1f5f9;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --border-light: #e2e8f0;
+      --border-mid: #cbd5e1;
+      --border-strong: #94a3b8;
+      
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      
+      /* Subtle Shadows for professional look */
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg-primary: #1e1e1c;
-        --bg-secondary: #2a2a28;
-        --bg-tertiary: #141412;
-        --text-primary: #f0ede8;
-        --text-secondary: #9a9993;
-        --border-light: rgba(255,255,255,0.10);
-        --border-mid: rgba(255,255,255,0.18);
-        --border-strong: rgba(255,255,255,0.28);
+        --bg-primary: #1e293b;
+        --bg-secondary: #0f172a;
+        --bg-tertiary: #020617;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --border-light: #334155;
+        --border-mid: #475569;
+        --border-strong: #64748b;
+        --accent: #3b82f6;
+        --accent-hover: #60a5fa;
       }
     }
 
-    body { font-family: var(--font); background: var(--bg-tertiary); color: var(--text-primary); min-height: 100vh; padding: 2rem 1rem; }
+    body { 
+      font-family: var(--font); 
+      background: var(--bg-tertiary); 
+      color: var(--text-primary); 
+      min-height: 100vh; 
+      padding: 2.5rem 1.5rem; 
+      line-height: 1.5;
+    }
+    
     .container { max-width: 1300px; margin: 0 auto; }
-    .header { margin-bottom: 1.5rem; }
-    .header-title { font-size: 22px; font-weight: 600; color: var(--text-primary); }
-    .header-sub { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+    
+    .header { margin-bottom: 2rem; }
+    .header-title { font-size: 28px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+    .header-sub { font-size: 15px; color: var(--text-secondary); margin-top: 6px; }
 
     /* STATS */
-    .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 1.5rem; }
-    @media (max-width:600px) { .stats { grid-template-columns: repeat(2,1fr); } }
-    .stat-card { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-md); padding: .85rem 1rem; }
-    .stat-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
-    .stat-val { font-size: 24px; font-weight: 600; }
+    .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 2rem; }
+    @media (max-width:768px) { .stats { grid-template-columns: repeat(2,1fr); } }
+    .stat-card { 
+      background: var(--bg-primary); 
+      border: 1px solid var(--border-light); 
+      border-radius: var(--radius-lg); 
+      padding: 1.5rem; 
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-label { font-size: 14px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
+    .stat-val { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
     .stat-val.total   { color: var(--text-primary); }
-    .stat-val.danger  { color: #a32d2d; }
-    .stat-val.warning { color: #854f0b; }
-    .stat-val.success { color: #3b6d11; }
+    .stat-val.danger  { color: #dc2626; }
+    .stat-val.warning { color: #d97706; }
+    .stat-val.success { color: #16a34a; }
 
     /* FORM */
-    .add-form { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.25rem; }
-    .form-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
-    .form-grid { display: grid; grid-template-columns: 1fr 2fr 1fr 1fr auto; gap: 10px; align-items: end; }
+    .add-form { 
+      background: var(--bg-primary); 
+      border: 1px solid var(--border-light); 
+      border-radius: var(--radius-lg); 
+      padding: 1.75rem; 
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-md);
+    }
+    .form-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 2fr 1fr 1fr auto; gap: 16px; align-items: end; }
     @media (max-width:900px) { .form-grid { grid-template-columns: 1fr 1fr; } }
     @media (max-width:500px) { .form-grid { grid-template-columns: 1fr; } }
-    .form-field { display: flex; flex-direction: column; gap: 4px; }
-    .form-field label { font-size: 12px; color: var(--text-secondary); }
+    
+    .form-field { display: flex; flex-direction: column; gap: 6px; }
+    .form-field label { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
     .form-field input, .form-field select {
-      border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
-      padding: 8px 10px; font-size: 13px; font-family: var(--font);
-      background: var(--bg-primary); color: var(--text-primary); height: 36px;
+      border: 1px solid var(--border-mid); 
+      border-radius: var(--radius-md);
+      padding: 10px 14px; 
+      font-size: 15px; 
+      font-family: var(--font);
+      background: var(--bg-primary); 
+      color: var(--text-primary); 
+      height: 42px;
+      transition: all 0.2s;
     }
-    .form-field input:focus, .form-field select:focus { outline: none; border-color: var(--accent); }
-    .form-actions { display: flex; gap: 8px; }
+    .form-field input:focus, .form-field select:focus { 
+      outline: none; 
+      border-color: var(--accent); 
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); 
+    }
+    
+    .form-actions { display: flex; gap: 10px; }
     .btn-add {
       background: var(--accent); color: #fff; border: none; border-radius: var(--radius-md);
-      padding: 0 20px; font-size: 13px; font-family: var(--font); cursor: pointer;
-      font-weight: 500; height: 36px; white-space: nowrap;
+      padding: 0 24px; font-size: 15px; font-family: var(--font); cursor: pointer;
+      font-weight: 600; height: 42px; white-space: nowrap; transition: background 0.2s;
     }
-    .btn-add:hover { opacity: .88; }
+    .btn-add:hover { background: var(--accent-hover); }
+    
     .btn-cancel-edit {
-      background: transparent; color: var(--text-secondary); border: 0.5px solid var(--border-mid);
-      border-radius: var(--radius-md); padding: 0 16px; font-size: 13px; font-family: var(--font);
-      cursor: pointer; font-weight: 500; height: 36px; white-space: nowrap; display: none;
+      background: transparent; color: var(--text-secondary); border: 1px solid var(--border-mid);
+      border-radius: var(--radius-md); padding: 0 20px; font-size: 15px; font-family: var(--font);
+      cursor: pointer; font-weight: 500; height: 42px; white-space: nowrap; display: none;
+      transition: all 0.2s;
     }
-    .btn-cancel-edit:hover { background: var(--bg-secondary); }
-    .edit-indicator { display: none; font-size: 12px; color: #854f0b; background: #faeeda; padding: 4px 10px; border-radius: var(--radius-md); margin-bottom: 10px; }
+    .btn-cancel-edit:hover { background: var(--bg-secondary); color: var(--text-primary); }
+    .edit-indicator { display: none; font-size: 14px; font-weight: 500; color: #92400e; background: #fef3c7; padding: 8px 16px; border-radius: var(--radius-md); margin-bottom: 16px; }
 
     /* MODAL EDIT */
     .modal-overlay {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-      z-index: 1000; align-items: center; justify-content: center;
+      display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
+      z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);
     }
     .modal-overlay.open { display: flex; }
     .modal-box {
-      background: var(--bg-primary); border-radius: var(--radius-lg); padding: 1.5rem;
-      width: 90%; max-width: 600px; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      background: var(--bg-primary); border-radius: var(--radius-lg); padding: 2rem;
+      width: 90%; max-width: 600px; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
     }
-    .modal-title { font-size: 15px; font-weight: 600; margin-bottom: 1rem; }
-    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+    .modal-title { font-size: 20px; font-weight: 600; margin-bottom: 1.5rem; }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.5rem; }
     @media (max-width:500px) { .modal-grid { grid-template-columns: 1fr; } }
-    .modal-grid .form-field input,
-    .modal-grid .form-field select { height: 38px; }
+    .modal-grid .form-field input, .modal-grid .form-field select { height: 42px; }
     .modal-field-full { grid-column: 1 / -1; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 1rem; }
+    
     .btn-modal-save {
       background: var(--accent); color: #fff; border: none; border-radius: var(--radius-md);
-      padding: 8px 20px; font-size: 13px; font-family: var(--font); cursor: pointer; font-weight: 500;
+      padding: 10px 24px; font-size: 15px; font-family: var(--font); cursor: pointer; font-weight: 600;
+      transition: background 0.2s;
     }
-    .btn-modal-save:hover { opacity: .88; }
+    .btn-modal-save:hover { background: var(--accent-hover); }
     .btn-modal-cancel {
-      background: transparent; color: var(--text-secondary); border: 0.5px solid var(--border-mid);
-      border-radius: var(--radius-md); padding: 8px 16px; font-size: 13px; font-family: var(--font); cursor: pointer;
+      background: transparent; color: var(--text-secondary); border: 1px solid var(--border-mid);
+      border-radius: var(--radius-md); padding: 10px 20px; font-size: 15px; font-family: var(--font); cursor: pointer;
+      font-weight: 500; transition: all 0.2s;
     }
-    .btn-modal-cancel:hover { background: var(--bg-secondary); }
+    .btn-modal-cancel:hover { background: var(--bg-secondary); color: var(--text-primary); }
 
     /* REKAP MINGGUAN */
-    .rekap-section { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.25rem; display: none; }
+    .rekap-section { background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.75rem; margin-bottom: 1.5rem; display: none; box-shadow: var(--shadow-md); }
     .rekap-section.open { display: block; }
-    .rekap-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
-    .rekap-controls { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1rem; }
+    .rekap-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+    .rekap-controls { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1.5rem; }
     .rekap-controls select, .rekap-controls input {
-      border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
-      padding: 6px 10px; font-size: 13px; font-family: var(--font);
-      background: var(--bg-primary); color: var(--text-primary);
+      border: 1px solid var(--border-mid); border-radius: var(--radius-md);
+      padding: 8px 14px; font-size: 15px; font-family: var(--font);
+      background: var(--bg-primary); color: var(--text-primary); height: 42px;
     }
-    .rc-field { display: flex; flex-direction: column; gap: 4px; }
-    .rc-field label { font-size: 12px; color: var(--text-secondary); }
-    .rekap-tabs { display: flex; gap: 6px; margin-bottom: 1rem; }
-    .rekap-tab { background: transparent; border: 0.5px solid var(--border-light); border-radius: 99px; padding: 5px 14px; font-size: 12px; color: var(--text-secondary); cursor: pointer; font-family: var(--font); }
-    .rekap-tab.active { background: var(--bg-secondary); border-color: var(--border-strong); color: var(--text-primary); font-weight: 500; }
-    .rekap-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); gap: 8px; margin-bottom: 1rem; }
-    .rekap-card { background: var(--bg-secondary); border-radius: var(--radius-md); padding: .75rem 1rem; }
-    .rekap-card-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 3px; }
-    .rekap-card-val { font-size: 20px; font-weight: 600; color: var(--text-primary); }
-    .rekap-table-wrap { overflow-x: auto; border: 0.5px solid var(--border-light); border-radius: var(--radius-md); }
-    .rekap-table { width: 100%; border-collapse: collapse; min-width: 750px; }
-    .rekap-table th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-secondary); text-align: left; padding: 8px 12px; border-bottom: 0.5px solid var(--border-light); background: var(--bg-secondary); white-space: nowrap; }
-    .rekap-table td { font-size: 13px; color: var(--text-primary); padding: 8px 12px; border-bottom: 0.5px solid var(--border-light); vertical-align: top; }
+    .rc-field { display: flex; flex-direction: column; gap: 6px; }
+    .rc-field label { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+    
+    .rekap-tabs { display: flex; gap: 10px; margin-bottom: 1.5rem; }
+    .rekap-tab { background: transparent; border: 1px solid var(--border-mid); border-radius: 99px; padding: 8px 20px; font-size: 14px; color: var(--text-secondary); cursor: pointer; font-family: var(--font); font-weight: 500; transition: all 0.2s; }
+    .rekap-tab.active { background: var(--bg-secondary); border-color: var(--text-primary); color: var(--text-primary); font-weight: 600; }
+    
+    .rekap-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); gap: 12px; margin-bottom: 1.5rem; }
+    .rekap-card { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 1rem 1.25rem; border: 1px solid var(--border-light); }
+    .rekap-card-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
+    .rekap-card-val { font-size: 24px; font-weight: 700; color: var(--text-primary); }
+    
+    .rekap-table-wrap { overflow-x: auto; border: 1px solid var(--border-light); border-radius: var(--radius-lg); }
+    .rekap-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+    .rekap-table th { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-secondary); text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border-light); background: var(--bg-secondary); white-space: nowrap; }
+    .rekap-table td { font-size: 14px; color: var(--text-primary); padding: 12px 16px; border-bottom: 1px solid var(--border-light); vertical-align: top; }
     .rekap-table tr:last-child td { border-bottom: none; }
-    .btn-print { background: transparent; border: 0.5px solid var(--border-mid); border-radius: var(--radius-md); padding: 6px 14px; font-size: 12px; color: var(--text-primary); cursor: pointer; font-family: var(--font); }
+    
+    .btn-print { background: var(--bg-primary); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 8px 16px; font-size: 14px; font-weight: 500; color: var(--text-primary); cursor: pointer; font-family: var(--font); transition: background 0.2s; }
     .btn-print:hover { background: var(--bg-secondary); }
 
     /* NOTULA MINGGUAN */
-    .notula-wrap { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 1.25rem; border: 0.5px solid var(--border-light); }
-    .notula-header { margin-bottom: 1rem; border-bottom: 1px solid var(--border-light); padding-bottom: .75rem; }
-    .notula-judul { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .notula-sub { font-size: 12px; color: var(--text-secondary); }
-    .notula-week-block { margin-bottom: 1.25rem; }
-    .notula-week-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text-secondary); margin-bottom: 8px; border-bottom: 0.5px solid var(--border-light); padding-bottom: 4px; }
-    .notula-item { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; border-bottom: 0.5px dashed var(--border-light); }
+    .notula-wrap { background: var(--bg-primary); border-radius: var(--radius-lg); padding: 1.75rem; border: 1px solid var(--border-light); }
+    .notula-header { margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-light); padding-bottom: 1rem; }
+    .notula-judul { font-size: 18px; font-weight: 600; margin-bottom: 6px; color: var(--text-primary); }
+    .notula-sub { font-size: 14px; color: var(--text-secondary); }
+    .notula-week-block { margin-bottom: 1.5rem; }
+    .notula-week-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-secondary); margin-bottom: 12px; border-bottom: 1px solid var(--border-light); padding-bottom: 6px; }
+    .notula-item { display: flex; gap: 16px; align-items: flex-start; padding: 12px 0; border-bottom: 1px dashed var(--border-light); }
     .notula-item:last-child { border-bottom: none; }
-    .notula-num { font-size: 12px; color: var(--text-secondary); min-width: 22px; font-weight: 600; padding-top: 1px; }
+    .notula-num { font-size: 14px; color: var(--text-secondary); min-width: 24px; font-weight: 600; padding-top: 2px; }
     .notula-content { flex: 1; }
-    .notula-nama { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
-    .notula-meta { font-size: 11px; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 8px; }
+    .notula-nama { font-size: 15px; font-weight: 600; margin-bottom: 6px; color: var(--text-primary); }
+    .notula-meta { font-size: 13px; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
     .notula-ts { font-style: italic; }
-    .notula-status-done { color: #3b6d11; }
-    .notula-status-late { color: #a32d2d; }
-    .notula-status-ok { color: #854f0b; }
-    .notula-empty { text-align: center; padding: 2rem; color: var(--text-secondary); font-size: 14px; }
-    .notula-week-selector { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+    .notula-status-done { color: #16a34a; }
+    .notula-status-late { color: #dc2626; }
+    .notula-status-ok { color: #d97706; }
+    .notula-empty { text-align: center; padding: 3rem; color: var(--text-secondary); font-size: 15px; }
 
     /* TOOLBAR */
-    .toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
-    .toolbar-left { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
-    .filter-label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
-    .filter-btn { background: transparent; border: 0.5px solid var(--border-light); border-radius: 99px; padding: 5px 14px; font-size: 12px; color: var(--text-secondary); cursor: pointer; font-family: var(--font); }
-    .filter-btn.active { background: var(--bg-secondary); border-color: var(--border-strong); color: var(--text-primary); font-weight: 500; }
-    .divider { width: 1px; height: 20px; background: var(--border-light); margin: 0 4px; }
-    .sync-info { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
-    .btn-refresh { background: transparent; border: 0.5px solid var(--border-light); border-radius: var(--radius-md); padding: 5px 12px; font-size: 12px; color: var(--text-secondary); cursor: pointer; font-family: var(--font); }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 1.5rem; }
+    .toolbar-left { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-label { font-size: 14px; font-weight: 500; color: var(--text-secondary); white-space: nowrap; }
+    
+    .filter-btn { background: transparent; border: 1px solid var(--border-mid); border-radius: 99px; padding: 6px 16px; font-size: 13px; color: var(--text-secondary); cursor: pointer; font-family: var(--font); font-weight: 500; transition: all 0.2s; }
+    .filter-btn:hover { background: var(--bg-tertiary); }
+    .filter-btn.active { background: var(--text-primary); border-color: var(--text-primary); color: var(--bg-primary); }
+    
+    .divider { width: 1px; height: 24px; background: var(--border-mid); margin: 0 4px; }
+    .sync-info { font-size: 13px; font-weight: 500; color: var(--text-secondary); display: flex; align-items: center; gap: 12px; }
+    
+    .btn-refresh { background: var(--bg-primary); border: 1px solid var(--border-mid); border-radius: var(--radius-md); padding: 8px 14px; font-size: 13px; font-weight: 500; color: var(--text-primary); cursor: pointer; font-family: var(--font); transition: all 0.2s; }
     .btn-refresh:hover { background: var(--bg-secondary); }
-    .btn-rekap { background: transparent; border: 0.5px solid var(--border-mid); border-radius: var(--radius-md); padding: 5px 14px; font-size: 12px; color: var(--text-primary); cursor: pointer; font-family: var(--font); font-weight: 500; }
-    .btn-rekap.active { background: var(--bg-secondary); }
-    .btn-notula { background: #185fa5; color: #fff; border: none; border-radius: var(--radius-md); padding: 5px 14px; font-size: 12px; cursor: pointer; font-family: var(--font); font-weight: 500; }
-    .btn-notula:hover { opacity: .88; }
-    .btn-notula.active { background: #0e3f72; }
+    
+    .btn-rekap { background: var(--bg-primary); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 8px 16px; font-size: 14px; color: var(--text-primary); cursor: pointer; font-family: var(--font); font-weight: 600; transition: all 0.2s; box-shadow: var(--shadow-sm); }
+    .btn-rekap:hover { background: var(--bg-secondary); }
+    .btn-rekap.active { background: var(--text-primary); color: var(--bg-primary); border-color: var(--text-primary); }
 
     /* TABLE */
-    .table-wrap { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden; overflow-x: auto; }
+    .table-wrap { background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden; overflow-x: auto; box-shadow: var(--shadow-md); }
     table { width: 100%; border-collapse: collapse; min-width: 1100px; }
-    th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-secondary); text-align: left; padding: 10px 14px; border-bottom: 0.5px solid var(--border-light); background: var(--bg-secondary); white-space: nowrap; }
-    td { font-size: 13px; color: var(--text-primary); padding: 10px 14px; border-bottom: 0.5px solid var(--border-light); vertical-align: top; }
+    th { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-secondary); text-align: left; padding: 16px; border-bottom: 1px solid var(--border-light); background: var(--bg-secondary); white-space: nowrap; }
+    td { font-size: 15px; color: var(--text-primary); padding: 16px; border-bottom: 1px solid var(--border-light); vertical-align: top; }
     tr:last-child td { border-bottom: none; }
-    tr.row-done td { opacity: .5; }
-    tr:hover td { background: var(--bg-secondary); }
+    tr.row-done td { opacity: .6; background: var(--bg-secondary); }
+    tr:hover td { background: var(--bg-tertiary); }
 
     /* BADGES */
-    .badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
-    .badge-overdue { background: #fcebeb; color: #a32d2d; }
-    .badge-today   { background: #faeeda; color: #854f0b; }
-    .badge-soon    { background: #e1f5ee; color: #0f6e56; }
-    .badge-active  { background: #f1efe8; color: #5f5e5a; }
-    .badge-done    { background: #eaf3de; color: #3b6d11; }
-    .badge-high    { background: #fcebeb; color: #a32d2d; }
-    .badge-medium  { background: #faeeda; color: #854f0b; }
-    .badge-low     { background: #eaf3de; color: #3b6d11; }
-    .seksi-badge   { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
-    .seksi-mski    { background: #eeedfe; color: #3c3489; }
-    .seksi-vera    { background: #fbeaf0; color: #72243e; }
-    .seksi-bank    { background: #e6f1fb; color: #0c447c; }
-    .seksi-umum    { background: #f1efe8; color: #444441; }
-    .seksi-pd      { background: #e1f5ee; color: #085041; }
+    .badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 99px; white-space: nowrap; }
+    .badge-overdue { background: #fee2e2; color: #991b1b; }
+    .badge-today   { background: #fef3c7; color: #92400e; }
+    .badge-soon    { background: #ccfbf1; color: #115e59; }
+    .badge-active  { background: #f1f5f9; color: #475569; }
+    .badge-done    { background: #dcfce7; color: #166534; }
+    
+    /* PRIORITAS BADGES */
+    .badge-high    { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .badge-medium  { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .badge-low     { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    
+    .seksi-badge   { display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 99px; white-space: nowrap; }
+    .seksi-mski    { background: #e0e7ff; color: #3730a3; }
+    .seksi-vera    { background: #fce7f3; color: #9d174d; }
+    .seksi-bank    { background: #dbeafe; color: #1e40af; }
+    .seksi-umum    { background: #f1f5f9; color: #334155; }
+    .seksi-pd      { background: #ccfbf1; color: #115e59; }
 
-    .inline-area { width: 100%; border: none; background: transparent; font-size: 13px; font-family: var(--font); color: var(--text-primary); resize: none; min-height: 36px; line-height: 1.5; }
-    .inline-area:focus { outline: none; background: var(--bg-tertiary); border-radius: 4px; padding: 4px 6px; margin: -4px -6px; }
-    .by-tag { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
-    .creator-info { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
-    .timestamp-info { font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-style: italic; }
+    /* TEXT BOX TINDAK LANJUT & KET. SELESAI */
+    .inline-area { 
+      width: 100%; 
+      border: 1px solid var(--border-strong); /* Garis tepi jelas */
+      background: var(--bg-tertiary); /* Warna latar abu-abu muda agar berbeda dari background tabel */
+      font-size: 14px; 
+      font-family: var(--font); 
+      color: var(--text-primary); 
+      resize: vertical; 
+      min-height: 42px; 
+      line-height: 1.5; 
+      padding: 8px; 
+      border-radius: var(--radius-md); 
+      transition: all 0.2s; 
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); /* Efek cekung / input field */
+    }
+    .inline-area:focus { 
+      outline: none; 
+      border-color: var(--accent); 
+      background: var(--bg-primary); 
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); 
+    }
+    
+    .by-tag { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-top: 4px; padding-left: 8px; }
+    .timestamp-info { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
 
     /* SORT CONTROLS */
     .sort-select {
-      border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
-      padding: 4px 10px; font-size: 12px; font-family: var(--font);
-      background: var(--bg-primary); color: var(--text-primary); cursor: pointer; height: 30px;
+      border: 1px solid var(--border-mid); border-radius: var(--radius-md);
+      padding: 6px 14px; font-size: 14px; font-family: var(--font); font-weight: 500;
+      background: var(--bg-primary); color: var(--text-primary); cursor: pointer; height: 38px;
     }
-    .sort-select:focus { outline: none; border-color: var(--accent); }
-    th.sortable { cursor: pointer; user-select: none; }
-    th.sortable:hover { color: var(--accent); }
-    th.sortable .sort-icon { margin-left: 4px; opacity: 0.5; }
-    th.sortable.sort-asc .sort-icon::after  { content: ' ↑'; opacity: 1; }
-    th.sortable.sort-desc .sort-icon::after { content: ' ↓'; opacity: 1; }
+    .sort-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
 
-    /* URAIAN PREVIEW */
-    .uraian-preview {
-      font-size: 12px; color: var(--text-secondary); margin-top: 4px;
-      line-height: 1.5; word-break: break-word;
+    /* URAIAN BOX (RESIZE & SCROLL) */
+    .uraian-box {
+      font-size: 14px; 
+      color: var(--text-primary); 
+      margin-top: 8px;
+      line-height: 1.6; 
+      white-space: pre-wrap; 
+      word-break: break-word;
+      background: var(--bg-secondary); 
+      border-radius: var(--radius-md);
+      border-left: 4px solid var(--accent);
+      padding: 10px 12px;
+      
+      /* Perbaikan Resize: tidak menggunakan max-height kecil */
+      height: 90px;
+      min-height: 50px;
+      max-height: 600px;
+      overflow-y: auto;
+      resize: vertical;
     }
-
-    /* URAIAN COLLAPSIBLE */
-    .uraian-toggle {
-      display: inline-flex; align-items: center; gap: 5px;
-      font-size: 11px; color: var(--accent); cursor: pointer;
-      background: #e8f0fb; border: none; border-radius: 99px;
-      padding: 3px 10px; margin-top: 5px; font-family: var(--font);
-      font-weight: 500; transition: background .15s;
-    }
-    .uraian-toggle:hover { background: #d0e4f7; }
-    .uraian-toggle .arrow { display: inline-block; transition: transform .2s; font-style: normal; }
-    .uraian-toggle.open .arrow { transform: rotate(90deg); }
-    .uraian-body {
-      display: none; margin-top: 8px;
-      background: var(--bg-secondary); border-radius: var(--radius-md);
-      border-left: 3px solid var(--accent);
-      padding: 8px 12px; font-size: 12px; color: var(--text-primary);
-      line-height: 1.6; white-space: pre-wrap; word-break: break-word;
-    }
-    .uraian-body.open { display: block; }
-    .uraian-none { font-size: 11px; color: var(--text-secondary); font-style: italic; margin-top: 4px; }
+    
+    .uraian-box::-webkit-scrollbar { width: 6px; }
+    .uraian-box::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+    .uraian-none { font-size: 13px; color: var(--text-secondary); font-style: italic; margin-top: 6px; }
 
     /* URAIAN TEXTAREA IN FORM */
-    .form-uraian { margin-top: 10px; }
+    .form-uraian { margin-top: 16px; }
     .form-uraian textarea {
-      width: 100%; border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
-      padding: 8px 10px; font-size: 13px; font-family: var(--font);
+      width: 100%; border: 1px solid var(--border-mid); border-radius: var(--radius-md);
+      padding: 12px 14px; font-size: 15px; font-family: var(--font);
       background: var(--bg-primary); color: var(--text-primary);
-      resize: vertical; min-height: 72px; line-height: 1.5;
+      resize: vertical; min-height: 80px; line-height: 1.6; transition: all 0.2s;
     }
-    .form-uraian textarea:focus { outline: none; border-color: var(--accent); }
-    .form-uraian label { font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px; }
+    .form-uraian textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
+    .form-uraian label { font-size: 14px; font-weight: 500; color: var(--text-secondary); display: block; margin-bottom: 8px; }
 
     /* MODAL TEXTAREA */
     .modal-grid textarea {
-      width: 100%; border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
-      padding: 8px 10px; font-size: 13px; font-family: var(--font);
+      width: 100%; border: 1px solid var(--border-mid); border-radius: var(--radius-md);
+      padding: 12px 14px; font-size: 15px; font-family: var(--font);
       background: var(--bg-primary); color: var(--text-primary);
-      resize: vertical; min-height: 80px; line-height: 1.5;
+      resize: vertical; min-height: 100px; line-height: 1.6; transition: all 0.2s;
     }
-    .modal-grid textarea:focus { outline: none; border-color: var(--accent); }
+    .modal-grid textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
 
-    .btn-done { display: block; width: 100%; background: transparent; border: 0.5px solid var(--border-light); border-radius: 99px; padding: 4px 10px; font-size: 11px; font-family: var(--font); color: var(--text-secondary); cursor: pointer; text-align: center; margin-bottom: 5px; }
-    .btn-done:hover { border-color: var(--border-strong); color: var(--text-primary); }
-    .btn-done.is-done { background: #eaf3de; color: #3b6d11; border-color: #c0dd97; }
-    .btn-edit-row { display: block; width: 100%; background: transparent; border: 0.5px solid var(--border-light); border-radius: 99px; padding: 4px 10px; font-size: 11px; font-family: var(--font); color: var(--accent); cursor: pointer; text-align: center; margin-bottom: 5px; }
-    .btn-edit-row:hover { border-color: var(--accent); background: #e8f0fb; }
-    .btn-del { display: block; width: 100%; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 12px; font-family: var(--font); text-align: center; padding: 3px; border-radius: 4px; }
-    .btn-del:hover { color: #a32d2d; background: #fcebeb; }
-    .empty-row td { text-align: center; padding: 2.5rem; color: var(--text-secondary); font-size: 14px; }
+    .btn-done { display: block; width: 100%; background: transparent; border: 1px solid var(--border-strong); border-radius: 99px; padding: 8px 12px; font-size: 13px; font-weight: 600; font-family: var(--font); color: var(--text-primary); cursor: pointer; text-align: center; margin-bottom: 8px; transition: all 0.2s; }
+    .btn-done:hover { background: var(--bg-tertiary); }
+    .btn-done.is-done { background: #dcfce7; color: #166534; border-color: #86efac; }
+    
+    .btn-edit-row { display: block; width: 100%; background: transparent; border: 1px solid var(--border-strong); border-radius: 99px; padding: 8px 12px; font-size: 13px; font-weight: 600; font-family: var(--font); color: var(--text-primary); cursor: pointer; text-align: center; margin-bottom: 8px; transition: all 0.2s; }
+    .btn-edit-row:hover { border-color: var(--accent); background: #eff6ff; color: var(--accent); }
+    
+    .btn-del { display: block; width: 100%; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 13px; font-weight: 500; font-family: var(--font); text-align: center; padding: 8px; border-radius: var(--radius-md); transition: all 0.2s; }
+    .btn-del:hover { color: #dc2626; background: #fee2e2; }
+    
+    .empty-row td { text-align: center; padding: 4rem; color: var(--text-secondary); font-size: 16px; font-weight: 500; }
 
     @media print {
       body { background: white; padding: 0; }
       .add-form, .toolbar, .table-wrap, .header, .stats, .btn-print, .btn-rekap, .rekap-controls, .rekap-tabs, .modal-overlay { display: none !important; }
-      .rekap-section { display: block !important; border: none; padding: 0; }
-      .rekap-table-wrap { border: 1px solid #ccc; }
-      .notula-wrap { border: 1px solid #ccc; }
-      .rekap-table td { font-size: 11px; }
+      .rekap-section { display: block !important; border: none; padding: 0; box-shadow: none; }
+      .rekap-table-wrap { border: 1px solid #000; }
+      .notula-wrap { border: 1px solid #000; }
+      .rekap-table td { font-size: 12px; }
+      .badge, .seksi-badge { border: 1px solid #ccc; background: transparent !important; color: #000 !important; }
     }
   </style>
 </head>
@@ -302,7 +374,6 @@
     <div class="stat-card"><div class="stat-label">Selesai</div><div class="stat-val success" id="st-done">0</div></div>
   </div>
 
-  <!-- FORM TAMBAH -->
   <div class="add-form">
     <div class="edit-indicator" id="editIndicator">✏️ Mode Edit — mengubah pekerjaan yang sudah ada</div>
     <div class="form-title" id="formTitle">Tambah Pekerjaan Baru</div>
@@ -349,9 +420,6 @@
     </div>
   </div>
 
-  <!-- REKAP / NOTULA MINGGUAN — dipindah ke bawah tabel -->
-
-  <!-- TOOLBAR -->
   <div class="toolbar">
     <div class="toolbar-left">
       <span class="filter-label">Status:</span>
@@ -390,29 +458,28 @@
     </div>
   </div>
 
-  <!-- TABLE UTAMA -->
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          <th>#</th>
-          <th>Seksi</th><th>Nama Pekerjaan</th><th>Dasar</th><th>Batas Waktu</th>
-          <th>Prioritas</th><th>Status</th><th>Tindak Lanjut</th>
-          <th>Keterangan Penyelesaian</th><th>Aksi</th>
+          <th style="width: 40px;">#</th>
+          <th style="width: 110px;">Seksi</th>
+          <th style="width: 34%;">Nama Pekerjaan</th> <th style="width: 120px;">Dasar</th>
+          <th style="width: 140px;">Batas Waktu & Status</th>
+          <th style="width: 90px;">Prioritas</th>
+          <th style="width: 25%;">Tindak Lanjut</th> <th style="width: 8%;">Ket. Selesai</th> <th style="width: 120px;">Aksi</th>
         </tr>
       </thead>
-      <tbody id="taskBody"><tr class="empty-row"><td colspan="10">Memuat data...</td></tr></tbody>
+      <tbody id="taskBody"><tr class="empty-row"><td colspan="9">Memuat data...</td></tr></tbody>
     </table>
   </div>
 
-  <!-- REKAP / NOTULA MINGGUAN -->
   <div style="margin-top:1.5rem">
     <div style="display:flex;gap:10px;margin-bottom:1rem">
       <button class="btn-rekap" id="btnRekap" onclick="toggleRekap()">📋 Rekap & Notula</button>
     </div>
   </div>
 
-  <!-- REKAP / NOTULA MINGGUAN — di bawah tabel -->
   <div class="rekap-section" id="rekapSection">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div class="rekap-title" id="rekapJudul">Rekap & Notula</div>
@@ -422,7 +489,7 @@
       <button class="rekap-tab active" id="tabBulanan" onclick="switchTab('bulanan')">📅 Rekap Bulanan</button>
       <button class="rekap-tab" id="tabMingguan" onclick="switchTab('mingguan')">📋 Notula Mingguan</button>
     </div>
-    <!-- Panel Bulanan -->
+    
     <div id="panelBulanan">
       <div class="rekap-controls">
         <div class="rc-field">
@@ -438,7 +505,7 @@
         </div>
         <div class="rc-field">
           <label>Tahun</label>
-          <input type="number" id="rekapTahun" min="2020" max="2099" style="width:90px" onchange="renderRekap()" />
+          <input type="number" id="rekapTahun" min="2020" max="2099" style="width:100px" onchange="renderRekap()" />
         </div>
         <div class="rc-field">
           <label>Filter Seksi</label>
@@ -452,25 +519,29 @@
           </select>
         </div>
       </div>
+      
+      <div id="rekapChart"></div>
+
       <div class="rekap-grid" id="rekapGrid"></div>
+      
       <div class="rekap-table-wrap">
         <table class="rekap-table">
           <thead>
             <tr>
               <th>Seksi</th><th>Nama Pekerjaan</th><th>Dasar</th><th>Uraian</th><th>Tgl Upload</th><th>Batas Waktu</th>
-              <th>Prioritas</th><th>Status</th><th>Tindak Lanjut</th><th>Keterangan Penyelesaian</th>
+              <th>Prioritas</th><th>Status</th><th>Tindak Lanjut</th><th>Ket. Selesai</th>
             </tr>
           </thead>
           <tbody id="rekapBody"></tbody>
         </table>
       </div>
     </div>
-    <!-- Panel Mingguan / Notula -->
+    
     <div id="panelMingguan" style="display:none">
       <div class="rekap-controls">
         <div class="rc-field">
           <label>Pilih Minggu (pilih salah satu hari dalam minggu)</label>
-          <input type="date" id="notulaDate" onchange="renderNotula()" style="width:180px" />
+          <input type="date" id="notulaDate" onchange="renderNotula()" style="width:200px" />
         </div>
         <div class="rc-field">
           <label>Filter Seksi</label>
@@ -490,7 +561,6 @@
 
 </div>
 
-<!-- MODAL EDIT -->
 <div class="modal-overlay" id="modalEdit">
   <div class="modal-box">
     <div class="modal-title">✏️ Edit Pekerjaan</div>
@@ -540,7 +610,7 @@
         <textarea id="m-uraian" placeholder="Uraian / deskripsi detail pekerjaan..."></textarea>
       </div>
     </div>
-    <div style="font-size:11px;color:var(--text-secondary);margin-bottom:1rem;" id="m-info"></div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem;" id="m-info"></div>
     <div class="modal-actions">
       <button class="btn-modal-cancel" onclick="closeModal()">Batal</button>
       <button class="btn-modal-save" onclick="saveModal()">💾 Simpan Perubahan</button>
@@ -556,7 +626,6 @@
   let tasks = [], filter = 'semua', seksiFilter = '', rekapOpen = false, activeTab = 'bulanan', sortMode = 'status';
 
   /* ── FIREBASE CONFIG ── */
-  // Ganti nilai di bawah ini dengan konfigurasi Firebase project Anda
   const FIREBASE_CONFIG = {
     apiKey:            "AIzaSyB67V5LrszRktaNUJx6oCPIkm2wWZlfxhU",
     authDomain:        "ilm-kppn-masohi.firebaseapp.com",
@@ -580,7 +649,6 @@
   /* ── STORAGE (Firebase Realtime Database) ── */
   async function storageSave(data) {
     try {
-      // Simpan snapshot lokal dulu agar listener tidak trigger re-render
       tasks = data;
       await getDb().ref(FB_PATH).set(data);
       return true;
@@ -603,7 +671,7 @@
     }
   }
 
-  // Real-time listener — update otomatis saat ada perubahan dari seksi lain
+  // Real-time listener
   let _realtimeActive = false;
   let _pollingInterval = null;
 
@@ -640,14 +708,14 @@
           applyRemoteData(data);
         },
         (err) => {
-          console.warn('Firebase listener error, beralih ke polling:', err);
+          console.warn('Firebase listener error:', err);
           _realtimeActive = false;
           startPolling();
         }
       );
       setTimeout(() => { if (!_realtimeActive) startPolling(); }, 4000);
     } catch(e) {
-      console.warn('Firebase tidak tersedia, menggunakan polling:', e);
+      console.warn('Firebase error:', e);
       startPolling();
     }
   }
@@ -675,10 +743,9 @@
   }
   function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  /* Get Monday of the week for a given date */
   function getMondayOf(date) {
     const d = new Date(date);
-    const day = d.getDay(); // 0=Sun
+    const day = d.getDay();
     const diff = (day === 0) ? -6 : 1 - day;
     d.setDate(d.getDate() + diff);
     d.setHours(0,0,0,0);
@@ -704,10 +771,18 @@
     if (d<=3)  return '<span class="badge badge-soon">Segera ('+d+' hari)</span>';
     return '<span class="badge badge-active">Aktif</span>';
   }
+  
+  // Fungsi PrioBadge dengan output bahasa Indonesia
   function prioBadge(p) {
-    const m={high:['badge-high','Tinggi'],medium:['badge-medium','Sedang'],low:['badge-low','Rendah']};
-    const [c,l]=m[p]||m.medium; return '<span class="badge '+c+'">'+l+'</span>';
+    const m = {
+      'high':   ['badge-high', 'Tinggi'],
+      'medium': ['badge-medium', 'Sedang'],
+      'low':    ['badge-low', 'Rendah']
+    };
+    const [c, l] = m[p] || m.medium; 
+    return '<span class="badge ' + c + '">' + l + '</span>';
   }
+  
   function seksiBadge(s) {
     const cls=SEKSI_CLASS[s]||'seksi-umum';
     return '<span class="seksi-badge '+cls+'">'+esc(s)+'</span>';
@@ -730,18 +805,10 @@
     }
   }
 
-  /* Render uraian dengan preview 100 karakter + collapsible jika panjang */
-  function renderUraian(uraian, id) {
+  /* Render Uraian as a resizable box */
+  function renderUraian(uraian) {
     if (!uraian) return '<div class="uraian-none">Tidak ada uraian</div>';
-    const LIMIT = 100;
-    if (uraian.length <= LIMIT) {
-      return `<div class="uraian-preview">${esc(uraian)}</div>`;
-    }
-    const preview = esc(uraian.slice(0, LIMIT));
-    const full    = esc(uraian);
-    return `
-      <div class="uraian-preview" id="up-${id}">${preview}<span id="uellipsis-${id}">… </span><button class="uraian-toggle" style="display:inline-flex;margin-top:0;padding:2px 8px" onclick="toggleUraianId('${id}')"><i class="arrow" id="uarrow-${id}">▶</i> Selengkapnya</button></div>
-      <div class="uraian-body" id="ub-${id}" style="display:none">${full}</div>`;
+    return `<div class="uraian-box">${esc(uraian)}</div>`;
   }
 
   /* ── RENDER MAIN TABLE ── */
@@ -755,29 +822,29 @@
 
     const body=document.getElementById('taskBody');
     body.innerHTML = !list.length
-      ? '<tr class="empty-row"><td colspan="10">Tidak ada data ditemukan.</td></tr>'
+      ? '<tr class="empty-row"><td colspan="9">Tidak ada data ditemukan.</td></tr>'
       : list.map((t,idx)=>`
         <tr class="${t.done?'row-done':''}">
-          <td style="color:var(--text-secondary);font-size:12px;text-align:center;min-width:32px">${idx+1}</td>
+          <td style="color:var(--text-secondary);font-size:14px;text-align:center;min-width:40px">${idx+1}</td>
           <td>${seksiBadge(t.seksi)}</td>
           <td>
-            <div style="font-weight:500">${esc(t.nama)}</div>
+            <div style="font-weight:600">${esc(t.nama)}</div>
             <div class="timestamp-info">📤 Upload: ${formatTS(t.uploadedAt||t.createdAt)}</div>
             ${t.editedAt ? '<div class="timestamp-info">✏️ Diedit: '+formatTS(t.editedAt)+'</div>' : ''}
-            ${renderUraian(t.uraian, t.id)}
+            ${renderUraian(t.uraian)}
           </td>
-          <td style="font-size:12px;color:var(--text-secondary)">${esc(t.dasar||'—')}</td>
-          <td>${formatDate(t.deadline)}</td>
-          <td>${prioBadge(t.priority)}</td>
-          <td>${statusBadge(t)}</td>
+          <td style="font-size:14px;color:var(--text-secondary)">${esc(t.dasar||'—')}</td>
           <td>
-            <textarea class="inline-area" rows="2" placeholder="Isi tindak lanjut..."
-              onchange="updateField('${t.id}','followUp',this.value)">${esc(t.followUp||'')}</textarea>
+            <div style="font-weight:600; margin-bottom: 6px;">${formatDate(t.deadline)}</div>
+            <div>${statusBadge(t)}</div>
+          </td>
+          <td>${prioBadge(t.priority)}</td>
+          <td>
+            <textarea class="inline-area" placeholder="Tindak Lanjut..." onchange="updateField('${t.id}','followUp',this.value)">${esc(t.followUp||'')}</textarea>
             ${t.followUpBy?'<div class="by-tag">oleh '+esc(t.followUpBy)+'</div>':''}
           </td>
           <td>
-            <textarea class="inline-area" rows="2" placeholder="Keterangan penyelesaian..."
-              onchange="updateField('${t.id}','resolution',this.value)">${esc(t.resolution||'')}</textarea>
+            <textarea class="inline-area" placeholder="Ket..." onchange="updateField('${t.id}','resolution',this.value)">${esc(t.resolution||'')}</textarea>
             ${t.resolvedBy?'<div class="by-tag">oleh '+esc(t.resolvedBy)+'</div>':''}
           </td>
           <td>
@@ -791,24 +858,6 @@
     document.getElementById('st-overdue').textContent = tasks.filter(t=>!t.done&&diffDays(t.deadline)<0).length;
     document.getElementById('st-ongoing').textContent = tasks.filter(t=>!t.done&&diffDays(t.deadline)>=0).length;
     document.getElementById('st-done').textContent    = tasks.filter(t=>t.done).length;
-  }
-
-  function toggleUraianId(id) {
-    const body    = document.getElementById('ub-'+id);
-    const arrow   = document.getElementById('uarrow-'+id);
-    const ellipsis= document.getElementById('uellipsis-'+id);
-    const isOpen  = body.style.display !== 'none';
-    body.style.display = isOpen ? 'none' : 'block';
-    if (arrow) arrow.textContent = isOpen ? '▶' : '▼';
-    if (ellipsis) ellipsis.style.display = isOpen ? '' : 'none';
-  }
-
-  function toggleUraian(btn) {
-    btn.classList.toggle('open');
-    const bodyEl = btn.nextElementSibling;
-    bodyEl.classList.toggle('open');
-    btn.querySelector('.arrow').textContent = bodyEl.classList.contains('open') ? '▼' : '▶';
-    btn.childNodes[1].textContent = bodyEl.classList.contains('open') ? ' Sembunyikan' : ' Lihat Uraian';
   }
 
   /* ── MODAL EDIT ── */
@@ -898,27 +947,61 @@
     const telat=list.filter(t=>!t.done&&diffDays(t.deadline)<0).length;
     const persen=total?Math.round(selesai/total*100):0;
 
+    // Render Stats
     document.getElementById('rekapGrid').innerHTML=`
       <div class="rekap-card"><div class="rekap-card-label">Total tugas</div><div class="rekap-card-val">${total}</div></div>
-      <div class="rekap-card"><div class="rekap-card-label">Selesai</div><div class="rekap-card-val" style="color:#3b6d11">${selesai}</div></div>
-      <div class="rekap-card"><div class="rekap-card-label">Belum selesai</div><div class="rekap-card-val" style="color:#854f0b">${belum}</div></div>
-      <div class="rekap-card"><div class="rekap-card-label">Terlambat</div><div class="rekap-card-val" style="color:#a32d2d">${telat}</div></div>
+      <div class="rekap-card"><div class="rekap-card-label">Selesai</div><div class="rekap-card-val" style="color:#16a34a">${selesai}</div></div>
+      <div class="rekap-card"><div class="rekap-card-label">Belum selesai</div><div class="rekap-card-val" style="color:#d97706">${belum}</div></div>
+      <div class="rekap-card"><div class="rekap-card-label">Terlambat</div><div class="rekap-card-val" style="color:#dc2626">${telat}</div></div>
       <div class="rekap-card"><div class="rekap-card-label">% Penyelesaian</div><div class="rekap-card-val">${persen}%</div></div>`;
 
+    // Render Chart Persentase Seksi
+    const seksiList = ['Seksi MSKI', 'Seksi Vera', 'Seksi Bank', 'Subbag Umum', 'Seksi PD'];
+    let chartHtml = `
+      <div style="background: var(--bg-primary); padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border-light); margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
+        <div style="font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: .05em;">📊 Persentase Penyelesaian per Seksi (Bulan Ini)</div>
+        <div style="display: grid; gap: 14px;">
+    `;
+    
+    seksiList.forEach(s => {
+      let sTasks = tasks.filter(t => {
+        const d = new Date(t.deadline);
+        return d.getMonth() === bulan && d.getFullYear() === tahun && t.seksi === s;
+      });
+      const sTotal = sTasks.length;
+      const sDone = sTasks.filter(t => t.done).length;
+      const pct = sTotal ? Math.round((sDone / sTotal) * 100) : 0;
+      
+      chartHtml += `
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div style="width: 110px; font-size: 14px; font-weight: 600; color: var(--text-primary); white-space: nowrap;">${s}</div>
+          <div style="flex: 1; background: var(--bg-tertiary); height: 12px; border-radius: 99px; overflow: hidden; border: 1px solid var(--border-light);">
+            <div style="width: ${pct}%; height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.5s;"></div>
+          </div>
+          <div style="width: 100px; font-size: 13px; color: var(--text-secondary); text-align: right;">
+            <span style="font-weight: 700; color: var(--text-primary); font-size: 14px;">${pct}%</span> (${sDone}/${sTotal})
+          </div>
+        </div>
+      `;
+    });
+    chartHtml += `</div></div>`;
+    document.getElementById('rekapChart').innerHTML = chartHtml;
+
+    // Render Tabel
     list.sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
     document.getElementById('rekapBody').innerHTML=!list.length
-      ? '<tr><td colspan="10" style="text-align:center;padding:1.5rem;color:var(--text-secondary)">Tidak ada data pada periode ini.</td></tr>'
+      ? '<tr><td colspan="10" style="text-align:center;padding:2.5rem;color:var(--text-secondary);font-size:15px">Tidak ada data pada periode ini.</td></tr>'
       : list.map(t=>`<tr>
           <td>${seksiBadge(t.seksi)}</td>
-          <td>${esc(t.nama)}</td>
-          <td style="font-size:12px">${esc(t.dasar||'—')}</td>
-          <td style="font-size:12px;white-space:pre-wrap;max-width:200px;word-break:break-word">${esc(t.uraian||'—')}</td>
-          <td style="font-size:12px;white-space:nowrap">${formatTSShort(t.uploadedAt||t.createdAt)}</td>
+          <td style="font-weight:500">${esc(t.nama)}</td>
+          <td>${esc(t.dasar||'—')}</td>
+          <td style="white-space:pre-wrap; min-width: 280px; max-width: 400px; word-break:break-word">${esc(t.uraian||'—')}</td>
+          <td style="white-space:nowrap">${formatTSShort(t.uploadedAt||t.createdAt)}</td>
           <td>${formatDate(t.deadline)}</td>
           <td>${prioBadge(t.priority)}</td>
           <td>${statusBadge(t)}</td>
-          <td style="font-size:12px">${esc(t.followUp||'—')}</td>
-          <td style="font-size:12px">${esc(t.resolution||'—')}</td>
+          <td>${esc(t.followUp||'—')}</td>
+          <td>${esc(t.resolution||'—')}</td>
         </tr>`).join('');
   }
 
@@ -963,11 +1046,11 @@
         <div class="notula-header">
           <div class="notula-judul">📋 NOTULA I LOVE MONDAY</div>
           <div class="notula-sub">${weekLabel}</div>
-          ${seksi ? '<div class="notula-sub" style="margin-top:2px">Seksi: '+esc(seksi)+'</div>' : ''}
-          <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">
-            <span style="font-size:12px">Total diposting: <strong>${total}</strong></span>
-            <span style="font-size:12px;color:#3b6d11">Selesai: <strong>${selesai}</strong></span>
-            <span style="font-size:12px;color:#a32d2d">Terlambat: <strong>${telat}</strong></span>
+          ${seksi ? '<div class="notula-sub" style="margin-top:4px;font-weight:500">Seksi: '+esc(seksi)+'</div>' : ''}
+          <div style="display:flex;gap:20px;margin-top:12px;flex-wrap:wrap">
+            <span style="font-size:14px">Total diposting: <strong>${total}</strong></span>
+            <span style="font-size:14px;color:#16a34a">Selesai: <strong>${selesai}</strong></span>
+            <span style="font-size:14px;color:#dc2626">Terlambat: <strong>${telat}</strong></span>
           </div>
         </div>`;
 
@@ -991,15 +1074,15 @@
               <div class="notula-meta">
                 <span>${seksiBadge(t.seksi)}</span>
                 <span>${prioBadge(t.priority)}</span>
-                <span class="${statusClass}" style="font-size:11px;font-weight:500">${statusText}</span>
+                <span class="${statusClass}" style="font-weight:600">${statusText}</span>
                 <span class="notula-ts">Upload: ${formatTS(t.uploadedAt||t.createdAt)}</span>
                 <span>Deadline: ${formatDate(t.deadline)}</span>
-                ${t.editedAt ? '<span class="notula-ts" style="color:#854f0b">Diedit: '+formatTS(t.editedAt)+'</span>' : ''}
+                ${t.editedAt ? '<span class="notula-ts" style="color:#d97706">Diedit: '+formatTS(t.editedAt)+'</span>' : ''}
               </div>
-              ${t.followUp ? '<div style="font-size:12px;margin-top:4px;color:var(--text-secondary)">Tindak lanjut: '+esc(t.followUp)+'</div>' : ''}
-              ${t.resolution ? '<div style="font-size:12px;margin-top:2px;color:var(--text-secondary)">Penyelesaian: '+esc(t.resolution)+'</div>' : ''}
-              ${t.dasar ? '<div style="font-size:12px;margin-top:4px;color:var(--text-secondary)">Dasar: <strong>'+esc(t.dasar)+'</strong></div>' : ''}
-              ${t.uraian ? '<div style="font-size:12px;margin-top:4px;color:var(--text-secondary);white-space:pre-wrap;word-break:break-word">Uraian: '+esc(t.uraian)+'</div>' : ''}
+              ${t.followUp ? '<div style="font-size:14px;margin-top:8px;color:var(--text-secondary)">Tindak lanjut: '+esc(t.followUp)+'</div>' : ''}
+              ${t.resolution ? '<div style="font-size:14px;margin-top:4px;color:var(--text-secondary)">Penyelesaian: '+esc(t.resolution)+'</div>' : ''}
+              ${t.dasar ? '<div style="font-size:14px;margin-top:8px;color:var(--text-secondary)">Dasar: <strong>'+esc(t.dasar)+'</strong></div>' : ''}
+              ${t.uraian ? '<div style="font-size:14px;margin-top:8px;color:var(--text-secondary);white-space:pre-wrap;word-break:break-word">Uraian: '+esc(t.uraian)+'</div>' : ''}
             </div>
           </div>`;
           globalNum++;
