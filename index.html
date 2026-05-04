@@ -283,8 +283,39 @@
     .by-tag { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-top: 4px; padding-left: 8px; }
     .timestamp-info { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
 
-    /* GOOGLE SHEETS PREVIEW */
-    .sheets-controls { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:1rem; }
+    /* FILTER BADGE COLORS */
+    .filter-btn.fb-semua.active   { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+    .filter-btn.fb-proses.active  { background: #d97706; border-color: #d97706; color: #fff; }
+    .filter-btn.fb-terlambat.active { background: #dc2626; border-color: #dc2626; color: #fff; }
+    .filter-btn.fb-selesai.active { background: #16a34a; border-color: #16a34a; color: #fff; }
+    .filter-btn.fb-semua   { color: #3b82f6; border-color: #93c5fd; }
+    .filter-btn.fb-proses  { color: #d97706; border-color: #fcd34d; }
+    .filter-btn.fb-terlambat { color: #dc2626; border-color: #fca5a5; }
+    .filter-btn.fb-selesai { color: #16a34a; border-color: #86efac; }
+
+    /* COUNTDOWN BADGE */
+    .badge-countdown-overdue { background: #fee2e2; color: #991b1b; font-weight:700; }
+    .badge-countdown-today   { background: #fef3c7; color: #92400e; font-weight:700; }
+    .badge-countdown-soon    { background: #ccfbf1; color: #115e59; font-weight:700; }
+    .badge-countdown-normal  { background: #f1f5f9; color: #334155; font-weight:600; }
+    .badge-countdown-done    { background: #dcfce7; color: #166534; font-weight:600; }
+
+    /* MINIMIZE TABLE BUTTON */
+    .btn-minimize-table {
+      background: var(--bg-primary); border: 1px solid var(--border-mid); border-radius: var(--radius-md);
+      padding: 6px 14px; font-size: 13px; font-weight: 500; color: var(--text-secondary);
+      cursor: pointer; font-family: var(--font); transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-minimize-table:hover { background: var(--bg-secondary); color: var(--text-primary); }
+    .table-wrap.minimized { display: none; }
+
+    /* SHEETS DROPDOWN */
+    .sheets-tab-select {
+      border: 1px solid var(--border-mid); border-radius: var(--radius-md);
+      padding: 8px 14px; font-size: 15px; font-family: var(--font);
+      background: var(--bg-primary); color: var(--text-primary); height: 42px; min-width: 200px; cursor: pointer;
+    }
+    .sheets-tab-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
     .sheets-status { padding:10px 14px; border-radius:var(--radius-md); font-size:14px; font-weight:500; margin-bottom:1rem; display:none; }
     .sheets-status.info    { display:block; background:#dbeafe; color:#1e40af; }
     .sheets-status.error   { display:block; background:#fee2e2; color:#991b1b; }
@@ -358,8 +389,8 @@
 
     @media print {
       body { background: white; padding: 0; }
-      .add-form, .toolbar, .table-wrap, .header, .stats, .btn-print, .btn-rekap, .rekap-controls, .rekap-tabs, .modal-overlay { display: none !important; }
-      .rekap-section { display: block !important; border: none; padding: 0; box-shadow: none; }
+      .add-form, .toolbar, .table-wrap, .header, .stats, .btn-print, .btn-rekap, .rekap-controls, .rekap-tabs, .modal-overlay, #monitoringGajiSection, #sheetsRekonSummary, #sheetsInfo, #sheetsTableWrap, #sheetsSearch, #sheetsStatus, #sheetsEmpty, .sheets-controls { display: none !important; }
+      #rekapSection { display: block !important; border: none; padding: 0; box-shadow: none; }
       .rekap-table-wrap { border: 1px solid #000; }
       .notula-wrap { border: 1px solid #000; }
       .rekap-table td { font-size: 12px; }
@@ -372,7 +403,7 @@
 
   <div class="header">
     <div class="header-title">I LOVE MONDAY KPPN MASOHI</div>
-    <div class="header-sub">Semua seksi dapat melihat, mengisi, dan memperbarui data</div>
+    <div class="header-sub">Dashboard Monitoring Pekerjaan seluruh Seksi/Subbag</div>
   </div>
 
   <div class="stats">
@@ -432,10 +463,10 @@
     <div class="toolbar-left">
       <span class="filter-label">Status:</span>
       <div class="filter-group" id="statusFilters">
-        <button class="filter-btn active" onclick="setFilter('semua',this)">Semua</button>
-        <button class="filter-btn" onclick="setFilter('proses',this)">Berjalan</button>
-        <button class="filter-btn" onclick="setFilter('terlambat',this)">Terlambat</button>
-        <button class="filter-btn" onclick="setFilter('selesai',this)">Selesai</button>
+        <button class="filter-btn fb-semua active" onclick="setFilter('semua',this)">Semua</button>
+        <button class="filter-btn fb-proses" onclick="setFilter('proses',this)">Berjalan</button>
+        <button class="filter-btn fb-terlambat" onclick="setFilter('terlambat',this)">Terlambat</button>
+        <button class="filter-btn fb-selesai" onclick="setFilter('selesai',this)">Selesai</button>
       </div>
       <div class="divider"></div>
       <span class="filter-label">Seksi:</span>
@@ -463,6 +494,7 @@
     <div class="sync-info">
       <span id="syncInfo">Memuat...</span>
       <button class="btn-refresh" onclick="loadTasks()">↻ Refresh</button>
+      <button class="btn-minimize-table" id="btnMinimizeTable" onclick="toggleMinimizeTable()">▲ Sembunyikan Tabel</button>
     </div>
   </div>
 
@@ -497,8 +529,10 @@
 
     <div class="sheets-controls">
       <div class="rc-field">
-        <label>Nama Sheet / Tab</label>
-        <input type="text" id="sheetsTabName" value="Juni 2026" style="width:180px;border:1px solid var(--border-mid);border-radius:var(--radius-md);padding:8px 14px;font-size:15px;font-family:var(--font);background:var(--bg-primary);color:var(--text-primary);height:42px;" />
+        <label>Pilih Sheet / Tab</label>
+        <select id="sheetsTabSelect" class="sheets-tab-select" onchange="onSheetTabChange()">
+          <option value="">— Memuat daftar sheet... —</option>
+        </select>
       </div>
       <div class="rc-field" style="justify-content:flex-end">
         <label>&nbsp;</label>
@@ -508,27 +542,40 @@
 
     <div id="sheetsStatus" class="sheets-status"></div>
 
-    <!-- Summary rekon gaji -->
-    <div id="sheetsRekonSummary" style="display:none;margin-bottom:1rem;display:none">
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1rem">
-        <div class="rekap-card" style="min-width:160px">
-          <div class="rekap-card-label">✅ Sudah Rekon Gaji</div>
-          <div class="rekap-card-val" id="rekonSudah" style="color:#16a34a">0</div>
+    <!-- Summary rekon gaji & SPM -->
+    <div id="sheetsRekonSummary" style="display:none;margin-bottom:1rem">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:1rem">
+        <div class="rekap-card">
+          <div class="rekap-card-label" style="font-size:12px">✅ Rekon Gaji (SPM) — Kol. D</div>
+          <div style="display:flex;gap:16px;align-items:baseline;margin-top:4px">
+            <div><div style="font-size:11px;color:var(--text-secondary)">Sudah</div><div class="rekap-card-val" id="rekonSpmSudah" style="color:#16a34a;font-size:22px">0</div></div>
+            <div><div style="font-size:11px;color:var(--text-secondary)">Belum</div><div class="rekap-card-val" id="rekonSpmBelum" style="color:#dc2626;font-size:22px">0</div></div>
+          </div>
         </div>
-        <div class="rekap-card" style="min-width:160px">
-          <div class="rekap-card-label">❌ Belum Rekon Gaji</div>
-          <div class="rekap-card-val" id="rekonBelum" style="color:#dc2626">0</div>
+        <div class="rekap-card">
+          <div class="rekap-card-label" style="font-size:12px">✅ Rekon Gaji (Satker) — Kol. E</div>
+          <div style="display:flex;gap:16px;align-items:baseline;margin-top:4px">
+            <div><div style="font-size:11px;color:var(--text-secondary)">Sudah</div><div class="rekap-card-val" id="rekonSatkerSudah" style="color:#16a34a;font-size:22px">0</div></div>
+            <div><div style="font-size:11px;color:var(--text-secondary)">Belum</div><div class="rekap-card-val" id="rekonSatkerBelum" style="color:#dc2626;font-size:22px">0</div></div>
+          </div>
         </div>
-        <div class="rekap-card" style="min-width:160px">
-          <div class="rekap-card-label">📋 Total Data</div>
-          <div class="rekap-card-val" id="rekonTotal">0</div>
+        <div class="rekap-card">
+          <div class="rekap-card-label" style="font-size:12px">📄 SPM (SPM) — Kol. G</div>
+          <div style="display:flex;gap:16px;align-items:baseline;margin-top:4px">
+            <div><div style="font-size:11px;color:var(--text-secondary)">Sudah</div><div class="rekap-card-val" id="spmSpmSudah" style="color:#16a34a;font-size:22px">0</div></div>
+            <div><div style="font-size:11px;color:var(--text-secondary)">Belum</div><div class="rekap-card-val" id="spmSpmBelum" style="color:#dc2626;font-size:22px">0</div></div>
+          </div>
+        </div>
+        <div class="rekap-card">
+          <div class="rekap-card-label" style="font-size:12px">📄 SPM (Satker) — Kol. H</div>
+          <div style="display:flex;gap:16px;align-items:baseline;margin-top:4px">
+            <div><div style="font-size:11px;color:var(--text-secondary)">Sudah</div><div class="rekap-card-val" id="spmSatkerSudah" style="color:#16a34a;font-size:22px">0</div></div>
+            <div><div style="font-size:11px;color:var(--text-secondary)">Belum</div><div class="rekap-card-val" id="spmSatkerBelum" style="color:#dc2626;font-size:22px">0</div></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div id="sheetsInfo" style="display:none;margin-bottom:1rem">
-      <div class="rekap-grid" id="sheetsMetaCards"></div>
-    </div>
 
     <input type="text" id="sheetsSearch" class="sheets-search" placeholder="🔍 Cari data..." oninput="filterSheetsTable()" style="display:none" />
 
@@ -828,12 +875,12 @@
 
   /* ── BADGES ── */
   function statusBadge(t) {
-    if (t.done) return '<span class="badge badge-done">Selesai</span>';
-    const d=diffDays(t.deadline);
-    if (d<0)  return '<span class="badge badge-overdue">Terlambat '+Math.abs(d)+' hari</span>';
-    if (d===0) return '<span class="badge badge-today">Hari ini</span>';
-    if (d<=3)  return '<span class="badge badge-soon">Segera ('+d+' hari)</span>';
-    return '<span class="badge badge-active">Aktif</span>';
+    if (t.done) return '<span class="badge badge-countdown-done">✓ Selesai</span>';
+    const d = diffDays(t.deadline);
+    if (d < 0)   return '<span class="badge badge-countdown-overdue">⚠ ' + Math.abs(d) + ' hari terlewat</span>';
+    if (d === 0) return '<span class="badge badge-countdown-today">⏰ Hari ini!</span>';
+    if (d <= 3)  return '<span class="badge badge-countdown-soon">⏳ ' + d + ' hari lagi</span>';
+    return '<span class="badge badge-countdown-normal">📅 ' + d + ' hari lagi</span>';
   }
   
   // Fungsi PrioBadge dengan output bahasa Indonesia
@@ -990,16 +1037,23 @@
   }
 
   let monitoringGajiOpen = false;
+  let sheetsListLoaded = false;
   function toggleMonitoringGaji() {
     monitoringGajiOpen = !monitoringGajiOpen;
     const section = document.getElementById('monitoringGajiSection');
     const btn = document.getElementById('btnMonitoringGaji');
     section.style.display = monitoringGajiOpen ? 'block' : 'none';
     btn.classList.toggle('active', monitoringGajiOpen);
+    if (monitoringGajiOpen && !sheetsListLoaded) {
+      sheetsListLoaded = true;
+      loadSheetList();
+    }
   }
 
   /* ── GOOGLE SHEETS PREVIEW ── */
   const SHEET_ID = '1pl1fwI-FBT_RlKCMa3RVS7Cw0ygiebGVTgqpfJdGT_A';
+  // Kolom yang DISEMBUNYIKAN (0-based index): A=0, E=4, H=7, J=9, K=10, L=11, M=12, N=13, O=14
+  const HIDDEN_COL_INDICES = new Set([0, 4, 7, 9, 10, 11, 12, 13, 14]);
   let sheetsRawData = { cols: [], rows: [] };
   let sheetsSortCol = -1;
   let sheetsSortAsc = true;
@@ -1010,11 +1064,50 @@
     el.className = 'sheets-status ' + type;
   }
 
+  function onSheetTabChange() {
+    // Auto-load when selection changes
+    const sel = document.getElementById('sheetsTabSelect');
+    if (sel.value) loadSheetsPreview();
+  }
+
+  async function loadSheetList() {
+    // Fetch sheet list by loading the spreadsheet feed
+    try {
+      const url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:json&sheet=Sheet1';
+      // We can't enumerate sheets directly from GViz, so we use the sheets feed
+      const feedUrl = 'https://spreadsheets.google.com/feeds/worksheets/' + SHEET_ID + '/public/basic?alt=json';
+      const res = await fetch(feedUrl);
+      if (!res.ok) throw new Error('gagal');
+      const json = await res.json();
+      const entries = json.feed.entry || [];
+      const sel = document.getElementById('sheetsTabSelect');
+      sel.innerHTML = '<option value="">— Pilih Sheet —</option>';
+      entries.forEach(e => {
+        const title = e.title.$t;
+        const opt = document.createElement('option');
+        opt.value = title;
+        opt.textContent = title;
+        sel.appendChild(opt);
+      });
+      // Auto-select first sheet
+      if (entries.length > 0) {
+        sel.value = entries[0].title.$t;
+        loadSheetsPreview();
+      }
+    } catch(e) {
+      // Fallback: manual input
+      const sel = document.getElementById('sheetsTabSelect');
+      sel.innerHTML = '<option value="Juni 2026">Juni 2026</option><option value="Juli 2026">Juli 2026</option>';
+      sel.value = 'Juni 2026';
+      loadSheetsPreview();
+    }
+  }
+
   async function loadSheetsPreview() {
-    const tabName = document.getElementById('sheetsTabName').value.trim() || 'Sheet1';
+    const tabName = document.getElementById('sheetsTabSelect').value;
+    if (!tabName) return;
     setSheetsStatus('Memuat data dari sheet "' + tabName + '"...', 'info');
     document.getElementById('sheetsTableWrap').style.display = 'none';
-    document.getElementById('sheetsInfo').style.display = 'none';
     document.getElementById('sheetsSearch').style.display = 'none';
     document.getElementById('sheetsEmpty').style.display = 'none';
     document.getElementById('sheetsRekonSummary').style.display = 'none';
@@ -1053,55 +1146,38 @@
     return val;
   }
 
-  function renderSheetsTable(cols, rows, tabName) {
-    const visibleCols = cols.map((c, i) => ({ label: c, idx: i })).filter(c => c.label);
-
-    // Hitung rekon gaji: cari kolom yang mengandung kata 'rekon' atau 'gaji'
-    let rekonColIdx = -1;
-    visibleCols.forEach(c => {
-      const lbl = c.label.toLowerCase();
-      if (rekonColIdx === -1 && (lbl.includes('rekon') || lbl.includes('rekonsiliasi'))) {
-        rekonColIdx = c.idx;
-      }
+  function countBoolCol(rows, colIdx) {
+    let sudah = 0, belum = 0;
+    rows.forEach(r => {
+      const v = String(r[colIdx] !== undefined ? r[colIdx] : '').toLowerCase().trim();
+      if (v === 'true' || v === 'sudah') sudah++;
+      else if (v === 'false' || v === 'belum') belum++;
     });
+    return { sudah, belum };
+  }
 
-    let sudahCount = 0, belumCount = 0;
-    if (rekonColIdx >= 0) {
-      rows.forEach(r => {
-        const v = String(r[rekonColIdx] || '').toLowerCase().trim();
-        if (v === 'true' || v === 'sudah') sudahCount++;
-        else if (v === 'false' || v === 'belum') belumCount++;
-      });
-    } else {
-      // Fallback: cari kolom boolean manapun
-      visibleCols.forEach(c => {
-        if (rekonColIdx >= 0) return;
-        const hasBool = rows.some(r => { const v = String(r[c.idx]||'').toLowerCase(); return v==='true'||v==='false'; });
-        if (hasBool) rekonColIdx = c.idx;
-      });
-      if (rekonColIdx >= 0) {
-        rows.forEach(r => {
-          const v = String(r[rekonColIdx]||'').toLowerCase().trim();
-          if (v==='true'||v==='sudah') sudahCount++;
-          else if (v==='false'||v==='belum') belumCount++;
-        });
-      }
-    }
+  function renderSheetsTable(cols, rows, tabName) {
+    // visibleCols: exclude hidden columns
+    const visibleCols = cols.map((c, i) => ({ label: c, idx: i }))
+      .filter(c => c.label && !HIDDEN_COL_INDICES.has(c.idx));
 
-    // Tampilkan summary rekon
-    const summaryEl = document.getElementById('sheetsRekonSummary');
-    document.getElementById('rekonSudah').textContent = sudahCount;
-    document.getElementById('rekonBelum').textContent = belumCount;
-    document.getElementById('rekonTotal').textContent = rows.length;
-    summaryEl.style.display = 'block';
+    // Count for D=3, E=4, G=6, H=7
+    const d3 = countBoolCol(rows, 3);
+    const e4 = countBoolCol(rows, 4);
+    const g6 = countBoolCol(rows, 6);
+    const h7 = countBoolCol(rows, 7);
 
-    document.getElementById('sheetsMetaCards').innerHTML =
-      '<div class="rekap-card"><div class="rekap-card-label">Sheet</div><div class="rekap-card-val" style="font-size:16px">' + esc(tabName) + '</div></div>' +
-      '<div class="rekap-card"><div class="rekap-card-label">Jumlah Kolom</div><div class="rekap-card-val">' + visibleCols.length + '</div></div>' +
-      '<div class="rekap-card"><div class="rekap-card-label">Jumlah Baris Data</div><div class="rekap-card-val">' + rows.length + '</div></div>';
-    document.getElementById('sheetsInfo').style.display = 'block';
+    document.getElementById('rekonSpmSudah').textContent    = d3.sudah;
+    document.getElementById('rekonSpmBelum').textContent    = d3.belum;
+    document.getElementById('rekonSatkerSudah').textContent = e4.sudah;
+    document.getElementById('rekonSatkerBelum').textContent = e4.belum;
+    document.getElementById('spmSpmSudah').textContent      = g6.sudah;
+    document.getElementById('spmSpmBelum').textContent      = g6.belum;
+    document.getElementById('spmSatkerSudah').textContent   = h7.sudah;
+    document.getElementById('spmSatkerBelum').textContent   = h7.belum;
+    document.getElementById('sheetsRekonSummary').style.display = 'block';
 
-    // Render header dengan sort
+    // Render header with sortable columns
     document.getElementById('sheetsHead').innerHTML =
       '<tr><th style="width:40px;cursor:default">#</th>' +
       visibleCols.map(c =>
@@ -1124,8 +1200,8 @@
       sheetsSortCol = colIdx;
       sheetsSortAsc = true;
     }
-    // Update sort icons
-    const visibleCols = sheetsRawData.cols.map((c, i) => ({ label: c, idx: i })).filter(c => c.label);
+    const visibleCols = sheetsRawData.cols.map((c, i) => ({ label: c, idx: i }))
+      .filter(c => c.label && !HIDDEN_COL_INDICES.has(c.idx));
     visibleCols.forEach(c => {
       const el = document.getElementById('sortIcon_' + c.idx);
       if (el) el.textContent = '';
@@ -1170,7 +1246,8 @@
 
   function filterSheetsTable() {
     const q = document.getElementById('sheetsSearch').value.toLowerCase();
-    const visibleCols = sheetsRawData.cols.map((c, i) => ({ label: c, idx: i })).filter(c => c.label);
+    const visibleCols = sheetsRawData.cols.map((c, i) => ({ label: c, idx: i }))
+      .filter(c => c.label && !HIDDEN_COL_INDICES.has(c.idx));
     let filtered = q
       ? sheetsRawData.rows.filter(r => r.some(c => String(c).toLowerCase().includes(q)))
       : [...sheetsRawData.rows];
@@ -1185,6 +1262,15 @@
       });
     }
     renderSheetRows(filtered, visibleCols);
+  }
+
+  let tableMinimized = false;
+  function toggleMinimizeTable() {
+    tableMinimized = !tableMinimized;
+    const tw = document.querySelector('.table-wrap');
+    const btn = document.getElementById('btnMinimizeTable');
+    tw.classList.toggle('minimized', tableMinimized);
+    btn.textContent = tableMinimized ? '▼ Tampilkan Tabel' : '▲ Sembunyikan Tabel';
   }
 
   function toggleRekap() {
