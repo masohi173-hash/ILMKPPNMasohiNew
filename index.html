@@ -283,6 +283,14 @@
     .by-tag { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-top: 4px; padding-left: 8px; }
     .timestamp-info { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
 
+    /* GOOGLE SHEETS PREVIEW */
+    .sheets-controls { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:1rem; }
+    .sheets-status { padding:10px 14px; border-radius:var(--radius-md); font-size:14px; font-weight:500; margin-bottom:1rem; display:none; }
+    .sheets-status.info    { display:block; background:#dbeafe; color:#1e40af; }
+    .sheets-status.error   { display:block; background:#fee2e2; color:#991b1b; }
+    .sheets-status.success { display:block; background:#dcfce7; color:#166534; }
+    .sheets-search { width:100%; max-width:360px; border:1px solid var(--border-mid); border-radius:var(--radius-md); padding:8px 14px; font-size:15px; font-family:var(--font); background:var(--bg-primary); color:var(--text-primary); height:42px; margin-bottom:1rem; }
+
     /* SORT CONTROLS */
     .sort-select {
       border: 1px solid var(--border-mid); border-radius: var(--radius-md);
@@ -488,6 +496,7 @@
     <div class="rekap-tabs">
       <button class="rekap-tab active" id="tabBulanan" onclick="switchTab('bulanan')">📅 Rekap Bulanan</button>
       <button class="rekap-tab" id="tabMingguan" onclick="switchTab('mingguan')">📋 Notula Mingguan</button>
+      <button class="rekap-tab" id="tabSheets" onclick="switchTab('sheets')">📊 Data Google Sheets</button>
     </div>
     
     <div id="panelBulanan">
@@ -557,8 +566,41 @@
       </div>
       <div id="notulaContent"></div>
     </div>
-  </div>
 
+    <!-- PANEL GOOGLE SHEETS -->
+    <div id="panelSheets" style="display:none">
+      <div class="sheets-controls">
+        <div class="rc-field">
+          <label>Nama Sheet / Tab</label>
+          <input type="text" id="sheetsTabName" value="Juni 2026" style="width:180px;border:1px solid var(--border-mid);border-radius:var(--radius-md);padding:8px 14px;font-size:15px;font-family:var(--font);background:var(--bg-primary);color:var(--text-primary);height:42px;" />
+        </div>
+        <div class="rc-field" style="justify-content:flex-end">
+          <label>&nbsp;</label>
+          <button class="btn-add" style="height:42px;padding:0 20px" onclick="loadSheetsPreview()">🔄 Tampilkan Data</button>
+        </div>
+      </div>
+
+      <div id="sheetsStatus" class="sheets-status"></div>
+
+      <div id="sheetsInfo" style="display:none;margin-bottom:1rem">
+        <div class="rekap-grid" id="sheetsMetaCards"></div>
+      </div>
+
+      <input type="text" id="sheetsSearch" class="sheets-search" placeholder="🔍 Cari data..." oninput="filterSheetsTable()" style="display:none" />
+
+      <div id="sheetsTableWrap" class="rekap-table-wrap" style="display:none">
+        <table class="rekap-table" id="sheetsTable">
+          <thead id="sheetsHead"></thead>
+          <tbody id="sheetsBody"></tbody>
+        </table>
+      </div>
+
+      <div id="sheetsEmpty" style="text-align:center;padding:3rem;color:var(--text-secondary);font-size:15px">
+        Pilih nama sheet lalu klik <strong>Tampilkan Data</strong> untuk memuat data dari Google Sheets.
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <div class="modal-overlay" id="modalEdit">
@@ -913,15 +955,103 @@
   /* ── TAB REKAP ── */
   function switchTab(tab) {
     activeTab = tab;
-    document.getElementById('tabBulanan').classList.toggle('active', tab==='bulanan');
-    document.getElementById('tabMingguan').classList.toggle('active', tab==='mingguan');
+    ['tabBulanan','tabMingguan','tabSheets'].forEach(id => document.getElementById(id).classList.remove('active'));
+    const tabMap = { bulanan:'tabBulanan', mingguan:'tabMingguan', sheets:'tabSheets' };
+    document.getElementById(tabMap[tab]).classList.add('active');
     document.getElementById('panelBulanan').style.display  = tab==='bulanan'  ? '' : 'none';
     document.getElementById('panelMingguan').style.display = tab==='mingguan' ? '' : 'none';
+    document.getElementById('panelSheets').style.display   = tab==='sheets'   ? '' : 'none';
     renderActivePanel();
   }
   function renderActivePanel() {
     if (activeTab==='bulanan') renderRekap();
-    else renderNotula();
+    else if (activeTab==='mingguan') renderNotula();
+  }
+
+  /* ── GOOGLE SHEETS PREVIEW ── */
+  const SHEET_ID = '1pl1fwI-FBT_RlKCMa3RVS7Cw0ygiebGVTgqpfJdGT_A';
+  let sheetsRawData = { cols: [], rows: [] };
+
+  function setSheetsStatus(msg, type) {
+    const el = document.getElementById('sheetsStatus');
+    el.textContent = msg;
+    el.className = 'sheets-status ' + type;
+  }
+
+  async function loadSheetsPreview() {
+    const tabName = document.getElementById('sheetsTabName').value.trim() || 'Sheet1';
+    setSheetsStatus('Memuat data dari sheet "' + tabName + '"...', 'info');
+    document.getElementById('sheetsTableWrap').style.display = 'none';
+    document.getElementById('sheetsInfo').style.display = 'none';
+    document.getElementById('sheetsSearch').style.display = 'none';
+    document.getElementById('sheetsEmpty').style.display = 'none';
+
+    try {
+      const url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(tabName);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Gagal mengambil data. Cek koneksi dan akses sharing Google Sheets.');
+      const text = await res.text();
+      const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+      if (!match) throw new Error('Format tidak dikenali. Pastikan nama sheet benar dan Google Sheets sudah di-share publik.');
+      const json = JSON.parse(match[1]);
+      if (!json.table) throw new Error('Sheet "' + tabName + '" tidak ditemukan atau kosong.');
+
+      const cols = json.table.cols.map(c => c.label || c.id || '');
+      const rows = (json.table.rows || []).map(r =>
+        (r.c || []).map(c => (c && c.v !== null && c.v !== undefined) ? (c.f !== undefined && c.f !== null ? c.f : c.v) : '')
+      );
+      const nonEmpty = rows.filter(r => r.some(c => c !== '' && c !== null && c !== undefined));
+
+      sheetsRawData = { cols, rows: nonEmpty };
+      renderSheetsTable(cols, nonEmpty, tabName);
+    } catch(e) {
+      setSheetsStatus('Error: ' + e.message, 'error');
+      document.getElementById('sheetsEmpty').textContent = e.message;
+      document.getElementById('sheetsEmpty').style.display = 'block';
+    }
+  }
+
+  function renderSheetsTable(cols, rows, tabName) {
+    const visibleCols = cols.map((c, i) => ({ label: c, idx: i })).filter(c => c.label);
+
+    document.getElementById('sheetsMetaCards').innerHTML =
+      '<div class="rekap-card"><div class="rekap-card-label">Sheet</div><div class="rekap-card-val" style="font-size:16px">' + esc(tabName) + '</div></div>' +
+      '<div class="rekap-card"><div class="rekap-card-label">Jumlah Kolom</div><div class="rekap-card-val">' + visibleCols.length + '</div></div>' +
+      '<div class="rekap-card"><div class="rekap-card-label">Jumlah Baris Data</div><div class="rekap-card-val">' + rows.length + '</div></div>';
+    document.getElementById('sheetsInfo').style.display = 'block';
+
+    document.getElementById('sheetsHead').innerHTML =
+      '<tr><th style="width:40px">#</th>' + visibleCols.map(c => '<th>' + esc(c.label) + '</th>').join('') + '</tr>';
+
+    renderSheetRows(rows, visibleCols);
+
+    document.getElementById('sheetsTableWrap').style.display = 'block';
+    document.getElementById('sheetsSearch').style.display = 'block';
+    document.getElementById('sheetsSearch').value = '';
+    setSheetsStatus('Berhasil memuat ' + rows.length + ' baris data dari sheet "' + tabName + '"!', 'success');
+  }
+
+  function renderSheetRows(rows, visibleCols) {
+    const tbody = document.getElementById('sheetsBody');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="' + (visibleCols.length + 1) + '" style="text-align:center;padding:2rem;color:var(--text-secondary)">Tidak ada data ditemukan.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map((r, i) =>
+      '<tr>' +
+      '<td style="color:var(--text-secondary);font-size:13px;text-align:center;min-width:36px">' + (i + 1) + '</td>' +
+      visibleCols.map(c => '<td>' + esc(String(r[c.idx] !== undefined ? r[c.idx] : '')) + '</td>').join('') +
+      '</tr>'
+    ).join('');
+  }
+
+  function filterSheetsTable() {
+    const q = document.getElementById('sheetsSearch').value.toLowerCase();
+    const visibleCols = sheetsRawData.cols.map((c, i) => ({ label: c, idx: i })).filter(c => c.label);
+    const filtered = q
+      ? sheetsRawData.rows.filter(r => r.some(c => String(c).toLowerCase().includes(q)))
+      : sheetsRawData.rows;
+    renderSheetRows(filtered, visibleCols);
   }
 
   function toggleRekap() {
