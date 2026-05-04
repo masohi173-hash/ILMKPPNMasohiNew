@@ -485,6 +485,62 @@
   <div style="margin-top:1.5rem">
     <div style="display:flex;gap:10px;margin-bottom:1rem">
       <button class="btn-rekap" id="btnRekap" onclick="toggleRekap()">📋 Rekap & Notula</button>
+      <button class="btn-rekap" id="btnMonitoringGaji" onclick="toggleMonitoringGaji()">💰 Monitoring Gaji</button>
+    </div>
+  </div>
+
+  <!-- PANEL MONITORING GAJI (di luar rekap) -->
+  <div class="rekap-section" id="monitoringGajiSection" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:8px">
+      <div class="rekap-title">💰 Monitoring Gaji</div>
+    </div>
+
+    <div class="sheets-controls">
+      <div class="rc-field">
+        <label>Nama Sheet / Tab</label>
+        <input type="text" id="sheetsTabName" value="Juni 2026" style="width:180px;border:1px solid var(--border-mid);border-radius:var(--radius-md);padding:8px 14px;font-size:15px;font-family:var(--font);background:var(--bg-primary);color:var(--text-primary);height:42px;" />
+      </div>
+      <div class="rc-field" style="justify-content:flex-end">
+        <label>&nbsp;</label>
+        <button class="btn-add" style="height:42px;padding:0 20px" onclick="loadSheetsPreview()">🔄 Tampilkan Data</button>
+      </div>
+    </div>
+
+    <div id="sheetsStatus" class="sheets-status"></div>
+
+    <!-- Summary rekon gaji -->
+    <div id="sheetsRekonSummary" style="display:none;margin-bottom:1rem;display:none">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1rem">
+        <div class="rekap-card" style="min-width:160px">
+          <div class="rekap-card-label">✅ Sudah Rekon Gaji</div>
+          <div class="rekap-card-val" id="rekonSudah" style="color:#16a34a">0</div>
+        </div>
+        <div class="rekap-card" style="min-width:160px">
+          <div class="rekap-card-label">❌ Belum Rekon Gaji</div>
+          <div class="rekap-card-val" id="rekonBelum" style="color:#dc2626">0</div>
+        </div>
+        <div class="rekap-card" style="min-width:160px">
+          <div class="rekap-card-label">📋 Total Data</div>
+          <div class="rekap-card-val" id="rekonTotal">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sheetsInfo" style="display:none;margin-bottom:1rem">
+      <div class="rekap-grid" id="sheetsMetaCards"></div>
+    </div>
+
+    <input type="text" id="sheetsSearch" class="sheets-search" placeholder="🔍 Cari data..." oninput="filterSheetsTable()" style="display:none" />
+
+    <div id="sheetsTableWrap" class="rekap-table-wrap" style="display:none;max-height:480px;overflow-y:auto">
+      <table class="rekap-table" id="sheetsTable">
+        <thead id="sheetsHead" style="position:sticky;top:0;z-index:2;background:var(--bg-secondary)"></thead>
+        <tbody id="sheetsBody"></tbody>
+      </table>
+    </div>
+
+    <div id="sheetsEmpty" style="text-align:center;padding:3rem;color:var(--text-secondary);font-size:15px">
+      Pilih nama sheet lalu klik <strong>Tampilkan Data</strong> untuk memuat data dari Google Sheets.
     </div>
   </div>
 
@@ -496,7 +552,6 @@
     <div class="rekap-tabs">
       <button class="rekap-tab active" id="tabBulanan" onclick="switchTab('bulanan')">📅 Rekap Bulanan</button>
       <button class="rekap-tab" id="tabMingguan" onclick="switchTab('mingguan')">📋 Notula Mingguan</button>
-      <button class="rekap-tab" id="tabSheets" onclick="switchTab('sheets')">📊 Data Google Sheets</button>
     </div>
     
     <div id="panelBulanan">
@@ -565,39 +620,6 @@
         </div>
       </div>
       <div id="notulaContent"></div>
-    </div>
-
-    <!-- PANEL GOOGLE SHEETS -->
-    <div id="panelSheets" style="display:none">
-      <div class="sheets-controls">
-        <div class="rc-field">
-          <label>Nama Sheet / Tab</label>
-          <input type="text" id="sheetsTabName" value="Juni 2026" style="width:180px;border:1px solid var(--border-mid);border-radius:var(--radius-md);padding:8px 14px;font-size:15px;font-family:var(--font);background:var(--bg-primary);color:var(--text-primary);height:42px;" />
-        </div>
-        <div class="rc-field" style="justify-content:flex-end">
-          <label>&nbsp;</label>
-          <button class="btn-add" style="height:42px;padding:0 20px" onclick="loadSheetsPreview()">🔄 Tampilkan Data</button>
-        </div>
-      </div>
-
-      <div id="sheetsStatus" class="sheets-status"></div>
-
-      <div id="sheetsInfo" style="display:none;margin-bottom:1rem">
-        <div class="rekap-grid" id="sheetsMetaCards"></div>
-      </div>
-
-      <input type="text" id="sheetsSearch" class="sheets-search" placeholder="🔍 Cari data..." oninput="filterSheetsTable()" style="display:none" />
-
-      <div id="sheetsTableWrap" class="rekap-table-wrap" style="display:none">
-        <table class="rekap-table" id="sheetsTable">
-          <thead id="sheetsHead"></thead>
-          <tbody id="sheetsBody"></tbody>
-        </table>
-      </div>
-
-      <div id="sheetsEmpty" style="text-align:center;padding:3rem;color:var(--text-secondary);font-size:15px">
-        Pilih nama sheet lalu klik <strong>Tampilkan Data</strong> untuk memuat data dari Google Sheets.
-      </div>
     </div>
 
   </div>
@@ -955,12 +977,11 @@
   /* ── TAB REKAP ── */
   function switchTab(tab) {
     activeTab = tab;
-    ['tabBulanan','tabMingguan','tabSheets'].forEach(id => document.getElementById(id).classList.remove('active'));
-    const tabMap = { bulanan:'tabBulanan', mingguan:'tabMingguan', sheets:'tabSheets' };
+    ['tabBulanan','tabMingguan'].forEach(id => document.getElementById(id).classList.remove('active'));
+    const tabMap = { bulanan:'tabBulanan', mingguan:'tabMingguan' };
     document.getElementById(tabMap[tab]).classList.add('active');
     document.getElementById('panelBulanan').style.display  = tab==='bulanan'  ? '' : 'none';
     document.getElementById('panelMingguan').style.display = tab==='mingguan' ? '' : 'none';
-    document.getElementById('panelSheets').style.display   = tab==='sheets'   ? '' : 'none';
     renderActivePanel();
   }
   function renderActivePanel() {
@@ -968,9 +989,20 @@
     else if (activeTab==='mingguan') renderNotula();
   }
 
+  let monitoringGajiOpen = false;
+  function toggleMonitoringGaji() {
+    monitoringGajiOpen = !monitoringGajiOpen;
+    const section = document.getElementById('monitoringGajiSection');
+    const btn = document.getElementById('btnMonitoringGaji');
+    section.style.display = monitoringGajiOpen ? 'block' : 'none';
+    btn.classList.toggle('active', monitoringGajiOpen);
+  }
+
   /* ── GOOGLE SHEETS PREVIEW ── */
   const SHEET_ID = '1pl1fwI-FBT_RlKCMa3RVS7Cw0ygiebGVTgqpfJdGT_A';
   let sheetsRawData = { cols: [], rows: [] };
+  let sheetsSortCol = -1;
+  let sheetsSortAsc = true;
 
   function setSheetsStatus(msg, type) {
     const el = document.getElementById('sheetsStatus');
@@ -985,6 +1017,7 @@
     document.getElementById('sheetsInfo').style.display = 'none';
     document.getElementById('sheetsSearch').style.display = 'none';
     document.getElementById('sheetsEmpty').style.display = 'none';
+    document.getElementById('sheetsRekonSummary').style.display = 'none';
 
     try {
       const url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(tabName);
@@ -1003,6 +1036,8 @@
       const nonEmpty = rows.filter(r => r.some(c => c !== '' && c !== null && c !== undefined));
 
       sheetsRawData = { cols, rows: nonEmpty };
+      sheetsSortCol = -1;
+      sheetsSortAsc = true;
       renderSheetsTable(cols, nonEmpty, tabName);
     } catch(e) {
       setSheetsStatus('Error: ' + e.message, 'error');
@@ -1011,8 +1046,54 @@
     }
   }
 
+  function normalizeBoolDisplay(val) {
+    const s = String(val).toLowerCase().trim();
+    if (s === 'true') return 'Sudah';
+    if (s === 'false') return 'Belum';
+    return val;
+  }
+
   function renderSheetsTable(cols, rows, tabName) {
     const visibleCols = cols.map((c, i) => ({ label: c, idx: i })).filter(c => c.label);
+
+    // Hitung rekon gaji: cari kolom yang mengandung kata 'rekon' atau 'gaji'
+    let rekonColIdx = -1;
+    visibleCols.forEach(c => {
+      const lbl = c.label.toLowerCase();
+      if (rekonColIdx === -1 && (lbl.includes('rekon') || lbl.includes('rekonsiliasi'))) {
+        rekonColIdx = c.idx;
+      }
+    });
+
+    let sudahCount = 0, belumCount = 0;
+    if (rekonColIdx >= 0) {
+      rows.forEach(r => {
+        const v = String(r[rekonColIdx] || '').toLowerCase().trim();
+        if (v === 'true' || v === 'sudah') sudahCount++;
+        else if (v === 'false' || v === 'belum') belumCount++;
+      });
+    } else {
+      // Fallback: cari kolom boolean manapun
+      visibleCols.forEach(c => {
+        if (rekonColIdx >= 0) return;
+        const hasBool = rows.some(r => { const v = String(r[c.idx]||'').toLowerCase(); return v==='true'||v==='false'; });
+        if (hasBool) rekonColIdx = c.idx;
+      });
+      if (rekonColIdx >= 0) {
+        rows.forEach(r => {
+          const v = String(r[rekonColIdx]||'').toLowerCase().trim();
+          if (v==='true'||v==='sudah') sudahCount++;
+          else if (v==='false'||v==='belum') belumCount++;
+        });
+      }
+    }
+
+    // Tampilkan summary rekon
+    const summaryEl = document.getElementById('sheetsRekonSummary');
+    document.getElementById('rekonSudah').textContent = sudahCount;
+    document.getElementById('rekonBelum').textContent = belumCount;
+    document.getElementById('rekonTotal').textContent = rows.length;
+    summaryEl.style.display = 'block';
 
     document.getElementById('sheetsMetaCards').innerHTML =
       '<div class="rekap-card"><div class="rekap-card-label">Sheet</div><div class="rekap-card-val" style="font-size:16px">' + esc(tabName) + '</div></div>' +
@@ -1020,8 +1101,13 @@
       '<div class="rekap-card"><div class="rekap-card-label">Jumlah Baris Data</div><div class="rekap-card-val">' + rows.length + '</div></div>';
     document.getElementById('sheetsInfo').style.display = 'block';
 
+    // Render header dengan sort
     document.getElementById('sheetsHead').innerHTML =
-      '<tr><th style="width:40px">#</th>' + visibleCols.map(c => '<th>' + esc(c.label) + '</th>').join('') + '</tr>';
+      '<tr><th style="width:40px;cursor:default">#</th>' +
+      visibleCols.map(c =>
+        '<th style="cursor:pointer;user-select:none;white-space:nowrap" onclick="sortSheetsBy(' + c.idx + ')">' +
+        esc(c.label) + ' <span id="sortIcon_' + c.idx + '" style="font-size:11px;color:var(--accent)"></span></th>'
+      ).join('') + '</tr>';
 
     renderSheetRows(rows, visibleCols);
 
@@ -1029,6 +1115,35 @@
     document.getElementById('sheetsSearch').style.display = 'block';
     document.getElementById('sheetsSearch').value = '';
     setSheetsStatus('Berhasil memuat ' + rows.length + ' baris data dari sheet "' + tabName + '"!', 'success');
+  }
+
+  function sortSheetsBy(colIdx) {
+    if (sheetsSortCol === colIdx) {
+      sheetsSortAsc = !sheetsSortAsc;
+    } else {
+      sheetsSortCol = colIdx;
+      sheetsSortAsc = true;
+    }
+    // Update sort icons
+    const visibleCols = sheetsRawData.cols.map((c, i) => ({ label: c, idx: i })).filter(c => c.label);
+    visibleCols.forEach(c => {
+      const el = document.getElementById('sortIcon_' + c.idx);
+      if (el) el.textContent = '';
+    });
+    const activeIcon = document.getElementById('sortIcon_' + colIdx);
+    if (activeIcon) activeIcon.textContent = sheetsSortAsc ? '▲' : '▼';
+
+    const q = document.getElementById('sheetsSearch').value.toLowerCase();
+    let filtered = q ? sheetsRawData.rows.filter(r => r.some(c => String(c).toLowerCase().includes(q))) : [...sheetsRawData.rows];
+    filtered.sort((a, b) => {
+      const va = String(a[colIdx] || ''), vb = String(b[colIdx] || '');
+      const na = parseFloat(va), nb = parseFloat(vb);
+      let cmp;
+      if (!isNaN(na) && !isNaN(nb)) cmp = na - nb;
+      else cmp = va.localeCompare(vb, 'id');
+      return sheetsSortAsc ? cmp : -cmp;
+    });
+    renderSheetRows(filtered, visibleCols);
   }
 
   function renderSheetRows(rows, visibleCols) {
@@ -1040,7 +1155,15 @@
     tbody.innerHTML = rows.map((r, i) =>
       '<tr>' +
       '<td style="color:var(--text-secondary);font-size:13px;text-align:center;min-width:36px">' + (i + 1) + '</td>' +
-      visibleCols.map(c => '<td>' + esc(String(r[c.idx] !== undefined ? r[c.idx] : '')) + '</td>').join('') +
+      visibleCols.map(c => {
+        const raw = String(r[c.idx] !== undefined ? r[c.idx] : '');
+        const display = normalizeBoolDisplay(raw);
+        const lower = raw.toLowerCase().trim();
+        let style = '';
+        if (lower === 'true') style = 'color:#16a34a;font-weight:600';
+        else if (lower === 'false') style = 'color:#dc2626;font-weight:600';
+        return '<td' + (style ? ' style="' + style + '"' : '') + '>' + esc(display) + '</td>';
+      }).join('') +
       '</tr>'
     ).join('');
   }
@@ -1048,9 +1171,19 @@
   function filterSheetsTable() {
     const q = document.getElementById('sheetsSearch').value.toLowerCase();
     const visibleCols = sheetsRawData.cols.map((c, i) => ({ label: c, idx: i })).filter(c => c.label);
-    const filtered = q
+    let filtered = q
       ? sheetsRawData.rows.filter(r => r.some(c => String(c).toLowerCase().includes(q)))
-      : sheetsRawData.rows;
+      : [...sheetsRawData.rows];
+    if (sheetsSortCol >= 0) {
+      filtered.sort((a, b) => {
+        const va = String(a[sheetsSortCol] || ''), vb = String(b[sheetsSortCol] || '');
+        const na = parseFloat(va), nb = parseFloat(vb);
+        let cmp;
+        if (!isNaN(na) && !isNaN(nb)) cmp = na - nb;
+        else cmp = va.localeCompare(vb, 'id');
+        return sheetsSortAsc ? cmp : -cmp;
+      });
+    }
     renderSheetRows(filtered, visibleCols);
   }
 
