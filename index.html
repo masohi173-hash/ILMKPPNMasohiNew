@@ -283,6 +283,13 @@
     .by-tag { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-top: 4px; padding-left: 8px; }
     .timestamp-info { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
 
+    .seksi-ptpn { background: #fdf4ff; color: #7e22ce; border-color: #e9d5ff; }
+    .seksi-all  { background: #f0f9ff; color: #0369a1; border-color: #bae6fd; }
+    th .th-sort-icon { font-size: 11px; color: var(--accent); opacity: 0.5; }
+    th:hover .th-sort-icon { opacity: 1; }
+    th.sort-active .th-sort-icon { opacity: 1; font-weight: 700; }
+    th.sort-active { color: var(--accent); }
+
     /* FILTER BADGE COLORS */
     .filter-btn.fb-semua.active   { background: #3b82f6; border-color: #3b82f6; color: #fff; }
     .filter-btn.fb-proses.active  { background: #d97706; border-color: #d97706; color: #fff; }
@@ -426,6 +433,8 @@
           <option value="Seksi Bank">Seksi Bank</option>
           <option value="Subbag Umum">Subbag Umum</option>
           <option value="Seksi PD">Seksi PD</option>
+          <option value="PTPN">PTPN</option>
+          <option value="Semua Seksi">Semua Seksi</option>
         </select>
       </div>
       <div class="form-field">
@@ -477,19 +486,9 @@
         <button class="filter-btn" onclick="setSeksiFilter('Seksi Bank',this)">Bank</button>
         <button class="filter-btn" onclick="setSeksiFilter('Subbag Umum',this)">Umum</button>
         <button class="filter-btn" onclick="setSeksiFilter('Seksi PD',this)">PD</button>
+        <button class="filter-btn" onclick="setSeksiFilter('PTPN',this)">PTPN</button>
+        <button class="filter-btn" onclick="setSeksiFilter('Semua Seksi',this)">Semua Seksi</button>
       </div>
-      <div class="divider"></div>
-      <span class="filter-label">Urut:</span>
-      <select class="sort-select" id="sortSelect" onchange="setSortMode(this.value)">
-        <option value="status">Status (Default)</option>
-        <option value="nama_az">Nama A → Z</option>
-        <option value="nama_za">Nama Z → A</option>
-        <option value="seksi_az">Seksi A → Z</option>
-        <option value="deadline_asc">Batas Waktu ↑</option>
-        <option value="deadline_desc">Batas Waktu ↓</option>
-        <option value="nomor_asc">Nomor Urut ↑ (Terlama)</option>
-        <option value="nomor_desc">Nomor Urut ↓ (Terbaru)</option>
-      </select>
     </div>
     <div class="sync-info">
       <span id="syncInfo">Memuat...</span>
@@ -502,12 +501,15 @@
     <table>
       <thead>
         <tr>
-          <th style="width: 40px;">#</th>
-          <th style="width: 110px;">Seksi</th>
-          <th style="width: 34%;">Nama Pekerjaan</th> <th style="width: 120px;">Dasar</th>
-          <th style="width: 140px;">Batas Waktu & Status</th>
-          <th style="width: 90px;">Prioritas</th>
-          <th style="width: 25%;">Tindak Lanjut</th> <th style="width: 8%;">Ket. Selesai</th> <th style="width: 120px;">Aksi</th>
+          <th style="width:40px">#</th>
+          <th style="width:110px;cursor:pointer;user-select:none" onclick="cycleSortCol('seksi')" id="th-seksi">Seksi <span class="th-sort-icon"></span></th>
+          <th style="width:34%;cursor:pointer;user-select:none" onclick="cycleSortCol('nama')" id="th-nama">Nama Pekerjaan <span class="th-sort-icon"></span></th>
+          <th style="width:120px;cursor:pointer;user-select:none" onclick="cycleSortCol('dasar')" id="th-dasar">Dasar <span class="th-sort-icon"></span></th>
+          <th style="width:140px;cursor:pointer;user-select:none" onclick="cycleSortCol('deadline')" id="th-deadline">Batas Waktu & Status <span class="th-sort-icon"></span></th>
+          <th style="width:90px;cursor:pointer;user-select:none" onclick="cycleSortCol('prioritas')" id="th-prioritas">Prioritas <span class="th-sort-icon"></span></th>
+          <th style="width:25%">Tindak Lanjut</th>
+          <th style="width:8%">Ket. Selesai</th>
+          <th style="width:120px">Aksi</th>
         </tr>
       </thead>
       <tbody id="taskBody"><tr class="empty-row"><td colspan="9">Memuat data...</td></tr></tbody>
@@ -686,6 +688,8 @@
           <option value="Seksi Bank">Seksi Bank</option>
           <option value="Subbag Umum">Subbag Umum</option>
           <option value="Seksi PD">Seksi PD</option>
+          <option value="PTPN">PTPN</option>
+          <option value="Semua Seksi">Semua Seksi</option>
         </select>
       </div>
       <div class="form-field">
@@ -732,9 +736,9 @@
 <script>
   const BULAN_NAMA  = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
   const HARI_NAMA   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-  const SEKSI_CLASS = { 'Seksi MSKI':'seksi-mski','Seksi Vera':'seksi-vera','Seksi Bank':'seksi-bank','Subbag Umum':'seksi-umum','Seksi PD':'seksi-pd' };
+  const SEKSI_CLASS = { 'Seksi MSKI':'seksi-mski','Seksi Vera':'seksi-vera','Seksi Bank':'seksi-bank','Subbag Umum':'seksi-umum','Seksi PD':'seksi-pd','PTPN':'seksi-ptpn','Semua Seksi':'seksi-all' };
 
-  let tasks = [], filter = 'semua', seksiFilter = '', rekapOpen = false, activeTab = 'bulanan', sortMode = 'status';
+  let tasks = [], filter = 'semua', seksiFilter = '', rekapOpen = false, activeTab = 'bulanan';
 
   /* ── FIREBASE CONFIG ── */
   const FIREBASE_CONFIG = {
@@ -899,21 +903,50 @@
     return '<span class="seksi-badge '+cls+'">'+esc(s)+'</span>';
   }
 
-  /* ── SORT ── */
-  function setSortMode(mode) { sortMode = mode; render(); }
+  /* ── SORT (klik judul kolom) ── */
+  let sortCol = 'status'; // kolom aktif
+  let sortAsc = true;
+
+  const SORT_COL_MAP = {
+    seksi:    (a,b) => a.seksi.localeCompare(b.seksi,'id'),
+    nama:     (a,b) => a.nama.localeCompare(b.nama,'id'),
+    dasar:    (a,b) => (a.dasar||'').localeCompare(b.dasar||'','id'),
+    deadline: (a,b) => new Date(a.deadline)-new Date(b.deadline),
+    prioritas:(a,b) => {const o={high:0,medium:1,low:2}; return (o[a.priority]||1)-(o[b.priority]||1);}
+  };
+
+  function cycleSortCol(col) {
+    if (sortCol === col) { sortAsc = !sortAsc; }
+    else { sortCol = col; sortAsc = true; }
+    updateThIcons();
+    render();
+  }
+
+  function updateThIcons() {
+    const cols = ['seksi','nama','dasar','deadline','prioritas'];
+    cols.forEach(c => {
+      const th = document.getElementById('th-' + c);
+      if (!th) return;
+      const icon = th.querySelector('.th-sort-icon');
+      if (c === sortCol) {
+        th.classList.add('sort-active');
+        icon.textContent = sortAsc ? ' ▲' : ' ▼';
+      } else {
+        th.classList.remove('sort-active');
+        icon.textContent = ' ⇅';
+      }
+    });
+  }
+
+  function setSortMode(mode) { /* legacy — tidak dipakai */ }
 
   function applySort(list) {
-    switch(sortMode) {
-      case 'nama_az':       return list.sort((a,b)=>a.nama.localeCompare(b.nama,'id'));
-      case 'nama_za':       return list.sort((a,b)=>b.nama.localeCompare(a.nama,'id'));
-      case 'seksi_az':      return list.sort((a,b)=>a.seksi.localeCompare(b.seksi,'id'));
-      case 'deadline_asc':  return list.sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
-      case 'deadline_desc': return list.sort((a,b)=>new Date(b.deadline)-new Date(a.deadline));
-      case 'nomor_asc':     return list.sort((a,b)=>parseInt(a.id)-parseInt(b.id));
-      case 'nomor_desc':    return list.sort((a,b)=>parseInt(b.id)-parseInt(a.id));
-      default: // 'status' — selesai ke bawah, lalu deadline
-        return list.sort((a,b)=>{ if(a.done!==b.done) return a.done?1:-1; return new Date(a.deadline)-new Date(b.deadline); });
+    if (sortCol === 'status') {
+      return list.sort((a,b)=>{ if(a.done!==b.done) return a.done?1:-1; return new Date(a.deadline)-new Date(b.deadline); });
     }
+    const fn = SORT_COL_MAP[sortCol];
+    if (!fn) return list;
+    return list.sort((a,b) => sortAsc ? fn(a,b) : -fn(a,b));
   }
 
   /* Render Uraian as a resizable box */
@@ -930,6 +963,7 @@
     else if(filter==='terlambat') list=list.filter(t=>!t.done&&diffDays(t.deadline)<0);
     if (seksiFilter) list=list.filter(t=>t.seksi===seksiFilter);
     applySort(list);
+    updateThIcons();
 
     const body=document.getElementById('taskBody');
     body.innerHTML = !list.length
@@ -1054,7 +1088,7 @@
   const SHEET_ID = '1pl1fwI-FBT_RlKCMa3RVS7Cw0ygiebGVTgqpfJdGT_A';
 
   // ▼▼▼ TEMPEL URL WEB APP ANDA DI SINI setelah deploy Apps Script ▼▼▼
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwzwyvzdeximN1VKzeb-iNI_Cgb5xUdubwCVxGqlPDBTIZ6ppImCR4gx4UJrS2nJX_u/exec';
+  const APPS_SCRIPT_URL = '';
   // Contoh: const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfy.../exec';
   // ▲▲▲ ────────────────────────────────────────────────────────────── ▲▲▲
 
@@ -1091,10 +1125,15 @@
         opt.textContent = name;
         sel.appendChild(opt);
       });
-      const bulanNama = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      // Auto-select BULAN DEPAN (1 bulan mendatang)
       const now = new Date();
-      const targetName = bulanNama[now.getMonth()] + ' ' + now.getFullYear();
-      const match = sheets.find(s => s === targetName) || sheets[sheets.length - 1];
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const bulanNama = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      const targetName = bulanNama[nextMonth.getMonth()] + ' ' + nextMonth.getFullYear();
+      // Cari bulan depan, fallback ke sheet terakhir, fallback ke sheet pertama
+      const match = sheets.find(s => s === targetName)
+                 || sheets[sheets.length - 1]
+                 || sheets[0];
       if (match) { sel.value = match; if (autoLoad) loadSheetsPreview(); }
     }
 
