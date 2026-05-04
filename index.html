@@ -961,7 +961,7 @@
     if (filter==='selesai')       list=list.filter(t=>t.done);
     else if(filter==='proses')    list=list.filter(t=>!t.done&&diffDays(t.deadline)>=0);
     else if(filter==='terlambat') list=list.filter(t=>!t.done&&diffDays(t.deadline)<0);
-    if (seksiFilter) list=list.filter(t=>t.seksi===seksiFilter);
+    if (seksiFilter) list=list.filter(t=>t.seksi===seksiFilter || t.seksi==='Semua Seksi');
     applySort(list);
     updateThIcons();
 
