@@ -1315,61 +1315,6 @@
 </div>
 
 <script>
-
-  /* ── SIDEBAR & NAVIGASI LOGIC ── */
-  function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const label = document.querySelector('.sb-toggle-label');
-    if (sidebar) {
-      const isCollapsed = sidebar.classList.toggle('collapsed');
-      if (label) {
-        label.textContent = isCollapsed ? 'Tampilkan' : 'Sembunyikan';
-      }
-    }
-  }
-
-  function navTo(sectionId) {
-    // Update UI Sidebar Active State
-    document.querySelectorAll('.sb-item').forEach(item => {
-      item.classList.remove('active');
-    });
-    const activeNav = document.getElementById('nav-' + sectionId);
-    if (activeNav) activeNav.classList.add('active');
-
-    // Update Tampilan Halaman (Section Visibility)
-    document.querySelectorAll('.page-section').forEach(section => {
-      section.classList.remove('active');
-    });
-    const targetSection = document.getElementById('section-' + sectionId);
-    if (targetSection) targetSection.classList.add('active');
-    
-    rekapOpen = (sectionId === 'rekap');
-    if (rekapOpen && typeof renderActivePanel === 'function') {
-      renderActivePanel();
-    }
-  }
-
-  function applyRemoteData(newTasks) {
-    if (!Array.isArray(newTasks)) {
-      newTasks = newTasks ? Object.values(newTasks) : [];
-    }
-    
-    // Bandingkan dan update tasks jika perlu
-    if (JSON.stringify(newTasks) !== JSON.stringify(tasks)) {
-      tasks = newTasks;
-      if (typeof render === 'function') render();
-      if (rekapOpen && typeof renderActivePanel === 'function') renderActivePanel();
-    }
-
-    // Update Status Sinkronisasi di Sidebar & Dashboard
-    const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-    const msg = 'Sinkron · ' + timeStr;
-    const s1 = document.getElementById('syncInfo');
-    const s2 = document.getElementById('sbSyncInfo');
-    if (s1) s1.textContent = msg;
-    if (s2) s2.textContent = msg;
-  }
-
   const BULAN_NAMA  = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
   const HARI_NAMA   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
   const SEKSI_CLASS = { 'Seksi MSKI':'seksi-mski','Seksi Vera':'seksi-vera','Seksi Bank':'seksi-bank','Subbag Umum':'seksi-umum','Seksi PD':'seksi-pd','PTPN':'seksi-ptpn','Semua Seksi':'seksi-all' };
@@ -1426,8 +1371,18 @@
   let _realtimeActive = false;
   let _pollingInterval = null;
 
-  
-    document.getElementById('syncInfo').textContent = 'Sinkron · ' + new Date().toLocaleTimeString('id-ID');
+  function applyRemoteData(newTasks) {
+    if (!Array.isArray(newTasks)) newTasks = newTasks ? Object.values(newTasks) : [];
+    if (JSON.stringify(newTasks) !== JSON.stringify(tasks)) {
+      tasks = newTasks;
+      render();
+      if (rekapOpen) renderActivePanel();
+    }
+    const syncMsg = 'Sinkron · ' + new Date().toLocaleTimeString('id-ID');
+    const s1 = document.getElementById('syncInfo');
+    const s2 = document.getElementById('sbSyncInfo');
+    if (s1) s1.textContent = syncMsg;
+    if (s2) s2.textContent = syncMsg;
   }
 
   function startPolling() {
@@ -1463,6 +1418,29 @@
       console.warn('Firebase error:', e);
       startPolling();
     }
+  }
+
+  /* ── FUNGSI SIDEBAR & NAVIGASI ── */
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const label = document.querySelector('.sb-toggle-label');
+    if (sidebar) {
+      const isCollapsed = sidebar.classList.toggle('collapsed');
+      if (label) label.textContent = isCollapsed ? 'Tampilkan' : 'Sembunyikan';
+    }
+  }
+
+  function navTo(sectionId) {
+    document.querySelectorAll('.sb-item').forEach(item => item.classList.remove('active'));
+    const activeNav = document.getElementById('nav-' + sectionId);
+    if (activeNav) activeNav.classList.add('active');
+
+    document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
+    const targetSection = document.getElementById('section-' + sectionId);
+    if (targetSection) targetSection.classList.add('active');
+    
+    rekapOpen = (sectionId === 'rekap');
+    if (rekapOpen && typeof renderActivePanel === 'function') renderActivePanel();
   }
 
   /* ── UTILS ── */
