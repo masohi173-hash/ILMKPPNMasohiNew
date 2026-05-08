@@ -1316,29 +1316,58 @@
 
 <script>
 
-  /* ── SIDEBAR LOGIC ── */
+  /* ── SIDEBAR & NAVIGASI LOGIC ── */
   function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
-    const toggleLabel = document.querySelector('.sb-toggle-label');
-    const isCollapsed = sidebar.classList.toggle('collapsed');
-    if (toggleLabel) {
-      toggleLabel.textContent = isCollapsed ? 'Tampilkan' : 'Sembunyikan';
+    const label = document.querySelector('.sb-toggle-label');
+    if (sidebar) {
+      const isCollapsed = sidebar.classList.toggle('collapsed');
+      if (label) {
+        label.textContent = isCollapsed ? 'Tampilkan' : 'Sembunyikan';
+      }
     }
   }
 
   function navTo(sectionId) {
-    // UI Sidebar Active State
-    document.querySelectorAll('.sb-item').forEach(item => item.classList.remove('active'));
+    // Update UI Sidebar Active State
+    document.querySelectorAll('.sb-item').forEach(item => {
+      item.classList.remove('active');
+    });
     const activeNav = document.getElementById('nav-' + sectionId);
     if (activeNav) activeNav.classList.add('active');
 
-    // Section Visibility
-    document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
+    // Update Tampilan Halaman (Section Visibility)
+    document.querySelectorAll('.page-section').forEach(section => {
+      section.classList.remove('active');
+    });
     const targetSection = document.getElementById('section-' + sectionId);
     if (targetSection) targetSection.classList.add('active');
     
     rekapOpen = (sectionId === 'rekap');
-    if (rekapOpen) renderActivePanel();
+    if (rekapOpen && typeof renderActivePanel === 'function') {
+      renderActivePanel();
+    }
+  }
+
+  function applyRemoteData(newTasks) {
+    if (!Array.isArray(newTasks)) {
+      newTasks = newTasks ? Object.values(newTasks) : [];
+    }
+    
+    // Bandingkan dan update tasks jika perlu
+    if (JSON.stringify(newTasks) !== JSON.stringify(tasks)) {
+      tasks = newTasks;
+      if (typeof render === 'function') render();
+      if (rekapOpen && typeof renderActivePanel === 'function') renderActivePanel();
+    }
+
+    // Update Status Sinkronisasi di Sidebar & Dashboard
+    const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    const msg = 'Sinkron · ' + timeStr;
+    const s1 = document.getElementById('syncInfo');
+    const s2 = document.getElementById('sbSyncInfo');
+    if (s1) s1.textContent = msg;
+    if (s2) s2.textContent = msg;
   }
 
   const BULAN_NAMA  = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -1397,20 +1426,7 @@
   let _realtimeActive = false;
   let _pollingInterval = null;
 
-    function applyRemoteData(newTasks) {
-    if (!Array.isArray(newTasks)) newTasks = newTasks ? Object.values(newTasks) : [];
-    if (JSON.stringify(newTasks) !== JSON.stringify(tasks)) {
-      tasks = newTasks;
-      render();
-      if (rekapOpen) renderActivePanel();
-    }
-    const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-    const msg = 'Sinkron · ' + timeStr;
-    const s1 = document.getElementById('syncInfo');
-    const s2 = document.getElementById('sbSyncInfo');
-    if(s1) s1.textContent = msg;
-    if(s2) s2.textContent = msg;
-  }
+  
     document.getElementById('syncInfo').textContent = 'Sinkron · ' + new Date().toLocaleTimeString('id-ID');
   }
 
