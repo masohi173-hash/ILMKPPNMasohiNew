@@ -1345,6 +1345,13 @@
     // 3. Handle Rekap state
     rekapOpen = (sectionId === 'rekap');
     if (rekapOpen && typeof renderActivePanel === 'function') renderActivePanel();
+    
+    // 4. Handle Gaji state (Auto load sheets list if opening Gaji)
+    if (sectionId === 'gaji') {
+        if (typeof loadSheetList === 'function' && document.getElementById('sheetsTabSelect').options.length <= 1) {
+            loadSheetList();
+        }
+    }
   }
 
 
@@ -1745,12 +1752,13 @@
     const bulanNama = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     const targetName = bulanNama[now.getMonth()] + ' ' + now.getFullYear();
     
-    if (defaultSheets.includes(targetName)) {
-      sel.value = targetName;
-      loadSheetsPreview(); // Auto load if found
-    } else {
-      sel.value = defaultSheets[0];
-    }
+    let match = defaultSheets.find(s => s === targetName) || defaultSheets[0];
+    sel.value = match;
+    
+    // Jangan langsung load data agar user bisa milih dulu
+    document.getElementById('sheetsStatus').className = 'sheets-status info';
+    document.getElementById('sheetsStatus').style.display = 'block';
+    document.getElementById('sheetsStatus').textContent = 'Silakan pilih bulan, lalu klik "Tampilkan Data".';
   }
 
   async function loadSheetsPreview() {
