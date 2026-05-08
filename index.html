@@ -1315,38 +1315,32 @@
 </div>
 
 <script>
-/* ── FUNGSI SIDEBAR ── */
-function toggleSidebar() {
-  const sidebar = document.getElementById('sidebar');
-  const toggleLabel = document.querySelector('.sb-toggle-label');
-  const isCollapsed = sidebar.classList.toggle('collapsed');
-  
-  // Ubah teks label tombol sesuai status
-  if (toggleLabel) {
-    toggleLabel.textContent = isCollapsed ? 'Tampilkan' : 'Sembunyikan';
+
+  /* ── SIDEBAR LOGIC ── */
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const toggleLabel = document.querySelector('.sb-toggle-label');
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    if (toggleLabel) {
+      toggleLabel.textContent = isCollapsed ? 'Tampilkan' : 'Sembunyikan';
+    }
   }
-}
 
-/* ── NAVIGASI ANTAR HALAMAN ── */
-function navTo(sectionId) {
-  // Update UI Sidebar
-  document.querySelectorAll('.sb-item').forEach(item => {
-    item.classList.remove('active');
-  });
-  const activeNav = document.getElementById('nav-' + sectionId);
-  if (activeNav) activeNav.classList.add('active');
+  function navTo(sectionId) {
+    // UI Sidebar Active State
+    document.querySelectorAll('.sb-item').forEach(item => item.classList.remove('active'));
+    const activeNav = document.getElementById('nav-' + sectionId);
+    if (activeNav) activeNav.classList.add('active');
 
-  // Update Tampilan Halaman
-  document.querySelectorAll('.page-section').forEach(section => {
-    section.classList.remove('active');
-  });
-  document.getElementById('section-' + sectionId).classList.add('active');
-  
-  // Update flag rekap jika masuk ke menu rekap
-  rekapOpen = (sectionId === 'rekap');
-  if (rekapOpen) renderActivePanel();
-}
-  
+    // Section Visibility
+    document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
+    const targetSection = document.getElementById('section-' + sectionId);
+    if (targetSection) targetSection.classList.add('active');
+    
+    rekapOpen = (sectionId === 'rekap');
+    if (rekapOpen) renderActivePanel();
+  }
+
   const BULAN_NAMA  = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
   const HARI_NAMA   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
   const SEKSI_CLASS = { 'Seksi MSKI':'seksi-mski','Seksi Vera':'seksi-vera','Seksi Bank':'seksi-bank','Subbag Umum':'seksi-umum','Seksi PD':'seksi-pd','PTPN':'seksi-ptpn','Semua Seksi':'seksi-all' };
@@ -1403,24 +1397,20 @@ function navTo(sectionId) {
   let _realtimeActive = false;
   let _pollingInterval = null;
 
-  function applyRemoteData(newTasks) {
+    function applyRemoteData(newTasks) {
     if (!Array.isArray(newTasks)) newTasks = newTasks ? Object.values(newTasks) : [];
     if (JSON.stringify(newTasks) !== JSON.stringify(tasks)) {
       tasks = newTasks;
       render();
       if (rekapOpen) renderActivePanel();
     }
-    // PERBAIKAN DI SINI: Update kedua elemen info sinkronisasi
-  const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-  const syncMsg = 'Sinkron · ' + timeStr;
-  
-  if (document.getElementById('syncInfo')) {
-    document.getElementById('syncInfo').textContent = syncMsg;
+    const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    const msg = 'Sinkron · ' + timeStr;
+    const s1 = document.getElementById('syncInfo');
+    const s2 = document.getElementById('sbSyncInfo');
+    if(s1) s1.textContent = msg;
+    if(s2) s2.textContent = msg;
   }
-  if (document.getElementById('sbSyncInfo')) {
-    document.getElementById('sbSyncInfo').textContent = syncMsg;
-  }
-}
     document.getElementById('syncInfo').textContent = 'Sinkron · ' + new Date().toLocaleTimeString('id-ID');
   }
 
