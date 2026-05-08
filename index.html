@@ -47,20 +47,308 @@
       }
     }
 
-    body { 
-      font-family: var(--font); 
-      background: var(--bg-tertiary); 
-      color: var(--text-primary); 
-      min-height: 100vh; 
-      padding: 2.5rem 1.5rem; 
+    /* ══════════════════════════════════════════
+       APP SHELL — SIDEBAR + MAIN LAYOUT
+       ══════════════════════════════════════════ */
+    html, body {
+      height: 100%;
+      overflow: hidden; /* shell handles scroll */
+    }
+    body {
+      font-family: var(--font);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
       line-height: 1.5;
+      display: flex;
+    }
+
+    /* ── SIDEBAR ── */
+    :root {
+      --sb-expanded: 232px;
+      --sb-collapsed: 60px;
+      --sb-bg: var(--bg-primary);
+      --sb-transition: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar {
+      width: var(--sb-expanded);
+      min-width: var(--sb-expanded);
+      height: 100vh;
+      background: var(--sb-bg);
+      border-right: 1px solid var(--border-light);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      left: 0;
+      z-index: 100;
+      transition: width var(--sb-transition), min-width var(--sb-transition);
+      overflow: hidden;
+      box-shadow: 2px 0 8px rgb(0 0 0 / 0.04);
+    }
+    .sidebar.collapsed {
+      width: var(--sb-collapsed);
+      min-width: var(--sb-collapsed);
+    }
+
+    /* Sidebar header */
+    .sb-header {
+      padding: 18px 14px 14px;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 64px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .sb-logo {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(37,99,235,0.3);
+      flex-shrink: 0;
+    }
+    .sb-title-wrap {
+      overflow: hidden;
+      white-space: nowrap;
+      opacity: 1;
+      transition: opacity var(--sb-transition), transform var(--sb-transition);
+    }
+    .sidebar.collapsed .sb-title-wrap {
+      opacity: 0;
+      transform: translateX(-8px);
+      pointer-events: none;
+    }
+    .sb-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+    .sb-subtitle {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 1px;
+    }
+
+    /* Sidebar nav */
+    .sb-nav {
+      flex: 1;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .sb-nav::-webkit-scrollbar { width: 0; }
+
+    .sb-group-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      padding: 10px 10px 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      opacity: 1;
+      height: 28px;
+      transition: opacity var(--sb-transition), height var(--sb-transition);
+    }
+    .sidebar.collapsed .sb-group-label {
+      opacity: 0;
+      height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+
+    .sb-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      position: relative;
+      white-space: nowrap;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      user-select: none;
+    }
+    .sb-item:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    .sb-item.active {
+      background: #eff6ff;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    @media (prefers-color-scheme: dark) {
+      .sb-item.active { background: #1e3a5f; color: #60a5fa; }
+    }
+    .sb-icon {
+      font-size: 18px;
+      width: 28px;
+      min-width: 28px;
+      text-align: center;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .sb-label {
+      overflow: hidden;
+      opacity: 1;
+      white-space: nowrap;
+      transition: opacity var(--sb-transition), transform var(--sb-transition);
+    }
+    .sidebar.collapsed .sb-label {
+      opacity: 0;
+      transform: translateX(-6px);
+      pointer-events: none;
+    }
+
+    /* Tooltip on collapsed */
+    .sb-item::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: calc(var(--sb-collapsed) - 4px);
+      top: 50%;
+      transform: translateY(-50%) translateX(4px);
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s, transform 0.15s;
+      z-index: 200;
+      box-shadow: var(--shadow-md);
+    }
+    .sidebar.collapsed .sb-item:hover::after {
+      opacity: 1;
+      transform: translateY(-50%) translateX(8px);
+    }
+
+    /* Active indicator bar */
+    .sb-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 20%;
+      height: 60%;
+      width: 3px;
+      background: var(--accent);
+      border-radius: 0 3px 3px 0;
+    }
+
+    /* Sidebar footer / toggle */
+    .sb-footer {
+      padding: 10px 8px;
+      border-top: 1px solid var(--border-light);
+      flex-shrink: 0;
+    }
+    .sb-sync {
+      font-size: 11px;
+      color: var(--text-secondary);
+      padding: 4px 10px 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      opacity: 1;
+      transition: opacity var(--sb-transition);
+    }
+    .sidebar.collapsed .sb-sync { opacity: 0; height: 0; padding: 0; }
+
+    .sb-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.15s, color 0.15s;
+      user-select: none;
+      border: none;
+      background: transparent;
+      width: 100%;
+      font-family: var(--font);
+    }
+    .sb-toggle:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+    .sb-toggle-icon {
+      font-size: 18px;
+      width: 28px;
+      min-width: 28px;
+      text-align: center;
+      transition: transform var(--sb-transition);
+      flex-shrink: 0;
+    }
+    .sidebar.collapsed .sb-toggle-icon { transform: rotate(180deg); }
+    .sb-toggle-label {
+      overflow: hidden;
+      opacity: 1;
+      white-space: nowrap;
+      transition: opacity var(--sb-transition), transform var(--sb-transition);
+    }
+    .sidebar.collapsed .sb-toggle-label {
+      opacity: 0;
+      transform: translateX(-6px);
+    }
+
+    /* ── MAIN CONTENT AREA ── */
+    .main-content {
+      flex: 1;
+      height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 2rem 2rem 3rem;
+      transition: padding var(--sb-transition);
+    }
+    .main-content::-webkit-scrollbar { width: 6px; }
+    .main-content::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+    .container { max-width: 1300px; margin: 0 auto; }
+
+    /* ── PAGE SECTIONS (shown/hidden by nav) ── */
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+
+    @media (max-width: 640px) {
+      .sidebar {
+        position: fixed;
+        height: 100vh;
+        z-index: 500;
+      }
+      .main-content { padding: 1.2rem 1rem 3rem; }
+      .sidebar:not(.collapsed) ~ .main-content::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.3);
+        z-index: 400;
+      }
     }
     
-    .container { max-width: 1300px; margin: 0 auto; }
-    
-    .header { margin-bottom: 2rem; }
-    .header-title { font-size: 28px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
-    .header-sub { font-size: 15px; color: var(--text-secondary); margin-top: 6px; }
+    .header { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-light); }
+    .header-title { font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+    .header-sub { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
 
     /* STATS */
     .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 2rem; }
@@ -395,24 +683,240 @@
     
     .empty-row td { text-align: center; padding: 4rem; color: var(--text-secondary); font-size: 16px; font-weight: 500; }
 
+    /* ── NOTULA UPLOAD SECTION ── */
+    .notula-upload-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 768px) { .notula-upload-area { grid-template-columns: 1fr; } }
+
+    .notula-upload-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+    }
+    .notula-upload-card-title {
+      font-size: 15px; font-weight: 600; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px; color: var(--text-primary);
+    }
+
+    /* FOTO */
+    .foto-dropzone {
+      border: 2px dashed var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--bg-primary);
+      margin-bottom: 12px;
+    }
+    .foto-dropzone:hover { border-color: var(--accent); background: #eff6ff; }
+    .foto-dropzone input[type=file] { display: none; }
+    .foto-dropzone-label { font-size: 14px; color: var(--text-secondary); cursor: pointer; }
+    .foto-dropzone-label strong { color: var(--accent); }
+
+    .foto-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .foto-thumb-wrap {
+      position: relative;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-light);
+      background: var(--bg-tertiary);
+    }
+    .foto-thumb-wrap img { width: 100%; height: 90px; object-fit: cover; display: block; }
+    .foto-thumb-del {
+      position: absolute; top: 4px; right: 4px;
+      background: rgba(220,38,38,0.85); color: #fff;
+      border: none; border-radius: 50%;
+      width: 22px; height: 22px;
+      font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1;
+    }
+    .foto-caption-input {
+      width: 100%; border: none; border-top: 1px solid var(--border-light);
+      padding: 4px 6px; font-size: 11px; background: var(--bg-secondary);
+      color: var(--text-primary); font-family: var(--font);
+    }
+    .foto-caption-input:focus { outline: none; background: var(--bg-primary); }
+
+    .btn-save-notula {
+      background: var(--accent); color: #fff; border: none; border-radius: var(--radius-md);
+      padding: 9px 20px; font-size: 14px; font-family: var(--font);
+      cursor: pointer; font-weight: 600; transition: background 0.2s; margin-top: 10px;
+    }
+    .btn-save-notula:hover { background: var(--accent-hover); }
+
+    /* ABSENSI */
+    .absensi-header-row {
+      display: grid;
+      grid-template-columns: 40px 1fr 1fr 130px 36px;
+      gap: 8px; align-items: center;
+      font-size: 12px; font-weight: 600; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: .04em;
+      margin-bottom: 6px; padding: 0 4px;
+    }
+    .absensi-row {
+      display: grid;
+      grid-template-columns: 40px 1fr 1fr 130px 36px;
+      gap: 8px; align-items: center; margin-bottom: 6px;
+    }
+    .absensi-row input, .absensi-row select {
+      border: 1px solid var(--border-mid);
+      border-radius: var(--radius-md);
+      padding: 6px 10px; font-size: 13px; font-family: var(--font);
+      background: var(--bg-primary); color: var(--text-primary);
+      height: 36px; width: 100%;
+    }
+    .absensi-row input:focus, .absensi-row select:focus {
+      outline: none; border-color: var(--accent);
+    }
+    .absensi-no { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-align: center; }
+    .btn-del-row {
+      background: transparent; border: 1px solid #fca5a5;
+      border-radius: var(--radius-md); color: #dc2626;
+      width: 36px; height: 36px; cursor: pointer;
+      font-size: 16px; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    .btn-del-row:hover { background: #fee2e2; }
+    .btn-add-absensi {
+      background: transparent; border: 1px dashed var(--border-strong);
+      border-radius: var(--radius-md); color: var(--text-secondary);
+      padding: 7px 14px; font-size: 13px; font-family: var(--font);
+      cursor: pointer; font-weight: 500; transition: all 0.2s; margin-top: 4px;
+      width: 100%;
+    }
+    .btn-add-absensi:hover { border-color: var(--accent); color: var(--accent); background: #eff6ff; }
+
+    .notula-save-status {
+      font-size: 13px; font-weight: 500; color: var(--text-secondary);
+      margin-top: 8px; min-height: 20px;
+    }
+    .notula-save-status.ok { color: #16a34a; }
+    .notula-save-status.err { color: #dc2626; }
+
+    /* INFO RAPAT */
+    .info-rapat-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;
+    }
+    @media (max-width: 500px) { .info-rapat-grid { grid-template-columns: 1fr; } }
+    .info-rapat-grid input {
+      border: 1px solid var(--border-mid); border-radius: var(--radius-md);
+      padding: 8px 12px; font-size: 14px; font-family: var(--font);
+      background: var(--bg-primary); color: var(--text-primary); height: 38px; width: 100%;
+    }
+    .info-rapat-grid input:focus { outline: none; border-color: var(--accent); }
+    .info-rapat-grid label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; display: block; }
+
+    /* ── PRINT NOTULA (foto & absensi) ── */
+    .notula-print-foto { display: none; }
+    .notula-print-absensi { display: none; }
+
     @media print {
-      body { background: white; padding: 0; }
-      .add-form, .toolbar, .table-wrap, .header, .stats, .btn-print, .btn-rekap, .rekap-controls, .rekap-tabs, .modal-overlay, #monitoringGajiSection, #sheetsRekonSummary, #sheetsInfo, #sheetsTableWrap, #sheetsSearch, #sheetsStatus, #sheetsEmpty, .sheets-controls { display: none !important; }
+      html, body { overflow: visible; height: auto; }
+      .sidebar { display: none !important; }
+      .main-content { height: auto; overflow: visible; padding: 0; }
+      body { display: block; background: white; }
+      .add-form, .toolbar, .table-wrap, .header, .stats, .btn-print, .btn-rekap, .rekap-controls, .rekap-tabs, .modal-overlay, #monitoringGajiSection, #sheetsRekonSummary, #sheetsInfo, #sheetsTableWrap, #sheetsSearch, #sheetsStatus, #sheetsEmpty, .sheets-controls, .notula-upload-area, .btn-save-notula, .notula-save-status { display: none !important; }
+      .page-section { display: block !important; }
       #rekapSection { display: block !important; border: none; padding: 0; box-shadow: none; }
       .rekap-table-wrap { border: 1px solid #000; }
       .notula-wrap { border: 1px solid #000; }
       .rekap-table td { font-size: 12px; }
       .badge, .seksi-badge { border: 1px solid #ccc; background: transparent !important; color: #000 !important; }
+      .notula-print-foto { display: block !important; margin-top: 24px; page-break-inside: avoid; }
+      .notula-print-foto h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 12px; }
+      .notula-print-foto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .notula-print-foto-grid figure { margin: 0; text-align: center; }
+      .notula-print-foto-grid img { width: 100%; max-height: 160px; object-fit: cover; border: 1px solid #ccc; }
+      .notula-print-foto-grid figcaption { font-size: 10px; color: #555; margin-top: 3px; }
+      .notula-print-absensi { display: block !important; margin-top: 24px; page-break-inside: avoid; }
+      .notula-print-absensi h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 12px; }
+      .notula-print-absensi .info-rapat-print { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; font-size: 12px; }
+      .abs-print-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+      .abs-print-table th { border: 1px solid #000; background: #f0f0f0; padding: 5px 8px; font-weight: 700; text-align: center; }
+      .abs-print-table td { border: 1px solid #888; padding: 5px 8px; }
+      .abs-status-H { color: #16a34a; font-weight: 700; }
+      .abs-status-I { color: #d97706; font-weight: 700; }
+      .abs-status-S { color: #2563eb; font-weight: 700; }
+      .abs-status-A { color: #dc2626; font-weight: 700; }
     }
   </style>
 </head>
 <body>
+
+<!-- ══════════════════════════════════════════════════════════
+     SIDEBAR NAVIGASI KIRI
+     ══════════════════════════════════════════════════════════ -->
+<nav class="sidebar" id="sidebar">
+
+  <!-- Header -->
+  <div class="sb-header">
+    <div class="sb-logo">ILM</div>
+    <div class="sb-title-wrap">
+      <div class="sb-title">I Love Monday</div>
+      <div class="sb-subtitle">KPPN Masohi</div>
+    </div>
+  </div>
+
+  <!-- Nav items -->
+  <div class="sb-nav">
+    <div class="sb-group-label">Menu Utama</div>
+
+    <div class="sb-item active" id="nav-dashboard" data-tooltip="Dashboard"
+         onclick="navTo('dashboard')">
+      <span class="sb-icon">📊</span>
+      <span class="sb-label">Dashboard</span>
+    </div>
+
+    <div class="sb-item" id="nav-rekap" data-tooltip="Rekap &amp; Notula"
+         onclick="navTo('rekap')">
+      <span class="sb-icon">📋</span>
+      <span class="sb-label">Rekap &amp; Notula</span>
+    </div>
+
+    <div class="sb-group-label" style="margin-top:6px">Keuangan</div>
+
+    <div class="sb-item" id="nav-gaji" data-tooltip="Monitoring Gaji"
+         onclick="navTo('gaji')">
+      <span class="sb-icon">💰</span>
+      <span class="sb-label">Monitoring Gaji</span>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="sb-footer">
+    <div class="sb-sync" id="sbSyncInfo">Memuat...</div>
+    <button class="sb-toggle" onclick="toggleSidebar()" title="Tutup/Buka sidebar">
+      <span class="sb-toggle-icon">◀</span>
+      <span class="sb-toggle-label">Sembunyikan</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════
+     MAIN CONTENT
+     ══════════════════════════════════════════════════════════ -->
+<div class="main-content" id="mainContent">
 <div class="container">
 
-  <div class="header">
-    <div class="header-title">I LOVE MONDAY KPPN MASOHI</div>
-    <div class="header-sub">Dashboard Monitoring Pekerjaan seluruh Seksi/Subbag</div>
-  </div>
+  <!-- ── PAGE: DASHBOARD ── -->
+  <div class="page-section active" id="section-dashboard">
+
+    <div class="header">
+      <div class="header-title">📊 Dashboard Monitoring</div>
+      <div class="header-sub">Kelola &amp; pantau pekerjaan seluruh Seksi/Subbag KPPN Masohi</div>
+    </div>
 
   <div class="stats">
     <div class="stat-card"><div class="stat-label">Total tugas</div><div class="stat-val total" id="st-total">0</div></div>
@@ -519,84 +1023,22 @@
 
   <div style="margin-top:1.5rem">
     <div style="display:flex;gap:10px;margin-bottom:1rem">
-      <button class="btn-rekap" id="btnRekap" onclick="toggleRekap()">📋 Rekap & Notula</button>
-      <button class="btn-rekap" id="btnMonitoringGaji" onclick="toggleMonitoringGaji()">💰 Monitoring Gaji</button>
+      <button class="btn-rekap" onclick="navTo('rekap')">📋 Rekap &amp; Notula</button>
+      <button class="btn-rekap" onclick="navTo('gaji')">💰 Monitoring Gaji</button>
     </div>
   </div>
 
-  <!-- PANEL MONITORING GAJI (di luar rekap) -->
-  <div class="rekap-section" id="monitoringGajiSection" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:8px">
-      <div class="rekap-title">💰 Monitoring Gaji</div>
+  </div><!-- /section-dashboard -->
+
+  <!-- ── PAGE: REKAP & NOTULA ── -->
+  <div class="page-section" id="section-rekap">
+    <div class="header">
+      <div class="header-title">📋 Rekap &amp; Notula</div>
+      <div class="header-sub">Rekap bulanan dan notula rapat mingguan</div>
     </div>
-
-    <div class="sheets-controls">
-      <div class="rc-field">
-        <label>Pilih Sheet / Tab</label>
-        <select id="sheetsTabSelect" class="sheets-tab-select" onchange="onSheetTabChange()">
-          <option value="">— Memuat daftar sheet... —</option>
-        </select>
-      </div>
-      <div class="rc-field" style="justify-content:flex-end">
-        <label>&nbsp;</label>
-        <button class="btn-add" style="height:42px;padding:0 20px" onclick="loadSheetsPreview()">🔄 Tampilkan Data</button>
-      </div>
-    </div>
-
-    <div id="sheetsStatus" class="sheets-status"></div>
-
-    <!-- Summary rekon gaji & SPM -->
-    <div id="sheetsRekonSummary" style="display:none;margin-bottom:1rem">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:1rem">
-        <div class="rekap-card">
-          <div class="rekap-card-label" style="font-size:12px">✅ Rekon Gaji (SPM) — Kol. D</div>
-          <div style="display:flex;gap:16px;align-items:baseline;margin-top:4px">
-            <div><div style="font-size:11px;color:var(--text-secondary)">Sudah</div><div class="rekap-card-val" id="rekonSpmSudah" style="color:#16a34a;font-size:22px">0</div></div>
-            <div><div style="font-size:11px;color:var(--text-secondary)">Belum</div><div class="rekap-card-val" id="rekonSpmBelum" style="color:#dc2626;font-size:22px">0</div></div>
-          </div>
-        </div>
-        <div class="rekap-card">
-          <div class="rekap-card-label" style="font-size:12px">✅ Rekon Gaji (Satker) — Kol. E</div>
-          <div style="display:flex;gap:16px;align-items:baseline;margin-top:4px">
-            <div><div style="font-size:11px;color:var(--text-secondary)">Sudah</div><div class="rekap-card-val" id="rekonSatkerSudah" style="color:#16a34a;font-size:22px">0</div></div>
-            <div><div style="font-size:11px;color:var(--text-secondary)">Belum</div><div class="rekap-card-val" id="rekonSatkerBelum" style="color:#dc2626;font-size:22px">0</div></div>
-          </div>
-        </div>
-        <div class="rekap-card">
-          <div class="rekap-card-label" style="font-size:12px">📄 SPM (SPM) — Kol. G</div>
-          <div style="display:flex;gap:16px;align-items:baseline;margin-top:4px">
-            <div><div style="font-size:11px;color:var(--text-secondary)">Sudah</div><div class="rekap-card-val" id="spmSpmSudah" style="color:#16a34a;font-size:22px">0</div></div>
-            <div><div style="font-size:11px;color:var(--text-secondary)">Belum</div><div class="rekap-card-val" id="spmSpmBelum" style="color:#dc2626;font-size:22px">0</div></div>
-          </div>
-        </div>
-        <div class="rekap-card">
-          <div class="rekap-card-label" style="font-size:12px">📄 SPM (Satker) — Kol. H</div>
-          <div style="display:flex;gap:16px;align-items:baseline;margin-top:4px">
-            <div><div style="font-size:11px;color:var(--text-secondary)">Sudah</div><div class="rekap-card-val" id="spmSatkerSudah" style="color:#16a34a;font-size:22px">0</div></div>
-            <div><div style="font-size:11px;color:var(--text-secondary)">Belum</div><div class="rekap-card-val" id="spmSatkerBelum" style="color:#dc2626;font-size:22px">0</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-
-    <input type="text" id="sheetsSearch" class="sheets-search" placeholder="🔍 Cari data..." oninput="filterSheetsTable()" style="display:none" />
-
-    <div id="sheetsTableWrap" class="rekap-table-wrap" style="display:none;max-height:480px;overflow-y:auto">
-      <table class="rekap-table" id="sheetsTable">
-        <thead id="sheetsHead" style="position:sticky;top:0;z-index:2;background:var(--bg-secondary)"></thead>
-        <tbody id="sheetsBody"></tbody>
-      </table>
-    </div>
-
-    <div id="sheetsEmpty" style="text-align:center;padding:3rem;color:var(--text-secondary);font-size:15px">
-      Pilih nama sheet lalu klik <strong>Tampilkan Data</strong> untuk memuat data dari Google Sheets.
-    </div>
-  </div>
-
-  <div class="rekap-section" id="rekapSection">
+  <div class="rekap-section open" id="rekapSection" style="margin-bottom:0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <div class="rekap-title" id="rekapJudul">Rekap & Notula</div>
+      <div class="rekap-title" id="rekapJudul">Rekap &amp; Notula</div>
       <button class="btn-print" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
     </div>
     <div class="rekap-tabs">
@@ -635,7 +1077,6 @@
       </div>
       
       <div id="rekapChart"></div>
-
       <div class="rekap-grid" id="rekapGrid"></div>
       
       <div class="rekap-table-wrap">
@@ -655,7 +1096,7 @@
       <div class="rekap-controls">
         <div class="rc-field">
           <label>Pilih Minggu (pilih salah satu hari dalam minggu)</label>
-          <input type="date" id="notulaDate" onchange="renderNotula()" style="width:200px" />
+          <input type="date" id="notulaDate" onchange="onNotulaDateChange()" style="width:200px" />
         </div>
         <div class="rc-field">
           <label>Filter Seksi</label>
@@ -669,11 +1110,150 @@
           </select>
         </div>
       </div>
+
+      <!-- AREA UPLOAD FOTO & ABSENSI -->
+      <div class="notula-upload-area" id="notulaUploadArea">
+
+        <!-- CARD ABSENSI -->
+        <div class="notula-upload-card">
+          <div class="notula-upload-card-title">👥 Absensi &amp; Info Rapat</div>
+
+          <div class="info-rapat-grid">
+            <div>
+              <label>Pimpinan Rapat</label>
+              <input type="text" id="not-pimpinan" placeholder="Nama pimpinan rapat..." oninput="markNotulaUnsaved()" />
+            </div>
+            <div>
+              <label>Notulen</label>
+              <input type="text" id="not-notulen" placeholder="Nama notulen..." oninput="markNotulaUnsaved()" />
+            </div>
+            <div>
+              <label>Tempat Rapat</label>
+              <input type="text" id="not-tempat" placeholder="Contoh: Aula KPPN..." oninput="markNotulaUnsaved()" />
+            </div>
+            <div>
+              <label>Jam Rapat</label>
+              <input type="time" id="not-jam" oninput="markNotulaUnsaved()" />
+            </div>
+          </div>
+
+          <div style="margin-bottom:8px">
+            <div class="absensi-header-row">
+              <div style="text-align:center">No</div>
+              <div>Nama</div>
+              <div>Jabatan</div>
+              <div style="text-align:center">Status</div>
+              <div></div>
+            </div>
+            <div id="absensiRows"></div>
+            <button class="btn-add-absensi" onclick="addAbsensiRow()">+ Tambah Peserta</button>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button class="btn-save-notula" onclick="saveNotulaWeek()">💾 Simpan Absensi &amp; Info</button>
+            <div class="notula-save-status" id="absStatus"></div>
+          </div>
+        </div>
+
+        <!-- CARD FOTO -->
+        <div class="notula-upload-card">
+          <div class="notula-upload-card-title">📸 Foto Dokumentasi Rapat</div>
+
+          <label class="foto-dropzone" id="fotoDrop" onclick="document.getElementById('fotoInput').click()">
+            <input type="file" id="fotoInput" accept="image/*" multiple onchange="handleFotoUpload(event)" />
+            <div class="foto-dropzone-label">
+              📁 <strong>Klik untuk pilih foto</strong><br/>
+              <span style="font-size:12px">JPG, PNG, WebP — dapat pilih beberapa</span>
+            </div>
+          </label>
+
+          <div class="foto-preview-grid" id="fotoPreviewGrid"></div>
+
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px">
+            <button class="btn-save-notula" onclick="saveNotulaWeek()">💾 Simpan Foto</button>
+            <div class="notula-save-status" id="fotoStatus"></div>
+          </div>
+        </div>
+
+      </div>
+
       <div id="notulaContent"></div>
     </div>
-
   </div>
-</div>
+  </div><!-- /section-rekap -->
+
+  <!-- ── PAGE: MONITORING GAJI ── -->
+  <div class="page-section" id="section-gaji">
+    <div class="header">
+      <div class="header-title">💰 Monitoring Gaji</div>
+      <div class="header-sub">Data rekonsiliasi gaji dan SPM dari Google Sheets</div>
+    </div>
+  <div class="rekap-section open" id="monitoringGajiSection" style="margin-bottom:0">
+    <div class="sheets-controls">
+      <div class="rc-field">
+        <label>Pilih Sheet / Tab</label>
+        <select id="sheetsTabSelect" class="sheets-tab-select" onchange="onSheetTabChange()">
+          <option value="">— Memuat daftar sheet... —</option>
+        </select>
+      </div>
+      <div class="rc-field" style="justify-content:flex-end">
+        <label>&nbsp;</label>
+        <button class="btn-add" style="height:42px;padding:0 20px" onclick="loadSheetsPreview()">🔄 Tampilkan Data</button>
+      </div>
+    </div>
+
+    <div id="sheetsStatus" class="sheets-status"></div>
+
+    <div id="sheetsRekonSummary" style="display:none;margin-bottom:1rem">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:1rem">
+        <div class="rekap-card">
+          <div class="rekap-card-label" style="font-size:12px">✅ Rekon Gaji (SPM) — Kol. D</div>
+          <div style="display:flex;gap:16px;align-items:baseline;margin-top:4px">
+            <div><div style="font-size:11px;color:var(--text-secondary)">Sudah</div><div class="rekap-card-val" id="rekonSpmSudah" style="color:#16a34a;font-size:22px">0</div></div>
+            <div><div style="font-size:11px;color:var(--text-secondary)">Belum</div><div class="rekap-card-val" id="rekonSpmBelum" style="color:#dc2626;font-size:22px">0</div></div>
+          </div>
+        </div>
+        <div class="rekap-card">
+          <div class="rekap-card-label" style="font-size:12px">✅ Rekon Gaji (Satker) — Kol. E</div>
+          <div style="display:flex;gap:16px;align-items:baseline;margin-top:4px">
+            <div><div style="font-size:11px;color:var(--text-secondary)">Sudah</div><div class="rekap-card-val" id="rekonSatkerSudah" style="color:#16a34a;font-size:22px">0</div></div>
+            <div><div style="font-size:11px;color:var(--text-secondary)">Belum</div><div class="rekap-card-val" id="rekonSatkerBelum" style="color:#dc2626;font-size:22px">0</div></div>
+          </div>
+        </div>
+        <div class="rekap-card">
+          <div class="rekap-card-label" style="font-size:12px">📄 SPM (SPM) — Kol. G</div>
+          <div style="display:flex;gap:16px;align-items:baseline;margin-top:4px">
+            <div><div style="font-size:11px;color:var(--text-secondary)">Sudah</div><div class="rekap-card-val" id="spmSpmSudah" style="color:#16a34a;font-size:22px">0</div></div>
+            <div><div style="font-size:11px;color:var(--text-secondary)">Belum</div><div class="rekap-card-val" id="spmSpmBelum" style="color:#dc2626;font-size:22px">0</div></div>
+          </div>
+        </div>
+        <div class="rekap-card">
+          <div class="rekap-card-label" style="font-size:12px">📄 SPM (Satker) — Kol. H</div>
+          <div style="display:flex;gap:16px;align-items:baseline;margin-top:4px">
+            <div><div style="font-size:11px;color:var(--text-secondary)">Sudah</div><div class="rekap-card-val" id="spmSatkerSudah" style="color:#16a34a;font-size:22px">0</div></div>
+            <div><div style="font-size:11px;color:var(--text-secondary)">Belum</div><div class="rekap-card-val" id="spmSatkerBelum" style="color:#dc2626;font-size:22px">0</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <input type="text" id="sheetsSearch" class="sheets-search" placeholder="🔍 Cari data..." oninput="filterSheetsTable()" style="display:none" />
+
+    <div id="sheetsTableWrap" class="rekap-table-wrap" style="display:none;max-height:520px;overflow-y:auto">
+      <table class="rekap-table" id="sheetsTable">
+        <thead id="sheetsHead" style="position:sticky;top:0;z-index:2;background:var(--bg-secondary)"></thead>
+        <tbody id="sheetsBody"></tbody>
+      </table>
+    </div>
+
+    <div id="sheetsEmpty" style="text-align:center;padding:3rem;color:var(--text-secondary);font-size:15px">
+      Pilih nama sheet lalu klik <strong>Tampilkan Data</strong> untuk memuat data dari Google Sheets.
+    </div>
+  </div>
+  </div><!-- /section-gaji -->
+
+</div><!-- /container -->
+</div><!-- /main-content -->
 
 <div class="modal-overlay" id="modalEdit">
   <div class="modal-box">
@@ -1432,6 +2012,237 @@
         </tr>`).join('');
   }
 
+  /* ════════════════════════════════════════════════════════════
+     NOTULA MINGGUAN — FOTO & ABSENSI
+     ════════════════════════════════════════════════════════════ */
+
+  // Local state for notula (foto + absensi) per week key (YYYY-MM-DD = monday)
+  let notulaWeekData = {}; // { [weekKey]: { pimpinan, notulen, tempat, jam, absensi: [], foto: [] } }
+  let currentNotulaWeekKey = null;
+  let notulaUnsaved = false;
+
+  const FB_NOTULA_PATH = 'notula_rapat_v1';
+
+  /* ── LOAD & SAVE NOTULA DATA (Firebase) ── */
+  async function loadNotulaWeek(weekKey) {
+    try {
+      const snap = await getDb().ref(FB_NOTULA_PATH + '/' + weekKey).get();
+      if (snap.exists()) {
+        notulaWeekData[weekKey] = snap.val();
+      } else {
+        notulaWeekData[weekKey] = { pimpinan:'', notulen:'', tempat:'', jam:'', absensi:[], foto:[] };
+      }
+    } catch(e) {
+      // fallback localStorage
+      try {
+        const raw = localStorage.getItem('notula_'+weekKey);
+        notulaWeekData[weekKey] = raw ? JSON.parse(raw) : { pimpinan:'', notulen:'', tempat:'', jam:'', absensi:[], foto:[] };
+      } catch(e2) {
+        notulaWeekData[weekKey] = { pimpinan:'', notulen:'', tempat:'', jam:'', absensi:[], foto:[] };
+      }
+    }
+    return notulaWeekData[weekKey];
+  }
+
+  async function saveNotulaWeek() {
+    const weekKey = currentNotulaWeekKey;
+    if (!weekKey) { alert('Pilih tanggal minggu terlebih dahulu!'); return; }
+
+    // Baca form
+    const d = notulaWeekData[weekKey] || {};
+    d.pimpinan = document.getElementById('not-pimpinan').value.trim();
+    d.notulen  = document.getElementById('not-notulen').value.trim();
+    d.tempat   = document.getElementById('not-tempat').value.trim();
+    d.jam      = document.getElementById('not-jam').value;
+    d.absensi  = collectAbsensiRows();
+    // foto already updated in d.foto by handleFotoUpload/removeFoto
+    if (!d.foto) d.foto = [];
+    notulaWeekData[weekKey] = d;
+
+    setNotulaStatus('Menyimpan...', '');
+    try {
+      await getDb().ref(FB_NOTULA_PATH + '/' + weekKey).set(d);
+      try { localStorage.setItem('notula_'+weekKey, JSON.stringify(d)); } catch(e){}
+      setNotulaStatus('✓ Tersimpan · ' + new Date().toLocaleTimeString('id-ID'), 'ok');
+      notulaUnsaved = false;
+      renderNotula(); // re-render preview
+    } catch(e) {
+      try { localStorage.setItem('notula_'+weekKey, JSON.stringify(d)); } catch(e2){}
+      setNotulaStatus('⚠ Tersimpan lokal (offline)', 'ok');
+      notulaUnsaved = false;
+      renderNotula();
+    }
+  }
+
+  function setNotulaStatus(msg, cls) {
+    ['absStatus','fotoStatus'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = msg;
+      el.className = 'notula-save-status ' + (cls||'');
+    });
+  }
+
+  function markNotulaUnsaved() { notulaUnsaved = true; }
+
+  /* ── DATE CHANGE ── */
+  async function onNotulaDateChange() {
+    if (notulaUnsaved) {
+      if (!confirm('Ada perubahan yang belum disimpan. Lanjut tanpa menyimpan?')) {
+        return;
+      }
+    }
+    renderNotula();
+    await loadNotulaForCurrentWeek();
+  }
+
+  async function loadNotulaForCurrentWeek() {
+    const dateVal = document.getElementById('notulaDate').value;
+    if (!dateVal) return;
+    const monday = getMondayOf(new Date(dateVal + 'T12:00:00'));
+    const weekKey = dateToStr(monday);
+    currentNotulaWeekKey = weekKey;
+
+    const d = await loadNotulaWeek(weekKey);
+    // Populate form
+    document.getElementById('not-pimpinan').value = d.pimpinan || '';
+    document.getElementById('not-notulen').value  = d.notulen  || '';
+    document.getElementById('not-tempat').value   = d.tempat   || '';
+    document.getElementById('not-jam').value      = d.jam      || '';
+    renderAbsensiRows(d.absensi || []);
+    renderFotoPreview(d.foto || []);
+    setNotulaStatus('', '');
+    notulaUnsaved = false;
+    renderNotula(); // also re-render preview with loaded data
+  }
+
+  /* ── ABSENSI ── */
+  const STATUS_OPT = [
+    {val:'H', label:'Hadir'},
+    {val:'I', label:'Izin'},
+    {val:'S', label:'Sakit'},
+    {val:'A', label:'Alpha'},
+  ];
+
+  let absensiData = []; // [ {nama, jabatan, status} ]
+
+  function renderAbsensiRows(rows) {
+    absensiData = rows.length ? rows.map(r=>({...r})) : [];
+    if (!absensiData.length) addAbsensiRow(); else _refreshAbsensiDOM();
+  }
+
+  function _refreshAbsensiDOM() {
+    const container = document.getElementById('absensiRows');
+    if (!container) return;
+    container.innerHTML = absensiData.map((r, i) => `
+      <div class="absensi-row" id="absRow${i}">
+        <div class="absensi-no">${i+1}</div>
+        <input type="text" value="${esc(r.nama||'')}" placeholder="Nama pegawai"
+          oninput="absensiData[${i}].nama=this.value;markNotulaUnsaved()" />
+        <input type="text" value="${esc(r.jabatan||'')}" placeholder="Jabatan/Seksi"
+          oninput="absensiData[${i}].jabatan=this.value;markNotulaUnsaved()" />
+        <select onchange="absensiData[${i}].status=this.value;markNotulaUnsaved()">
+          ${STATUS_OPT.map(o=>`<option value="${o.val}" ${r.status===o.val?'selected':''}>${o.label}</option>`).join('')}
+        </select>
+        <button class="btn-del-row" onclick="removeAbsensiRow(${i})" title="Hapus">×</button>
+      </div>`
+    ).join('');
+  }
+
+  function addAbsensiRow() {
+    absensiData.push({nama:'', jabatan:'', status:'H'});
+    _refreshAbsensiDOM();
+    markNotulaUnsaved();
+  }
+
+  function removeAbsensiRow(i) {
+    absensiData.splice(i, 1);
+    _refreshAbsensiDOM();
+    markNotulaUnsaved();
+  }
+
+  function collectAbsensiRows() {
+    // Re-sync from DOM to be safe
+    document.querySelectorAll('[id^="absRow"]').forEach((row, i) => {
+      const inputs = row.querySelectorAll('input');
+      const sel = row.querySelector('select');
+      if (absensiData[i]) {
+        absensiData[i].nama    = inputs[0]?.value || '';
+        absensiData[i].jabatan = inputs[1]?.value || '';
+        absensiData[i].status  = sel?.value || 'H';
+      }
+    });
+    return absensiData.filter(r => r.nama.trim());
+  }
+
+  /* ── FOTO ── */
+  // Foto stored as base64 data URLs inside notulaWeekData[weekKey].foto
+  function getFotoArray() {
+    const wk = currentNotulaWeekKey;
+    if (!wk || !notulaWeekData[wk]) return [];
+    return notulaWeekData[wk].foto || [];
+  }
+
+  function handleFotoUpload(e) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    const wk = currentNotulaWeekKey;
+    if (!wk) { alert('Pilih tanggal minggu terlebih dahulu!'); return; }
+    if (!notulaWeekData[wk]) notulaWeekData[wk] = {pimpinan:'',notulen:'',tempat:'',jam:'',absensi:[],foto:[]};
+    if (!notulaWeekData[wk].foto) notulaWeekData[wk].foto = [];
+
+    let loaded = 0;
+    files.forEach(file => {
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        notulaWeekData[wk].foto.push({ src: ev.target.result, caption: '' });
+        loaded++;
+        if (loaded === files.length) {
+          renderFotoPreview(notulaWeekData[wk].foto);
+          markNotulaUnsaved();
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = ''; // reset
+  }
+
+  function removeFoto(idx) {
+    const wk = currentNotulaWeekKey;
+    if (!wk || !notulaWeekData[wk]) return;
+    notulaWeekData[wk].foto.splice(idx, 1);
+    renderFotoPreview(notulaWeekData[wk].foto);
+    markNotulaUnsaved();
+  }
+
+  function renderFotoPreview(fotoArr) {
+    const grid = document.getElementById('fotoPreviewGrid');
+    if (!grid) return;
+    if (!fotoArr || !fotoArr.length) {
+      grid.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);padding:8px 0">Belum ada foto</div>';
+      return;
+    }
+    grid.innerHTML = fotoArr.map((f, i) => `
+      <div class="foto-thumb-wrap">
+        <img src="${f.src}" alt="Foto ${i+1}" />
+        <button class="foto-thumb-del" onclick="removeFoto(${i})" title="Hapus foto">×</button>
+        <input class="foto-caption-input" type="text" placeholder="Keterangan foto..."
+          value="${esc(f.caption||'')}"
+          oninput="updateFotoCaption(${i}, this.value)" />
+      </div>`
+    ).join('');
+  }
+
+  function updateFotoCaption(idx, val) {
+    const wk = currentNotulaWeekKey;
+    if (!wk || !notulaWeekData[wk] || !notulaWeekData[wk].foto[idx]) return;
+    notulaWeekData[wk].foto[idx].caption = val;
+    markNotulaUnsaved();
+  }
+
+  /* ── INIT NOTULA DATE ── */
+
   /* ── NOTULA MINGGUAN ── */
   function renderNotula() {
     const dateVal = document.getElementById('notulaDate').value;
@@ -1446,6 +2257,7 @@
     const monday = getMondayOf(new Date(dateVal+'T12:00:00'));
     const sunday = getSundayOf(monday);
     const weekLabel = formatWeekLabel(monday, sunday);
+    const weekKey = dateToStr(monday);
 
     // Filter tasks uploaded in this week
     let list = tasks.filter(t => {
@@ -1468,16 +2280,97 @@
     const selesai = list.filter(t=>t.done).length;
     const telat   = list.filter(t=>!t.done&&diffDays(t.deadline)<0).length;
 
+    // Get notula data for this week (for print sections)
+    const nd       = notulaWeekData[weekKey] || {};
+    const fotoArr  = nd.foto     || [];
+    const absArr   = nd.absensi  || [];
+    const pimpinan = nd.pimpinan || '';
+    const notulen  = nd.notulen  || '';
+    const tempat   = nd.tempat   || '';
+    const jam      = nd.jam      || '';
+
+    // Build info rapat for print
+    let infoRapatPrint = '';
+    if (pimpinan || notulen || tempat || jam) {
+      infoRapatPrint = `<div class="info-rapat-print">
+        ${pimpinan ? `<span><strong>Pimpinan Rapat:</strong> ${esc(pimpinan)}</span>` : ''}
+        ${notulen  ? `<span><strong>Notulen:</strong> ${esc(notulen)}</span>` : ''}
+        ${tempat   ? `<span><strong>Tempat:</strong> ${esc(tempat)}</span>` : ''}
+        ${jam      ? `<span><strong>Jam:</strong> ${esc(jam)} WIT</span>` : ''}
+      </div>`;
+    }
+
+    // Build absensi print table
+    let absensiPrintHTML = '';
+    if (absArr.length) {
+      const hadir = absArr.filter(r=>r.status==='H').length;
+      const izin  = absArr.filter(r=>r.status==='I').length;
+      const sakit = absArr.filter(r=>r.status==='S').length;
+      const alpha = absArr.filter(r=>r.status==='A').length;
+      absensiPrintHTML = `
+        <div class="notula-print-absensi">
+          <h3>📋 Daftar Hadir Peserta Rapat</h3>
+          ${infoRapatPrint}
+          <table class="abs-print-table">
+            <thead>
+              <tr>
+                <th style="width:36px">No</th>
+                <th>Nama</th>
+                <th>Jabatan / Seksi</th>
+                <th style="width:70px">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${absArr.map((r,i)=>`<tr>
+                <td style="text-align:center">${i+1}</td>
+                <td>${esc(r.nama)}</td>
+                <td>${esc(r.jabatan||'-')}</td>
+                <td style="text-align:center" class="abs-status-${r.status||'H'}">${{H:'Hadir',I:'Izin',S:'Sakit',A:'Alpha'}[r.status]||'Hadir'}</td>
+              </tr>`).join('')}
+            </tbody>
+            <tfoot>
+              <tr><td colspan="4" style="text-align:right;font-size:11px;padding:4px 8px;color:#555">
+                Hadir: <strong>${hadir}</strong> &nbsp;|&nbsp; Izin: <strong>${izin}</strong> &nbsp;|&nbsp; Sakit: <strong>${sakit}</strong> &nbsp;|&nbsp; Alpha: <strong>${alpha}</strong> &nbsp;|&nbsp; Total: <strong>${absArr.length}</strong>
+              </td></tr>
+            </tfoot>
+          </table>
+        </div>`;
+    }
+
+    // Build foto print section
+    let fotoPrintHTML = '';
+    if (fotoArr.length) {
+      fotoPrintHTML = `
+        <div class="notula-print-foto">
+          <h3>📸 Dokumentasi Foto Rapat</h3>
+          <div class="notula-print-foto-grid">
+            ${fotoArr.map((f,i)=>`
+              <figure>
+                <img src="${f.src}" alt="Foto ${i+1}" />
+                ${f.caption ? `<figcaption>${esc(f.caption)}</figcaption>` : ''}
+              </figure>`).join('')}
+          </div>
+        </div>`;
+    }
+
     let html = `
       <div class="notula-wrap">
         <div class="notula-header">
-          <div class="notula-judul">📋 NOTULA I LOVE MONDAY</div>
+          <div class="notula-judul">📋 NOTULA I LOVE MONDAY — RAPAT MINGGUAN</div>
           <div class="notula-sub">${weekLabel}</div>
           ${seksi ? '<div class="notula-sub" style="margin-top:4px;font-weight:500">Seksi: '+esc(seksi)+'</div>' : ''}
+          ${(pimpinan||notulen||tempat||jam) ? `
+          <div style="display:flex;gap:16px;margin-top:10px;flex-wrap:wrap;font-size:13px;color:var(--text-secondary)">
+            ${pimpinan ? `<span>🎤 <strong>Pimpinan:</strong> ${esc(pimpinan)}</span>` : ''}
+            ${notulen  ? `<span>📝 <strong>Notulen:</strong> ${esc(notulen)}</span>` : ''}
+            ${tempat   ? `<span>📍 <strong>Tempat:</strong> ${esc(tempat)}</span>` : ''}
+            ${jam      ? `<span>⏰ <strong>Jam:</strong> ${esc(jam)} WIT</span>` : ''}
+          </div>` : ''}
           <div style="display:flex;gap:20px;margin-top:12px;flex-wrap:wrap">
             <span style="font-size:14px">Total diposting: <strong>${total}</strong></span>
             <span style="font-size:14px;color:#16a34a">Selesai: <strong>${selesai}</strong></span>
             <span style="font-size:14px;color:#dc2626">Terlambat: <strong>${telat}</strong></span>
+            ${absArr.length ? `<span style="font-size:14px;color:#2563eb">Peserta rapat: <strong>${absArr.filter(r=>r.status==='H').length}/${absArr.length} hadir</strong></span>` : ''}
           </div>
         </div>`;
 
@@ -1517,6 +2410,10 @@
         html += '</div>';
       });
     }
+
+    // Attach absensi & foto (only visible on print via CSS)
+    html += absensiPrintHTML;
+    html += fotoPrintHTML;
     html += '</div>';
     container.innerHTML = html;
   }
@@ -1596,8 +2493,15 @@
   document.getElementById('rekapBulan').value=now.getMonth();
   document.getElementById('rekapTahun').value=now.getFullYear();
   document.getElementById('notulaDate').value=todayStr();
+  // Set current week key on startup
+  (function(){
+    const monday = getMondayOf(now);
+    currentNotulaWeekKey = dateToStr(monday);
+  })();
   // Muat data awal, lalu aktifkan real-time sync
   loadTasks().then(() => startRealtimeSync());
+  // Load notula data for current week (setelah tasks dimuat)
+  loadNotulaForCurrentWeek();
 </script>
 </body>
 </html>
