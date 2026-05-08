@@ -1321,6 +1321,33 @@
 
   let tasks = [], filter = 'semua', seksiFilter = '', rekapOpen = false, activeTab = 'bulanan';
 
+  /* ── SIDEBAR & NAVIGATION ── */
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const label = document.querySelector('.sb-toggle-label');
+    if (sidebar) {
+      const isCollapsed = sidebar.classList.toggle('collapsed');
+      if (label) label.textContent = isCollapsed ? 'Tampilkan' : 'Sembunyikan';
+    }
+  }
+
+  function navTo(sectionId) {
+    // 1. Update Sidebar Active State
+    document.querySelectorAll('.sb-item').forEach(item => item.classList.remove('active'));
+    const activeNav = document.getElementById('nav-' + sectionId);
+    if (activeNav) activeNav.classList.add('active');
+
+    // 2. Update Page Section Visibility
+    document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
+    const targetSection = document.getElementById('section-' + sectionId);
+    if (targetSection) targetSection.classList.add('active');
+    
+    // 3. Handle Rekap state
+    rekapOpen = (sectionId === 'rekap');
+    if (rekapOpen && typeof renderActivePanel === 'function') renderActivePanel();
+  }
+
+
   /* ── FIREBASE CONFIG ── */
   const FIREBASE_CONFIG = {
     apiKey:            "AIzaSyB67V5LrszRktaNUJx6oCPIkm2wWZlfxhU",
@@ -1378,11 +1405,12 @@
       render();
       if (rekapOpen) renderActivePanel();
     }
-    const syncMsg = 'Sinkron · ' + new Date().toLocaleTimeString('id-ID');
+    const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    const msg = 'Sinkron · ' + timeStr;
     const s1 = document.getElementById('syncInfo');
     const s2 = document.getElementById('sbSyncInfo');
-    if (s1) s1.textContent = syncMsg;
-    if (s2) s2.textContent = syncMsg;
+    if (s1) s1.textContent = msg;
+    if (s2) s2.textContent = msg;
   }
 
   function startPolling() {
@@ -1418,29 +1446,6 @@
       console.warn('Firebase error:', e);
       startPolling();
     }
-  }
-
-  /* ── FUNGSI SIDEBAR & NAVIGASI ── */
-  function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const label = document.querySelector('.sb-toggle-label');
-    if (sidebar) {
-      const isCollapsed = sidebar.classList.toggle('collapsed');
-      if (label) label.textContent = isCollapsed ? 'Tampilkan' : 'Sembunyikan';
-    }
-  }
-
-  function navTo(sectionId) {
-    document.querySelectorAll('.sb-item').forEach(item => item.classList.remove('active'));
-    const activeNav = document.getElementById('nav-' + sectionId);
-    if (activeNav) activeNav.classList.add('active');
-
-    document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
-    const targetSection = document.getElementById('section-' + sectionId);
-    if (targetSection) targetSection.classList.add('active');
-    
-    rekapOpen = (sectionId === 'rekap');
-    if (rekapOpen && typeof renderActivePanel === 'function') renderActivePanel();
   }
 
   /* ── UTILS ── */
@@ -1718,13 +1723,12 @@
     if (sel.value) loadSheetsPreview();
   }
 
-    async function loadSheetList() {
+  async function loadSheetList() {
     const sel = document.getElementById('sheetsTabSelect');
-    // Tambahkan atau ubah nama sheet di sini sesuai dengan tab di Google Sheet Anda
     const defaultSheets = [
       'Januari 2026', 'Februari 2026', 'Maret 2026',
-      'April 2026', 'Mei 2026', 'Juni 2026', 
-      'Juli 2026', 'Agustus 2026', 'September 2026', 
+      'April 2026', 'Mei 2026', 'Juni 2026',
+      'Juli 2026', 'Agustus 2026', 'September 2026',
       'Oktober 2026', 'November 2026', 'Desember 2026'
     ];
 
@@ -1736,125 +1740,65 @@
       sel.appendChild(opt);
     });
 
-    // Pilih otomatis bulan berjalan
+    // Auto-select current month
     const now = new Date();
     const bulanNama = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     const targetName = bulanNama[now.getMonth()] + ' ' + now.getFullYear();
     
     if (defaultSheets.includes(targetName)) {
       sel.value = targetName;
+      loadSheetsPreview(); // Auto load if found
     } else {
       sel.value = defaultSheets[0];
     }
-  });
-      // Auto-select BULAN DEPAN (1 bulan mendatang)
-      const now = new Date();
-      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-      const bulanNama = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-      const targetName = bulanNama[nextMonth.getMonth()] + ' ' + nextMonth.getFullYear();
-      // Cari bulan depan, fallback ke sheet terakhir, fallback ke sheet pertama
-      const match = sheets.find(s => s === targetName)
-                 || sheets[sheets.length - 1]
-                 || sheets[0];
-      if (match) { sel.value = match; if (autoLoad) loadSheetsPreview(); }
-    }
-
-    // Cara 1: Apps Script Web App (paling andal, auto-detect sheet baru)
-    if (APPS_SCRIPT_URL) {
-      try {
-        const res = await fetch(APPS_SCRIPT_URL + '?action=list');
-        if (!res.ok) throw new Error('Apps Script error');
-        const json = await res.json();
-        if (json.sheets && json.sheets.length > 0) {
-          populateSelect(json.sheets, true);
-          return;
-        }
-      } catch(e) { console.warn('Apps Script gagal, coba Feeds API...'); }
-    }
-
-    // Cara 2: Google Feeds API (kadang kena CORS)
-    try {
-      const feedUrl = 'https://spreadsheets.google.com/feeds/worksheets/' + SHEET_ID + '/public/basic?alt=json';
-      const res = await fetch(feedUrl);
-      if (!res.ok) throw new Error('Feeds error');
-      const json = await res.json();
-      const entries = json.feed.entry || [];
-      if (entries.length > 0) {
-        populateSelect(entries.map(e => e.title.$t), true);
-        return;
-      }
-    } catch(e) { console.warn('Feeds API gagal, pakai daftar default...'); }
-
-    // Cara 3: Fallback hardcode
-    populateSelect(defaultSheets, true);
   }
 
-    async function loadSheetsPreview() {
+  async function loadSheetsPreview() {
     const tabName = document.getElementById('sheetsTabSelect').value;
-    if (!tabName) {
-      alert('Pilih nama sheet terlebih dahulu');
-      return;
-    }
-    
-    setSheetsStatus('Sedang mengambil data dari sheet "' + tabName + '"...', 'info');
+    if (!tabName) return;
+    setSheetsStatus('Memuat data dari sheet "' + tabName + '"...', 'info');
     document.getElementById('sheetsTableWrap').style.display = 'none';
-    document.getElementById('sheetsRekonSummary').style.display = 'none';
+    document.getElementById('sheetsSearch').style.display = 'none';
     document.getElementById('sheetsEmpty').style.display = 'none';
+    document.getElementById('sheetsRekonSummary').style.display = 'none';
 
-    try {
-      // Menggunakan Google Visualization API (GViz) yang lebih stabil untuk sheet publik
-      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
-      
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Gagal mengakses Google Sheet. Pastikan Sheet sudah di-share "Anyone with the link can view"');
-      
-      const text = await response.text();
-      // Parsing JSON dari format GViz yang memiliki prefix /*-full-json-*/
-      const jsonData = JSON.parse(text.substring(text.indexOf('(') + 1, text.lastIndexOf(')')));
-      
-      if (!jsonData.table || !jsonData.table.rows || jsonData.table.rows.length === 0) {
-        throw new Error('Sheet "' + tabName + '" kosong atau tidak ditemukan.');
-      }
-
-      const cols = jsonData.table.cols.map(c => c.label || '');
-      const rows = jsonData.table.rows.map(r => 
-        r.c.map(cell => (cell && cell.v !== null) ? (cell.f ? cell.f : cell.v) : '')
-      );
-
-      sheetsRawData = { cols, rows };
-      renderSheetsTable(cols, rows, tabName);
-      
-      document.getElementById('sheetsSearch').style.display = 'block';
-      setSheetsStatus('Berhasil memuat ' + rows.length + ' data.', 'success');
-    } catch (error) {
-      console.error(error);
-      setSheetsStatus('Error: ' + error.message, 'error');
-      document.getElementById('sheetsEmpty').style.display = 'block';
-      document.getElementById('sheetsEmpty').textContent = 'Gagal memuat data. ' + error.message;
-    }
-  };
+    // Cara 1: Apps Script (data lebih akurat, tipe boolean terjaga)
+    if (APPS_SCRIPT_URL) {
+      try {
+        const res = await fetch(APPS_SCRIPT_URL + '?action=data&sheet=' + encodeURIComponent(tabName));
+        if (!res.ok) throw new Error('Apps Script error');
+        const json = await res.json();
+        if (json.error) throw new Error(json.error);
+        sheetsRawData = { cols: json.headers, rows: json.rows };
         sheetsSortCol = -1; sheetsSortAsc = true;
         renderSheetsTable(json.headers, json.rows, tabName);
         return;
       } catch(e) { console.warn('Apps Script data gagal, fallback ke GViz...', e); }
     }
 
-    // Cara 2: GViz (fallback)
+    // Pengambilan data via GViz API (Tanpa Apps Script)
     try {
-      const url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(tabName);
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
       const res = await fetch(url);
-      if (!res.ok) throw new Error('Gagal mengambil data. Cek koneksi dan akses sharing Google Sheets.');
-      const text = await res.text();
-      const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
-      if (!match) throw new Error('Format tidak dikenali. Pastikan nama sheet benar dan Google Sheets sudah di-share publik.');
-      const json = JSON.parse(match[1]);
-      if (!json.table) throw new Error('Sheet "' + tabName + '" tidak ditemukan atau kosong.');
+      if (!res.ok) throw new Error('Gagal mengakses Google Sheet. Pastikan Sheet sudah di-share "Anyone with the link can view".');
+      
+      let text = await res.text();
+      // Bersihkan response GViz untuk mendapatkan JSON murni
+      const startIdx = text.indexOf('{');
+      const endIdx = text.lastIndexOf('}');
+      if (startIdx === -1 || endIdx === -1) throw new Error('Format balasan Google Sheets tidak valid.');
+      
+      const jsonStr = text.substring(startIdx, endIdx + 1);
+      const json = JSON.parse(jsonStr);
+      
+      if (!json.table || !json.table.rows) throw new Error('Sheet "' + tabName + '" tidak ditemukan atau kosong.');
 
       const cols = json.table.cols.map(c => c.label || c.id || '');
-      const rows = (json.table.rows || []).map(r =>
+      const rows = json.table.rows.map(r =>
         (r.c || []).map(c => (c && c.v !== null && c.v !== undefined) ? (c.f !== undefined && c.f !== null ? c.f : c.v) : '')
       );
       const nonEmpty = rows.filter(r => r.some(c => c !== '' && c !== null && c !== undefined));
+      
       sheetsRawData = { cols, rows: nonEmpty };
       sheetsSortCol = -1; sheetsSortAsc = true;
       renderSheetsTable(cols, nonEmpty, tabName);
