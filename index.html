@@ -851,7 +851,20 @@
       .abs-status-S { color: #2563eb; font-weight: 700; }
       .abs-status-A { color: #dc2626; font-weight: 700; }
     }
+
+    /* --- CSS KEGIATAN TAMBAHAN --- */
+    .td-ket { word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; max-width: 250px; }
+    .badge-time { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; font-weight: bold; }
+    .time-past { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .time-today { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .time-future { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .btn-edit { background: var(--warning, #d97706); color: white; padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; margin-right: 4px; }
+    .btn-edit:hover { background: #b45309; }
+    th.sortable { cursor: pointer; transition: background 0.2s; user-select: none; }
+    th.sortable:hover { background: #e2e8f0; }
+    th.sortable span { font-size: 0.8em; margin-left: 4px; color: var(--accent); }
   </style>
+
 </head>
 <body>
 
@@ -893,10 +906,8 @@
       <span class="sb-label">Monitoring Gaji</span>
     </div>
     <div class="sb-group-label" style="margin-top:6px">Agenda</div>
-    <div class="sb-item" id="nav-kegiatan" data-tooltip="List Kegiatan"
-         onclick="navTo('kegiatan')">
-      <span class="sb-icon">🗓️</span>
-      <span class="sb-label">List Kegiatan</span>
+    <div class="sb-item" id="nav-kegiatan" data-tooltip="List Kegiatan" onclick="navTo('kegiatan')">
+      <span class="sb-icon">🗓️</span><span class="sb-label">List Kegiatan</span>
     </div>
   </div>
 
@@ -1269,7 +1280,7 @@
         <button class="btn-add" id="btnToggleFormKegiatan" onclick="toggleFormKegiatan()" style="margin-bottom: 1rem;">+ Tambah Kegiatan Baru</button>
         
         <div id="formKegiatan" class="add-form" style="display: none; margin-bottom: 1.5rem;">
-            <div class="form-title">Input Kegiatan Baru</div>
+            <div class="form-title" id="formKegiatanTitle">Input Kegiatan Baru</div>
             <div class="form-grid" style="grid-template-columns: 2fr 1fr 2fr 1fr auto;">
                 <div class="form-field">
                     <label>Nama Kegiatan *</label>
@@ -1292,8 +1303,8 @@
                     <input type="datetime-local" id="fk-waktu" />
                 </div>
                 <div class="form-actions">
-                    <button class="btn-add" onclick="submitKegiatan()">Simpan</button>
-                    <button class="btn-cancel-edit" style="display: inline-block;" onclick="toggleFormKegiatan()">Batal</button>
+                    <button class="btn-add" id="btnSubmitKegiatan" onclick="submitKegiatan()">Simpan</button>
+                    <button class="btn-cancel-edit" style="display: inline-block;" onclick="toggleFormKegiatan(true)">Batal</button>
                 </div>
             </div>
             <div class="form-uraian">
@@ -1308,12 +1319,12 @@
         <thead>
           <tr>
             <th style="width:40px">#</th>
-            <th style="width:160px">Waktu Kegiatan</th>
-            <th>Nama Kegiatan</th>
-            <th style="width:120px">Tipe</th>
+            <th class="sortable" style="width:180px" onclick="sortKegiatan('waktu')">Waktu Kegiatan <span id="sort-waktu">▲</span></th>
+            <th class="sortable" onclick="sortKegiatan('nama')">Nama Kegiatan <span id="sort-nama"></span></th>
+            <th class="sortable" style="width:120px" onclick="sortKegiatan('tipe')">Tipe <span id="sort-tipe"></span></th>
             <th>Link / Lokasi</th>
             <th>Keterangan</th>
-            <th style="width:80px">Aksi</th>
+            <th style="width:140px; text-align:center;">Aksi</th>
           </tr>
         </thead>
         <tbody id="kegiatanBody"><tr class="empty-row"><td colspan="7">Memuat data...</td></tr></tbody>
@@ -2579,18 +2590,50 @@
 
   /* ── MODUL KEGIATAN ── */
   let kegiatanList = [];
-  const FB_KEGIATAN_PATH = 'kegiatan_masohi_v1';
+  const FB_KEGIATAN_PATH = 'kegiatan_masohi_v2';
+  let editingKegiatanId = null;
+  let sortColKegiatan = 'waktu';
+  let sortAscKegiatan = true;
 
-  function toggleFormKegiatan() {
+  function toggleFormKegiatan(isCancel = false) {
       const form = document.getElementById('formKegiatan');
       const btn = document.getElementById('btnToggleFormKegiatan');
-      if (form.style.display === 'none') {
-          form.style.display = 'block';
-          btn.style.display = 'none';
-      } else {
+      
+      if (isCancel || form.style.display === 'block') {
           form.style.display = 'none';
           btn.style.display = 'inline-block';
+          // Reset if canceled
+          editingKegiatanId = null;
+          document.getElementById('formKegiatanTitle').innerText = 'Input Kegiatan Baru';
+          document.getElementById('btnSubmitKegiatan').innerText = 'Simpan';
+          document.getElementById('fk-nama').value = '';
+          document.getElementById('fk-link').value = '';
+          document.getElementById('fk-waktu').value = '';
+          document.getElementById('fk-ket').value = '';
+      } else {
+          form.style.display = 'block';
+          btn.style.display = 'none';
       }
+  }
+
+  function editKegiatan(id) {
+      const k = kegiatanList.find(x => x.id === id);
+      if (!k) return;
+      
+      editingKegiatanId = id;
+      document.getElementById('fk-nama').value = k.nama || '';
+      document.getElementById('fk-tipe').value = k.tipe || 'Daring';
+      document.getElementById('fk-link').value = k.link || '';
+      document.getElementById('fk-waktu').value = k.waktu || '';
+      document.getElementById('fk-ket').value = k.ket || '';
+      
+      document.getElementById('formKegiatanTitle').innerText = 'Edit Kegiatan';
+      document.getElementById('btnSubmitKegiatan').innerText = 'Update';
+      
+      const form = document.getElementById('formKegiatan');
+      const btn = document.getElementById('btnToggleFormKegiatan');
+      form.style.display = 'block';
+      btn.style.display = 'none';
   }
 
   async function submitKegiatan() {
@@ -2605,28 +2648,53 @@
           return;
       }
 
-      const id = 'kgt_' + Date.now().toString();
-      const newKegiatan = { id, nama, tipe, link, waktu, ket, createdAt: new Date().toISOString() };
-      
-      kegiatanList.push(newKegiatan);
-      kegiatanList.sort((a,b) => new Date(a.waktu) - new Date(b.waktu));
+      if (editingKegiatanId) {
+          // Update Mode
+          const k = kegiatanList.find(x => x.id === editingKegiatanId);
+          if (k) {
+              k.nama = nama; k.tipe = tipe; k.link = link; k.waktu = waktu; k.ket = ket;
+          }
+      } else {
+          // Insert Mode
+          const id = 'kgt_' + Date.now().toString();
+          kegiatanList.push({ id, nama, tipe, link, waktu, ket, createdAt: new Date().toISOString() });
+      }
       
       renderKegiatan();
-      toggleFormKegiatan();
-      
-      // Reset form
-      document.getElementById('fk-nama').value = '';
-      document.getElementById('fk-link').value = '';
-      document.getElementById('fk-waktu').value = '';
-      document.getElementById('fk-ket').value = '';
+      toggleFormKegiatan(true); // Close and reset
 
       // Save to Firebase
-      try {
-          await getDb().ref(FB_KEGIATAN_PATH).set(kegiatanList);
-      } catch(e) {
-          console.error('Gagal menyimpan kegiatan:', e);
-          localStorage.setItem(FB_KEGIATAN_PATH, JSON.stringify(kegiatanList));
+      try { await getDb().ref(FB_KEGIATAN_PATH).set(kegiatanList); } 
+      catch(e) { localStorage.setItem(FB_KEGIATAN_PATH, JSON.stringify(kegiatanList)); }
+  }
+
+  function sortKegiatan(col) {
+      if (sortColKegiatan === col) {
+          sortAscKegiatan = !sortAscKegiatan;
+      } else {
+          sortColKegiatan = col;
+          sortAscKegiatan = true;
       }
+      
+      // Update UI Arrows
+      ['waktu', 'nama', 'tipe'].forEach(c => document.getElementById('sort-' + c).innerText = '');
+      document.getElementById('sort-' + col).innerText = sortAscKegiatan ? ' ▲' : ' ▼';
+      
+      renderKegiatan();
+  }
+
+  function getSisaWaktuHtml(waktuStr) {
+      if (!waktuStr) return '';
+      const now = new Date();
+      const target = new Date(waktuStr);
+      const diffMs = target - now;
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+      if (diffHours < 0) return `<br><span class="badge-time time-past">Lewat ${Math.abs(diffDays)} Hari</span>`;
+      if (diffDays === 0) return `<br><span class="badge-time time-today">Hari ini (Dalam ${diffHours} Jam)</span>`;
+      if (diffDays === 1) return `<br><span class="badge-time time-future">Besok</span>`;
+      return `<br><span class="badge-time time-future">Dalam ${diffDays} Hari</span>`;
   }
 
   function renderKegiatan() {
@@ -2636,26 +2704,43 @@
           return;
       }
       
-      kegiatanList.sort((a,b) => new Date(a.waktu) - new Date(b.waktu));
+      // Apply Sorting
+      kegiatanList.sort((a,b) => {
+          let vA = a[sortColKegiatan] || '';
+          let vB = b[sortColKegiatan] || '';
+          if (sortColKegiatan === 'waktu') {
+              vA = new Date(a.waktu).getTime();
+              vB = new Date(b.waktu).getTime();
+          } else {
+              vA = vA.toLowerCase(); vB = vB.toLowerCase();
+          }
+          if (vA < vB) return sortAscKegiatan ? -1 : 1;
+          if (vA > vB) return sortAscKegiatan ? 1 : -1;
+          return 0;
+      });
 
       tbody.innerHTML = kegiatanList.map((k, idx) => {
           const dateObj = new Date(k.waktu);
-          const timeStr = dateObj.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'}) + '<br>' + dateObj.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+          const timeStr = dateObj.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'}) + ' • ' + dateObj.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+          const sisaHtml = getSisaWaktuHtml(k.waktu);
           
           let badgeClass = 'badge-active';
           if(k.tipe === 'Daring') badgeClass = 'badge-soon';
           if(k.tipe === 'Luring') badgeClass = 'badge-today';
           
-          let linkHtml = k.link ? (k.link.startsWith('http') ? `<a href="${k.link}" target="_blank" style="color:var(--accent);font-weight:500;">Link Meeting</a>` : esc(k.link)) : '-';
+          let linkHtml = k.link ? (k.link.startsWith('http') ? `<a href="${k.link}" target="_blank" style="color:var(--accent);font-weight:500;">Link Buka</a>` : esc(k.link)) : '-';
 
           return `<tr>
               <td style="color:var(--text-secondary);text-align:center;">${idx+1}</td>
-              <td style="font-weight:600;">${timeStr}</td>
+              <td style="font-weight:600;">${timeStr} ${sisaHtml}</td>
               <td style="font-weight:600;color:var(--text-primary);">${esc(k.nama)}</td>
               <td><span class="badge ${badgeClass}">${esc(k.tipe)}</span></td>
-              <td>${linkHtml}</td>
-              <td style="font-size:0.9rem;">${esc(k.ket || '-')}</td>
-              <td><button class="btn-del" onclick="deleteKegiatan('${k.id}')">Hapus</button></td>
+              <td class="td-ket">${linkHtml}</td>
+              <td class="td-ket" style="font-size:0.9rem;">${esc(k.ket || '-')}</td>
+              <td style="text-align:center;">
+                  <button class="btn-edit" onclick="editKegiatan('${k.id}')">Edit</button>
+                  <button class="btn-del" onclick="deleteKegiatan('${k.id}')">Hapus</button>
+              </td>
           </tr>`;
       }).join('');
   }
@@ -2664,27 +2749,20 @@
       if(!confirm('Hapus kegiatan ini?')) return;
       kegiatanList = kegiatanList.filter(k => k.id !== id);
       renderKegiatan();
-      try {
-          await getDb().ref(FB_KEGIATAN_PATH).set(kegiatanList);
-      } catch(e) {
-          localStorage.setItem(FB_KEGIATAN_PATH, JSON.stringify(kegiatanList));
-      }
+      try { await getDb().ref(FB_KEGIATAN_PATH).set(kegiatanList); } 
+      catch(e) { localStorage.setItem(FB_KEGIATAN_PATH, JSON.stringify(kegiatanList)); }
   }
 
   function startRealtimeKegiatan() {
       try {
-          const db = getDb();
-          db.ref(FB_KEGIATAN_PATH).on('value', snap => {
+          getDb().ref(FB_KEGIATAN_PATH).on('value', snap => {
               const data = snap.exists() ? snap.val() : [];
               kegiatanList = Array.isArray(data) ? data : Object.values(data);
               renderKegiatan();
           });
       } catch(e) {
           const local = localStorage.getItem(FB_KEGIATAN_PATH);
-          if (local) {
-              kegiatanList = JSON.parse(local);
-              renderKegiatan();
-          }
+          if (local) { kegiatanList = JSON.parse(local); renderKegiatan(); }
       }
   }
 
