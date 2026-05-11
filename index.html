@@ -5,244 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>I Love Monday KPPN Masohi</title>
   <link rel="icon" type="image/png" href="Favicon.png" />
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
-  /* ── MODUL KEGIATAN ── */
-  let kegiatanList = [];
-  const FB_KEGIATAN_PATH = 'kegiatan_masohi_v1';
-  let kegiatanRealtimeActive = false;
-
-  function toggleFormKegiatan() {
-      const form = document.getElementById('formKegiatan');
-      const btn = document.getElementById('btnToggleFormKegiatan');
-      if (form.style.display === 'none') {
-          form.style.display = 'block';
-          btn.style.display = 'none';
-      } else {
-          form.style.display = 'none';
-          btn.style.display = 'inline-block';
-      }
-  }
-
-  async function submitKegiatan() {
-      const nama = document.getElementById('fk-nama').value.trim();
-      const tipe = document.getElementById('fk-tipe').value;
-      const link = document.getElementById('fk-link').value.trim();
-      const waktu = document.getElementById('fk-waktu').value;
-      const ket = document.getElementById('fk-ket').value.trim();
-
-      if (!nama || !waktu) {
-          alert('Nama Kegiatan dan Waktu wajib diisi!');
-          return;
-      }
-
-      const id = 'kgt_' + Date.now().toString();
-      const newKegiatan = { id, nama, tipe, link, waktu, ket, createdAt: new Date().toISOString() };
-      
-      kegiatanList.push(newKegiatan);
-      kegiatanList.sort((a,b) => new Date(a.waktu) - new Date(b.waktu));
-      
-      renderKegiatan();
-      toggleFormKegiatan();
-      
-      // Reset form
-      document.getElementById('fk-nama').value = '';
-      document.getElementById('fk-link').value = '';
-      document.getElementById('fk-waktu').value = '';
-      document.getElementById('fk-ket').value = '';
-
-      // Save to Firebase
-      try {
-          await getDb().ref(FB_KEGIATAN_PATH).set(kegiatanList);
-      } catch(e) {
-          console.error('Gagal menyimpan kegiatan:', e);
-          localStorage.setItem(FB_KEGIATAN_PATH, JSON.stringify(kegiatanList));
-      }
-  }
-
-  function renderKegiatan() {
-      const tbody = document.getElementById('kegiatanBody');
-      if (!kegiatanList || kegiatanList.length === 0) {
-          tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Belum ada jadwal kegiatan.</td></tr>';
-          return;
-      }
-      
-      // Filter out old activities (older than 1 days) to keep list clean, optional.
-      // But let's show all for now and just sort by time.
-      kegiatanList.sort((a,b) => new Date(a.waktu) - new Date(b.waktu));
-
-      tbody.innerHTML = kegiatanList.map((k, idx) => {
-          const dateObj = new Date(k.waktu);
-          const timeStr = dateObj.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'}) + '<br>' + dateObj.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-          
-          let badgeClass = 'badge-active';
-          if(k.tipe === 'Daring') badgeClass = 'badge-soon';
-          if(k.tipe === 'Luring') badgeClass = 'badge-today';
-          
-          let linkHtml = k.link ? (k.link.startsWith('http') ? `<a href="${k.link}" target="_blank" style="color:var(--accent);font-weight:500;">Link Meeting</a>` : esc(k.link)) : '-';
-
-          return `<tr>
-              <td style="color:var(--text-secondary);text-align:center;">${idx+1}</td>
-              <td style="font-weight:600;">${timeStr}</td>
-              <td style="font-weight:600;color:var(--text-primary);">${esc(k.nama)}</td>
-              <td><span class="badge ${badgeClass}">${esc(k.tipe)}</span></td>
-              <td>${linkHtml}</td>
-              <td style="font-size:0.9rem;">${esc(k.ket || '-')}</td>
-              <td><button class="btn-del" onclick="deleteKegiatan('${k.id}')">Hapus</button></td>
-          </tr>`;
-      }).join('');
-  }
-
-  async function deleteKegiatan(id) {
-      if(!confirm('Hapus kegiatan ini?')) return;
-      kegiatanList = kegiatanList.filter(k => k.id !== id);
-      renderKegiatan();
-      try {
-          await getDb().ref(FB_KEGIATAN_PATH).set(kegiatanList);
-      } catch(e) {
-          localStorage.setItem(FB_KEGIATAN_PATH, JSON.stringify(kegiatanList));
-      }
-  }
-
-  function startRealtimeKegiatan() {
-      try {
-          const db = getDb();
-          db.ref(FB_KEGIATAN_PATH).on('value', snap => {
-              const data = snap.exists() ? snap.val() : [];
-              kegiatanList = Array.isArray(data) ? data : Object.values(data);
-              renderKegiatan();
-          });
-      } catch(e) {
-          const local = localStorage.getItem(FB_KEGIATAN_PATH);
-          if (local) {
-              kegiatanList = JSON.parse(local);
-              renderKegiatan();
-          }
-      }
-  }
-
-  // Hook into existing init
-  const originalLoadTasks = loadTasks;
-
-</script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js">
-  /* ── MODUL KEGIATAN ── */
-  let kegiatanList = [];
-  const FB_KEGIATAN_PATH = 'kegiatan_masohi_v1';
-  let kegiatanRealtimeActive = false;
-
-  function toggleFormKegiatan() {
-      const form = document.getElementById('formKegiatan');
-      const btn = document.getElementById('btnToggleFormKegiatan');
-      if (form.style.display === 'none') {
-          form.style.display = 'block';
-          btn.style.display = 'none';
-      } else {
-          form.style.display = 'none';
-          btn.style.display = 'inline-block';
-      }
-  }
-
-  async function submitKegiatan() {
-      const nama = document.getElementById('fk-nama').value.trim();
-      const tipe = document.getElementById('fk-tipe').value;
-      const link = document.getElementById('fk-link').value.trim();
-      const waktu = document.getElementById('fk-waktu').value;
-      const ket = document.getElementById('fk-ket').value.trim();
-
-      if (!nama || !waktu) {
-          alert('Nama Kegiatan dan Waktu wajib diisi!');
-          return;
-      }
-
-      const id = 'kgt_' + Date.now().toString();
-      const newKegiatan = { id, nama, tipe, link, waktu, ket, createdAt: new Date().toISOString() };
-      
-      kegiatanList.push(newKegiatan);
-      kegiatanList.sort((a,b) => new Date(a.waktu) - new Date(b.waktu));
-      
-      renderKegiatan();
-      toggleFormKegiatan();
-      
-      // Reset form
-      document.getElementById('fk-nama').value = '';
-      document.getElementById('fk-link').value = '';
-      document.getElementById('fk-waktu').value = '';
-      document.getElementById('fk-ket').value = '';
-
-      // Save to Firebase
-      try {
-          await getDb().ref(FB_KEGIATAN_PATH).set(kegiatanList);
-      } catch(e) {
-          console.error('Gagal menyimpan kegiatan:', e);
-          localStorage.setItem(FB_KEGIATAN_PATH, JSON.stringify(kegiatanList));
-      }
-  }
-
-  function renderKegiatan() {
-      const tbody = document.getElementById('kegiatanBody');
-      if (!kegiatanList || kegiatanList.length === 0) {
-          tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Belum ada jadwal kegiatan.</td></tr>';
-          return;
-      }
-      
-      // Filter out old activities (older than 1 days) to keep list clean, optional.
-      // But let's show all for now and just sort by time.
-      kegiatanList.sort((a,b) => new Date(a.waktu) - new Date(b.waktu));
-
-      tbody.innerHTML = kegiatanList.map((k, idx) => {
-          const dateObj = new Date(k.waktu);
-          const timeStr = dateObj.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'}) + '<br>' + dateObj.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-          
-          let badgeClass = 'badge-active';
-          if(k.tipe === 'Daring') badgeClass = 'badge-soon';
-          if(k.tipe === 'Luring') badgeClass = 'badge-today';
-          
-          let linkHtml = k.link ? (k.link.startsWith('http') ? `<a href="${k.link}" target="_blank" style="color:var(--accent);font-weight:500;">Link Meeting</a>` : esc(k.link)) : '-';
-
-          return `<tr>
-              <td style="color:var(--text-secondary);text-align:center;">${idx+1}</td>
-              <td style="font-weight:600;">${timeStr}</td>
-              <td style="font-weight:600;color:var(--text-primary);">${esc(k.nama)}</td>
-              <td><span class="badge ${badgeClass}">${esc(k.tipe)}</span></td>
-              <td>${linkHtml}</td>
-              <td style="font-size:0.9rem;">${esc(k.ket || '-')}</td>
-              <td><button class="btn-del" onclick="deleteKegiatan('${k.id}')">Hapus</button></td>
-          </tr>`;
-      }).join('');
-  }
-
-  async function deleteKegiatan(id) {
-      if(!confirm('Hapus kegiatan ini?')) return;
-      kegiatanList = kegiatanList.filter(k => k.id !== id);
-      renderKegiatan();
-      try {
-          await getDb().ref(FB_KEGIATAN_PATH).set(kegiatanList);
-      } catch(e) {
-          localStorage.setItem(FB_KEGIATAN_PATH, JSON.stringify(kegiatanList));
-      }
-  }
-
-  function startRealtimeKegiatan() {
-      try {
-          const db = getDb();
-          db.ref(FB_KEGIATAN_PATH).on('value', snap => {
-              const data = snap.exists() ? snap.val() : [];
-              kegiatanList = Array.isArray(data) ? data : Object.values(data);
-              renderKegiatan();
-          });
-      } catch(e) {
-          const local = localStorage.getItem(FB_KEGIATAN_PATH);
-          if (local) {
-              kegiatanList = JSON.parse(local);
-              renderKegiatan();
-          }
-      }
-  }
-
-  // Hook into existing init
-  const originalLoadTasks = loadTasks;
-
-</script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -2812,27 +2576,10 @@
     if(rekapOpen) renderActivePanel();
   }
 
-  /* ── INIT ── */
-  const now=new Date();
-  document.getElementById('f-deadline').value=todayStr();
-  document.getElementById('rekapBulan').value=now.getMonth();
-  document.getElementById('rekapTahun').value=now.getFullYear();
-  document.getElementById('notulaDate').value=todayStr();
-  // Set current week key on startup
-  (function(){
-    const monday = getMondayOf(now);
-    currentNotulaWeekKey = dateToStr(monday);
-  })();
-  // Muat data awal, lalu aktifkan real-time sync
-  loadTasks().then(() => startRealtimeSync());
-  startRealtimeKegiatan();
-  // Load notula data for current week (setelah tasks dimuat)
-  loadNotulaForCurrentWeek();
 
   /* ── MODUL KEGIATAN ── */
   let kegiatanList = [];
   const FB_KEGIATAN_PATH = 'kegiatan_masohi_v1';
-  let kegiatanRealtimeActive = false;
 
   function toggleFormKegiatan() {
       const form = document.getElementById('formKegiatan');
@@ -2889,8 +2636,6 @@
           return;
       }
       
-      // Filter out old activities (older than 1 days) to keep list clean, optional.
-      // But let's show all for now and just sort by time.
       kegiatanList.sort((a,b) => new Date(a.waktu) - new Date(b.waktu));
 
       tbody.innerHTML = kegiatanList.map((k, idx) => {
@@ -2943,9 +2688,22 @@
       }
   }
 
-  // Hook into existing init
-  const originalLoadTasks = loadTasks;
-
+  /* ── INIT ── */
+  const now=new Date();
+  document.getElementById('f-deadline').value=todayStr();
+  document.getElementById('rekapBulan').value=now.getMonth();
+  document.getElementById('rekapTahun').value=now.getFullYear();
+  document.getElementById('notulaDate').value=todayStr();
+  // Set current week key on startup
+  (function(){
+    const monday = getMondayOf(now);
+    currentNotulaWeekKey = dateToStr(monday);
+  })();
+  // Muat data awal, lalu aktifkan real-time sync
+  loadTasks().then(() => startRealtimeSync());
+  startRealtimeKegiatan();
+  // Load notula data for current week (setelah tasks dimuat)
+  loadNotulaForCurrentWeek();
 </script>
 </body>
 </html>
