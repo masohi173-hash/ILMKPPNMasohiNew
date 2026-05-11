@@ -7,6 +7,8 @@
   <link rel="icon" type="image/png" href="Favicon.png" />
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -899,6 +901,12 @@
     </div>
 
     <div class="sb-group-label" style="margin-top:6px">Keuangan</div>
+
+    <div class="sb-item" id="nav-keuangan" data-tooltip="Dashboard Keuangan"
+         onclick="navTo('keuangan')">
+      <span class="sb-icon">💹</span>
+      <span class="sb-label">Dashboard Keuangan</span>
+    </div>
 
     <div class="sb-item" id="nav-gaji" data-tooltip="Monitoring Gaji"
          onclick="navTo('gaji')">
