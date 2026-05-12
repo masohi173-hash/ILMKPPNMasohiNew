@@ -1112,6 +1112,33 @@
       border-radius:var(--radius-md); padding:1rem 1.1rem; margin-bottom:1.25rem;
     }
 
+    /* Fix GUP collapsible table overflow */
+    .keu-gup-detail { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .keu-gup-detail-table { min-width: 540px; }
+    .keu-gup-detail-table .td-uraian { max-width: 200px; word-break: break-word; white-space: normal; font-size: 12px; }
+
+    /* Bigger base text for keuangan dashboard */
+    .keu-panel-body { font-size: 14px; }
+    .keu-stat-val   { font-size: 26px !important; }
+    .keu-stat-sub   { font-size: 13px !important; }
+    .keu-stat-lbl   { font-size: 12px !important; }
+    .keu-slbl       { font-size: 12px !important; }
+    .keu-pg-name    { font-size: 14px !important; }
+    .keu-pg-val     { font-size: 13px !important; }
+    .keu-pg-hint    { font-size: 12px !important; }
+    .chart-note     { font-size: 13px !important; }
+    .keu-gup-date   { font-size: 14px !important; }
+    .keu-gup-amount { font-size: 15px !important; }
+    .keu-pagu-name  { font-size: 13.5px !important; }
+    .keu-pagu-pct   { font-size: 12px !important; }
+    .keu-catatan-title { font-size: 14px !important; }
+    .keu-catatan-ta { font-size: 14px !important; }
+    .keu-gup-sum-v  { font-size: 16px !important; }
+    .keu-gup-sum-l  { font-size: 11px !important; }
+    .keu-gup-pct-pill { font-size: 12px !important; }
+    .keu-kkp-m      { font-size: 14px !important; }
+    .keu-kkp-amt    { font-size: 13px !important; }
+
   </style>
 
 </head>
@@ -1456,68 +1483,49 @@
 
   <!-- ── PAGE: MONITORING GAJI ── -->
 
-  <!-- ══════════════════════════════════════════
-       PAGE: DASHBOARD KEUANGAN
-       ══════════════════════════════════════════ -->
+  <!-- DASHBOARD KEUANGAN -->
   <div class="page-section" id="section-keuangan">
     <div class="header">
-      <div class="header-title">💹 Dashboard Keuangan</div>
+      <div class="header-title">💹 Dashboard Keuangan KPPN Masohi sebagai Satker</div>
       <div class="header-sub">Monitoring penyerapan anggaran, GUP, dan belanja bahan — TA 2026</div>
     </div>
-
-    <!-- UPLOAD BAR -->
     <div class="keu-upload-bar">
       <div class="keu-upload-left">
         <div>
-          <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:2px">📂 Sumber Data: Upload File Excel</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:3px">📂 Upload File Excel untuk Update Data</div>
           <div class="keu-last-updated" id="keuLastUpdated">Belum ada data — upload file xlsx untuk memulai</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span class="keu-upload-status" id="keuUploadStatus"></span>
-        <button class="keu-upload-btn" onclick="document.getElementById('keuFileInput').click()">
-          ⬆ Upload File Excel
-        </button>
+        <button class="keu-upload-btn" onclick="document.getElementById('keuFileInput').click()">⬆ Upload File Excel</button>
         <input type="file" id="keuFileInput" class="keu-upload-input" accept=".xlsx,.xls" onchange="handleKeuanganUpload(event)"/>
       </div>
     </div>
-
-    <!-- PANEL 01 -->
     <div class="keu-panel" id="keuPanel1">
       <div class="keu-panel-banner keu-banner-1">
         <div class="keu-panel-num">PANEL 01</div>
         <div class="keu-panel-title">💰 Penyerapan Anggaran</div>
-        <div class="keu-panel-desc">Realisasi belanja dari Transaksi · Target TW · Komposisi pengeluaran</div>
+        <div class="keu-panel-desc">Realisasi belanja · Target Triwulanan · Komposisi pengeluaran</div>
       </div>
-      <div class="keu-panel-body" id="keuBody1">
-        <div style="text-align:center;padding:2rem;color:var(--text-secondary)">Upload file Excel untuk menampilkan data</div>
-      </div>
+      <div class="keu-panel-body" id="keuBody1"><div style="text-align:center;padding:2.5rem;color:var(--text-secondary);font-size:15px">Upload file Excel untuk menampilkan data</div></div>
     </div>
-
-    <!-- PANEL 02 -->
     <div class="keu-panel" id="keuPanel2">
       <div class="keu-panel-banner keu-banner-2">
         <div class="keu-panel-num">PANEL 02</div>
         <div class="keu-panel-title">📈 Progres GUP Bulanan</div>
-        <div class="keu-panel-desc">Ganti Uang Persediaan per siklus · Target triwulanan · Detail transaksi per GUP</div>
+        <div class="keu-panel-desc">Siklus GUP · Target triwulanan · Transaksi per periode</div>
       </div>
-      <div class="keu-panel-body" id="keuBody2">
-        <div style="text-align:center;padding:2rem;color:var(--text-secondary)">Upload file Excel untuk menampilkan data</div>
-      </div>
+      <div class="keu-panel-body" id="keuBody2"><div style="text-align:center;padding:2.5rem;color:var(--text-secondary);font-size:15px">Upload file Excel untuk menampilkan data</div></div>
     </div>
-
-    <!-- PANEL 03 -->
     <div class="keu-panel" id="keuPanel3">
       <div class="keu-panel-banner keu-banner-3">
         <div class="keu-panel-num">PANEL 03</div>
         <div class="keu-panel-title">🗂️ Penyerapan Belanja Bahan</div>
         <div class="keu-panel-desc">Realisasi per kegiatan · Pagu Belanja Bahan Akun 521211</div>
       </div>
-      <div class="keu-panel-body" id="keuBody3">
-        <div style="text-align:center;padding:2rem;color:var(--text-secondary)">Upload file Excel untuk menampilkan data</div>
-      </div>
+      <div class="keu-panel-body" id="keuBody3"><div style="text-align:center;padding:2.5rem;color:var(--text-secondary);font-size:15px">Upload file Excel untuk menampilkan data</div></div>
     </div>
-
   </div><!-- /section-keuangan -->
 
   <div class="page-section" id="section-gaji">
@@ -1592,7 +1600,12 @@
   <!-- ── PAGE: KEGIATAN ── -->
   <div class="page-section" id="section-kegiatan">
     <div class="header">
-      <div class="header-title">🗓️ List Kegiatan Online/Offline</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div class="header-title">🗓️ List Kegiatan Online/Offline</div>
+        <button onclick="downloadKegiatanPDF()" style="background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:7px;box-shadow:0 4px 12px rgba(124,58,237,.3);transition:opacity .2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+          🎨 Download Rekap PDF
+        </button>
+      </div>
       <div class="header-sub">Kelola daftar kegiatan dan jadwal meeting</div>
     </div>
     
@@ -1747,13 +1760,11 @@
     if (rekapOpen && typeof renderActivePanel === 'function') renderActivePanel();
     
     // 4. Handle Gaji state (Auto load sheets list if opening Gaji)
+    if (sectionId === 'keuangan') { loadKeuanganRealtime(); }
     if (sectionId === 'gaji') {
         if (typeof loadSheetList === 'function' && document.getElementById('sheetsTabSelect').options.length <= 1) {
             loadSheetList();
         }
-    }
-    if (sectionId === 'keuangan') {
-        loadKeuanganRealtime();
     }
   }
 
@@ -1862,8 +1873,9 @@
   function todayStr() { return new Date().toISOString().slice(0,10); }
   function nowISO()   { return new Date().toISOString(); }
   function diffDays(d) {
-    const n=new Date(); n.setHours(0,0,0,0);
-    const dl=new Date(d); dl.setHours(0,0,0,0);
+    // Deadline counts as "today" until noon (12:00). After noon it becomes "0 hari lagi" → "terlambat"
+    const n  = new Date(); n.setHours(12,0,0,0);
+    const dl = new Date(d); dl.setHours(12,0,0,0);
     return Math.round((dl-n)/86400000);
   }
   function formatDate(d) { if(!d) return '-'; const [y,m,dd]=d.split('-'); return dd+'/'+m+'/'+y; }
@@ -3008,16 +3020,37 @@
 
   function getSisaWaktuHtml(waktuStr) {
       if (!waktuStr) return '';
-      const now = new Date();
+      // Rule: deadline hari ini = aktif s.d. pukul 12:00. Lewat 12:00 = sudah lewat.
+      const now    = new Date();
       const target = new Date(waktuStr);
-      const diffMs = target - now;
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      // Normalise both to noon for day-diff
+      const nowNoon = new Date(now); nowNoon.setHours(12,0,0,0);
+      const tgtNoon = new Date(target); tgtNoon.setHours(12,0,0,0);
+      const diffMs   = tgtNoon - nowNoon;
+      const diffDays = Math.round(diffMs / (1000*60*60*24));
+      // For real-time display, also check actual time vs noon today
+      const todayNoon = new Date(now); todayNoon.setHours(12,0,0,0);
+      const isToday   = tgtNoon.toDateString() === nowNoon.toDateString();
+      const pastNoon  = now >= todayNoon;
 
-      if (diffHours < 0) return `<br><span class="badge-time time-past">Lewat ${Math.abs(diffDays)} Hari</span>`;
-      if (diffDays === 0) return `<br><span class="badge-time time-today">Hari ini (Dalam ${diffHours} Jam)</span>`;
+      if (diffDays < 0) return `<br><span class="badge-time time-past">Lewat ${Math.abs(diffDays)} Hari</span>`;
+      if (diffDays === 0 && pastNoon) return `<br><span class="badge-time time-past">Lewat Tengah Hari</span>`;
+      if (diffDays === 0) return `<br><span class="badge-time time-today">Hari ini (sebelum 12:00)</span>`;
       if (diffDays === 1) return `<br><span class="badge-time time-future">Besok</span>`;
       return `<br><span class="badge-time time-future">Dalam ${diffDays} Hari</span>`;
+  }
+
+
+  // Auto-detect and add spaces between words in keterangan (handles camelCase / missing spaces)
+  function autoSpace(text) {
+    if (!text || text === '-') return text;
+    // Insert space before uppercase letters that follow lowercase (camelCase)
+    let s = text.replace(/([a-z])([A-Z])/g, '$1 $2');
+    // Insert space between letter and number run
+    s = s.replace(/([a-zA-Z])(\d)/g, '$1 $2').replace(/(\d)([a-zA-Z])/g, '$1 $2');
+    // Collapse multiple spaces
+    s = s.replace(/  +/g, ' ').trim();
+    return esc(s);
   }
 
   function renderKegiatan() {
@@ -3053,13 +3086,17 @@
           
           let linkHtml = k.link ? (k.link.startsWith('http') ? `<a href="${k.link}" target="_blank" style="color:var(--accent);font-weight:500;">Link Buka</a>` : esc(k.link)) : '-';
 
-          return `<tr>
+          const isLewat = new Date(k.waktu) < new Date();
+          const rowStyle = isLewat
+            ? 'opacity:0.45;background:var(--bg-secondary);filter:grayscale(0.4);'
+            : '';
+          return `<tr style="${rowStyle}">
               <td style="color:var(--text-secondary);text-align:center;">${idx+1}</td>
               <td style="font-weight:600;">${timeStr} ${sisaHtml}</td>
               <td style="font-weight:600;color:var(--text-primary);">${esc(k.nama)}</td>
               <td><span class="badge ${badgeClass}">${esc(k.tipe)}</span></td>
               <td class="td-ket">${linkHtml}</td>
-              <td class="td-ket" style="font-size:0.9rem;">${esc(k.ket || '-')}</td>
+              <td class="td-ket" style="font-size:0.9rem;">${autoSpace(k.ket || '-')}</td>
               <td style="text-align:center;">
                   <button class="btn-edit" onclick="editKegiatan('${k.id}')">Edit</button>
                   <button class="btn-del" onclick="deleteKegiatan('${k.id}')">Hapus</button>
@@ -3107,836 +3144,562 @@
   loadNotulaForCurrentWeek();
 
   /* ══════════════════════════════════════════════════════════════
-     KEUANGAN DASHBOARD — Upload, Parse, Firebase, Render
+     KEUANGAN DASHBOARD — Upload · Parse · Firebase · Render
      ══════════════════════════════════════════════════════════════ */
-
   const FB_KEU = 'keuangan_v1';
-  let keuData = null;
-  let keuCharts = {};
-  let keuRealtimeRef = null;
-  let keuLoaded = false;
+  let keuData = null, keuCharts = {}, keuLoaded = false;
 
-  // ── PAGU CONSTANTS (dari RPD TW II) ──────────────────────────
   const PAGU = {
-    pegawai: 150901000,
-    barang:  942922000,
-    upTunai: 30000000,
-    upKKP:   20000000,
-    twTarget: {
-      barang:  { tw1:15, tw2:50, tw3:70, tw4:90 },
-      pegawai: { tw1:20, tw2:50, tw3:75, tw4:95 }
-    }
+    pegawai: 150901000, barang: 942922000, upTunai: 30000000,
+    twTarget: { barang: {tw1:15,tw2:50,tw3:70,tw4:90}, pegawai: {tw1:20,tw2:50,tw3:75,tw4:95} }
   };
+  const BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
-  const BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni',
-                    'Juli','Agustus','September','Oktober','November','Desember'];
-
-  // ── DATE PARSER ───────────────────────────────────────────────
   function parseKeuDate(v) {
     if (!v) return null;
     if (v instanceof Date) return v;
-    if (typeof v === 'number') {
-      // Excel serial date
-      const d = new Date(Math.round((v - 25569) * 86400 * 1000));
-      return d;
-    }
+    if (typeof v === 'number') return new Date(Math.round((v - 25569) * 86400000));
     const s = String(v).trim();
     const m = s.match(/^(\d{1,2})\s+(\w+)\s+(\d{4})/i);
     if (m) {
-      const months = {januari:0,februari:1,maret:2,april:3,mei:4,juni:5,
-                      juli:6,agustus:7,september:8,oktober:9,november:10,desember:11};
-      const mo = months[m[2].toLowerCase()];
+      const mo = {januari:0,februari:1,maret:2,april:3,mei:4,juni:5,juli:6,agustus:7,september:8,oktober:9,november:10,desember:11}[m[2].toLowerCase()];
       if (mo !== undefined) return new Date(+m[3], mo, +m[1]);
     }
-    const d2 = new Date(s);
-    if (!isNaN(d2)) return d2;
-    return null;
+    const d = new Date(s); return isNaN(d) ? null : d;
   }
 
-  function fmtDate(dt) {
-    if (!dt) return '—';
-    return dt.toLocaleDateString('id-ID', {day:'2-digit',month:'short',year:'numeric'});
-  }
-
+  function fmtDate(dt) { return dt ? dt.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) : '—'; }
   function fmtRp(n) {
-    if (!n && n !== 0) return '—';
-    if (n >= 1e9) return 'Rp ' + (n/1e9).toFixed(2) + ' M';
-    if (n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + ' jt';
-    return 'Rp ' + n.toLocaleString('id-ID');
+    if (n == null) return '—';
+    if (n >= 1e9) return 'Rp '+(n/1e9).toFixed(2)+' M';
+    if (n >= 1e6) return 'Rp '+(n/1e6).toFixed(1)+' jt';
+    return 'Rp '+n.toLocaleString('id-ID');
   }
+  function fmtRpFull(n) { return n==null ? '—' : 'Rp '+n.toLocaleString('id-ID'); }
 
-  function fmtRpFull(n) {
-    if (!n && n !== 0) return '—';
-    return 'Rp ' + n.toLocaleString('id-ID');
-  }
-
-  // ── UPLOAD HANDLER ────────────────────────────────────────────
+  /* ── UPLOAD ── */
   async function handleKeuanganUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const status = document.getElementById('keuUploadStatus');
-    status.textContent = '⏳ Membaca file...';
-    status.className = 'keu-upload-status';
+    const file = e.target.files[0]; if (!file) return;
+    const st = document.getElementById('keuUploadStatus');
+    st.textContent = '⏳ Membaca file...'; st.className = 'keu-upload-status';
     try {
       const buf = await file.arrayBuffer();
-      const wb  = XLSX.read(buf, { type: 'array', cellDates: true });
-
-      // Parse sheets
+      const wb  = XLSX.read(buf, {type:'array', cellDates:true});
       const transaksi = parseKeuTransaksi(wb);
       const paguBahan = parseKeuPaguBahan(wb);
-
-      const payload = {
-        lastUpdated: new Date().toISOString(),
-        fileName: file.name,
-        transaksi,
-        paguBahan
-      };
-
-      status.textContent = '☁ Menyimpan ke server...';
+      const payload = { lastUpdated: new Date().toISOString(), fileName: file.name, transaksi, paguBahan };
+      st.textContent = '☁ Menyimpan...'; 
       await getDb().ref(FB_KEU).set(payload);
-
-      status.textContent = `✓ Berhasil — ${transaksi.filter(t=>!t.isGUP).length} transaksi, ${paguBahan.length} kegiatan`;
-      status.className = 'keu-upload-status success';
+      st.textContent = `✓ Berhasil — ${transaksi.filter(t=>!t.isGUP).length} transaksi, ${paguBahan.length} kegiatan`;
+      st.className = 'keu-upload-status success';
       e.target.value = '';
     } catch(err) {
-      console.error(err);
-      status.textContent = '✗ Gagal: ' + err.message;
-      status.className = 'keu-upload-status error';
+      st.textContent = '✗ Gagal: '+err.message; st.className = 'keu-upload-status error';
     }
   }
 
-  // ── PARSE TRANSAKSI ──────────────────────────────────────────
+  /* ── PARSE TRANSAKSI ── */
   function parseKeuTransaksi(wb) {
-    const ws = wb.Sheets['Transaksi'];
-    if (!ws) throw new Error('Sheet "Transaksi" tidak ditemukan');
-    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+    const ws = wb.Sheets['Transaksi']; if (!ws) throw new Error('Sheet "Transaksi" tidak ditemukan');
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
     const result = [];
-
-    for (let i = 1; i < rows.length; i++) {
+    for (let i=1; i<rows.length; i++) {
       const r = rows[i];
-      const no = r[0], uraian = r[1], nilai = r[2], mek = r[3], tgl = r[4];
+      const no=r[0], uraian=r[1], nilai=r[2], mek=r[3], tgl=r[4];
       if (!nilai || typeof nilai !== 'number') continue;
-
       if (String(no||'').trim().toUpperCase() === 'GUP') {
-        // GUP row: tanggal ada di kolom B (uraian)
         const dt = parseKeuDate(uraian);
-        result.push({
-          isGUP: true,
-          tgl: dt ? dt.toISOString() : null,
-          tglRaw: String(uraian||''),
-          nilai: nilai
-        });
-      } else if (typeof no === 'number' && uraian) {
+        result.push({isGUP:true, tgl: dt?dt.toISOString():null, nilai});
+      } else if (typeof no==='number' && uraian) {
         const dt = parseKeuDate(tgl);
-        result.push({
-          isGUP: false,
-          no: no,
-          uraian: String(uraian),
-          nilai: nilai,
-          mek: String(mek||''),
-          tgl: dt ? dt.toISOString() : null,
-          bukti: r[5] ? String(r[5]) : '',
-          sakti: r[6] ? String(r[6]) : ''
-        });
+        result.push({isGUP:false, no, uraian:String(uraian), nilai, mek:String(mek||''),
+          tgl: dt?dt.toISOString():null, bukti:r[5]?String(r[5]):'', sakti:r[6]?String(r[6]):''});
       }
     }
     return result;
   }
 
-  // ── PARSE PAGU BELANJA BAHAN ──────────────────────────────────
+  /* ── PARSE PAGU BELANJA BAHAN — baca E7:E17 untuk pagu, kolom realisasi sebelahnya ── */
   function parseKeuPaguBahan(wb) {
-    const ws = wb.Sheets['Pagu Belanja Bahan'];
-    if (!ws) return [];
-    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+    const ws = wb.Sheets['Pagu Belanja Bahan']; if (!ws) return [];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
     const result = [];
-    for (let i = 1; i < rows.length; i++) {
+    // E = index 4, data mulai baris 7 (index 6) s.d. 17 (index 16)
+    for (let i=6; i<=16 && i<rows.length; i++) {
       const r = rows[i];
-      // Look for rows with kegiatan name + pagu value
-      const nm = r[1] || r[0];
-      const pagu = r[3] || r[2];
-      const real = r[4] || r[5] || 0;
-      if (nm && typeof pagu === 'number' && pagu > 0) {
-        result.push({ kegiatan: String(nm), pagu, realisasi: real||0 });
+      // Cari nama kegiatan di kolom A/B/C
+      const nama = r[0] || r[1] || r[2];
+      // Pagu di kolom E (index 4)
+      const pagu = r[4];
+      // Realisasi di kolom F atau G (index 5 atau 6) — cari yang numeric
+      const real = (typeof r[5]==='number' ? r[5] : 0) || (typeof r[6]==='number' ? r[6] : 0) || 0;
+      if (nama && typeof pagu==='number' && pagu > 0) {
+        result.push({kegiatan: String(nama).trim(), pagu, realisasi: Math.max(0, real)});
       }
     }
     return result;
   }
 
-  // ── FIREBASE REALTIME ─────────────────────────────────────────
+  /* ── FIREBASE REALTIME ── */
   function loadKeuanganRealtime() {
-    if (keuLoaded) return;
-    keuLoaded = true;
-    const ref = getDb().ref(FB_KEU);
-    ref.on('value', snap => {
+    if (keuLoaded) return; keuLoaded = true;
+    getDb().ref(FB_KEU).on('value', snap => {
       if (!snap.exists()) return;
       keuData = snap.val();
       renderKeuanganDashboard(keuData);
     });
   }
 
-  // ── MAIN RENDERER ─────────────────────────────────────────────
+  /* ── MAIN RENDER ── */
   function renderKeuanganDashboard(data) {
     if (!data || !data.transaksi) return;
-
-    // Last updated
     const el = document.getElementById('keuLastUpdated');
     if (el && data.lastUpdated) {
       const d = new Date(data.lastUpdated);
-      el.innerHTML = `<span class="keu-live-dot"></span> Data terakhir diupdate: <strong>${d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})} pukul ${d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</strong> &nbsp;·&nbsp; ${data.fileName||''}`;
+      el.innerHTML = `<span class="keu-live-dot"></span> Terakhir diupdate: <strong>${d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})} pukul ${d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</strong> · ${data.fileName||''}`;
     }
-
-    const transaksi = data.transaksi || [];
-    const paguBahan = data.paguBahan || [];
-
-    // Separate GUP from regular
-    const gupRows  = transaksi.filter(t => t.isGUP);
-    const realRows = transaksi.filter(t => !t.isGUP);
-
+    const gupRows  = data.transaksi.filter(t=>t.isGUP);
+    const realRows = data.transaksi.filter(t=>!t.isGUP);
     renderKeuPanel1(realRows, gupRows);
     renderKeuPanel2(realRows, gupRows);
-    renderKeuPanel3(paguBahan, realRows);
-    renderAllCatatan(data.catatan || {});
+    renderKeuPanel3(data.paguBahan||[], realRows);
+    renderAllCatatan(data.catatan||{});
   }
 
-  // ── PANEL 01: PENYERAPAN ──────────────────────────────────────
+  /* ── KATEGORI ── */
+  function keuKat(u) {
+    if (!u) return 'Lainnya'; u = u.toLowerCase();
+    if (u.includes('bbm')||u.includes('bahan bakar')) return 'BBM';
+    if (u.includes('pemeliharaan')&&(u.includes('gedung')||u.includes('bangunan')||u.includes('halaman')||u.includes('rumah')||u.includes('kantor'))) return 'Pmliharaan Gedung';
+    if (u.includes('pemeliharaan')&&(u.includes('peralatan')||u.includes('mesin')||u.includes('kendaraan')||u.includes('roda'))) return 'Pmliharaan Mesin';
+    if (u.includes('perjalanan')||u.includes('uang harian')||u.includes('akomodasi')||u.includes('transport')) return 'Perjalanan Dinas';
+    if (u.includes('bahan')||u.includes('konsumsi')||u.includes('makan')||u.includes('minum')||u.includes('snack')) return 'Belanja Bahan';
+    if (u.includes('keperluan')||u.includes('atk')||u.includes('alat tulis')||u.includes('cetak')||u.includes('tinta')||u.includes('kertas')||u.includes('materai')) return 'Keperluan Kantor';
+    if (u.includes('honor')) return 'Honor'; return 'Lainnya';
+  }
+
+  function keuDestroyChart(id) {
+    if (keuCharts[id]) { keuCharts[id].destroy(); delete keuCharts[id]; }
+    const el = document.getElementById(id);
+    if (el) { const p=el.parentNode; p.innerHTML=`<canvas id="${id}"></canvas>`; }
+  }
+
+  /* ── PANEL 01 ── */
   function renderKeuPanel1(realRows, gupRows) {
-    // Monthly realisasi
-    const monthly = {};
-    let grandTotal = 0;
-    const katTotal = {};
-    const katCount = {};
-    const cmsByMonth = {};
-
-    realRows.forEach(t => {
-      const val = t.nilai;
-      grandTotal += val;
-      // category
+    const monthly={}, katTotal={}, katCount={};
+    let grand=0;
+    realRows.forEach(t=>{
+      grand += t.nilai;
       const k = keuKat(t.uraian);
-      katTotal[k] = (katTotal[k]||0) + val;
-      katCount[k] = (katCount[k]||0) + 1;
-      // monthly
-      if (t.tgl) {
-        const dt = new Date(t.tgl);
-        const mk = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
-        monthly[mk] = (monthly[mk]||0) + val;
-        if (t.mek && t.mek.toLowerCase().includes('cms')) {
-          cmsByMonth[mk] = (cmsByMonth[mk]||0) + val;
-        }
-      }
+      katTotal[k]=(katTotal[k]||0)+t.nilai; katCount[k]=(katCount[k]||0)+1;
+      if (t.tgl) { const mk=t.tgl.substring(0,7); monthly[mk]=(monthly[mk]||0)+t.nilai; }
     });
-
-    // Accumulate monthly for trend
-    const sortedMonths = Object.keys(monthly).sort();
-    let akum = 0;
-    const akumByMonth = {};
-    sortedMonths.forEach(mk => { akum += monthly[mk]; akumByMonth[mk] = akum; });
-    // Add no-date to last month
-    const noDateTotal = realRows.filter(t=>!t.tgl).reduce((s,t)=>s+t.nilai, 0);
-    if (sortedMonths.length) {
-      const lastMk = sortedMonths[sortedMonths.length-1];
-      akumByMonth[lastMk] = (akumByMonth[lastMk]||0) + noDateTotal;
-    }
-    const latestAkum = Object.values(akumByMonth).pop() || 0;
-    const pctBarang = latestAkum / PAGU.barang * 100;
-
-    // Target lines for chart
-    const tw1Pct = PAGU.twTarget.barang.tw1;
-    const tw2Pct = PAGU.twTarget.barang.tw2;
-    const tw1Val = PAGU.barang * tw1Pct / 100 / 1e6;
-    const tw2Val = PAGU.barang * tw2Pct / 100 / 1e6;
-
-    // Chart labels Jan-Jun
-    const chartLabels = ['Jan','Feb','Mar','Apr','Mei','Jun'];
-    const monthKeys   = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06'];
-    const chartData   = monthKeys.map(mk => akumByMonth[mk] ? +(akumByMonth[mk]/1e6).toFixed(1) : null);
-
-    // Top categories
+    const noDate = realRows.filter(t=>!t.tgl).reduce((s,t)=>s+t.nilai,0);
+    const sortedMK = Object.keys(monthly).sort();
+    let akum=0; const akumMap={};
+    sortedMK.forEach(mk=>{akum+=monthly[mk]; akumMap[mk]=akum;});
+    if (sortedMK.length) akumMap[sortedMK[sortedMK.length-1]]+=noDate;
+    const latestAkum = Object.values(akumMap).pop()||0;
+    const pctBar = latestAkum/PAGU.barang*100;
+    const tw1Val = PAGU.barang*PAGU.twTarget.barang.tw1/100/1e6;
+    const tw2Val = PAGU.barang*PAGU.twTarget.barang.tw2/100/1e6;
+    const allLabels = ['Jan','Feb','Mar','Apr','Mei','Jun'];
+    const allKeys   = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06'];
+    const trendData = allKeys.map(mk=>akumMap[mk]?+(akumMap[mk]/1e6).toFixed(1):null);
     const katSorted = Object.entries(katTotal).sort((a,b)=>b[1]-a[1]);
+    const PALETTE = ['#1B3A6B','#059669','#ea580c','#7c3aed','#d97706','#0ea5e9','#db2777','#65a30d'];
 
-    const html = `
+    document.getElementById('keuBody1').innerHTML = `
     <div class="keu-stats">
-      <div class="keu-stat keu-stat-blue">
-        <span class="keu-stat-ico">📊</span>
-        <div class="keu-stat-lbl">Total Pagu B.Barang</div>
-        <div class="keu-stat-val">Rp 942,9 jt</div>
-        <div class="keu-stat-sub">+ B.Pegawai Rp 150,9 jt</div>
-      </div>
-      <div class="keu-stat keu-stat-green">
-        <span class="keu-stat-ico">✅</span>
-        <div class="keu-stat-lbl">Total Realisasi (Transaksi)</div>
-        <div class="keu-stat-val">${fmtRp(latestAkum)}</div>
-        <div class="keu-stat-sub">${realRows.length} transaksi tercatat</div>
-        <div class="keu-stat-badge keu-badge-${pctBarang >= tw1Pct ? 'g' : 'a'}">${pctBarang.toFixed(1)}% B.Barang</div>
-      </div>
-      <div class="keu-stat keu-stat-amber">
-        <span class="keu-stat-ico">🎯</span>
-        <div class="keu-stat-lbl">Target TW I (Mar)</div>
-        <div class="keu-stat-val">${tw1Pct}%</div>
-        <div class="keu-stat-sub">= ${fmtRp(PAGU.barang*tw1Pct/100)}</div>
-        <div class="keu-stat-badge keu-badge-${pctBarang >= tw1Pct ? 'g' : 'a'}">${pctBarang >= tw1Pct ? 'Terlampaui ✓' : 'Belum'}</div>
-      </div>
-      <div class="keu-stat keu-stat-blue">
-        <span class="keu-stat-ico">🏁</span>
-        <div class="keu-stat-lbl">Target TW II (Jun)</div>
-        <div class="keu-stat-val">${tw2Pct}%</div>
-        <div class="keu-stat-sub">Butuh +${fmtRp(PAGU.barang*tw2Pct/100 - latestAkum)} lagi</div>
-        <div class="keu-stat-badge keu-badge-a">Dalam Proses</div>
-      </div>
+      <div class="keu-stat keu-stat-blue"><span class="keu-stat-ico">📊</span><div class="keu-stat-lbl">Total Pagu B.Barang</div><div class="keu-stat-val">Rp 942,9 jt</div><div class="keu-stat-sub">+ B.Pegawai Rp 150,9 jt</div></div>
+      <div class="keu-stat keu-stat-green"><span class="keu-stat-ico">✅</span><div class="keu-stat-lbl">Realisasi (dari Transaksi)</div><div class="keu-stat-val">${fmtRp(latestAkum)}</div><div class="keu-stat-sub">${realRows.length} transaksi</div><div class="keu-stat-badge keu-badge-${pctBar>=PAGU.twTarget.barang.tw1?'g':'a'}">${pctBar.toFixed(1)}%</div></div>
+      <div class="keu-stat keu-stat-amber"><span class="keu-stat-ico">🎯</span><div class="keu-stat-lbl">Target TW I (Mar 15%)</div><div class="keu-stat-val">Rp ${(PAGU.barang*.15/1e6).toFixed(0)} jt</div><div class="keu-stat-sub">= ${PAGU.twTarget.barang.tw1}% dari pagu</div><div class="keu-stat-badge keu-badge-${pctBar>=15?'g':'r'}">${pctBar>=15?'Terlampaui ✓':'Belum'}</div></div>
+      <div class="keu-stat keu-stat-blue"><span class="keu-stat-ico">🏁</span><div class="keu-stat-lbl">Target TW II (Jun 50%)</div><div class="keu-stat-val">Rp ${(PAGU.barang*.5/1e6).toFixed(0)} jt</div><div class="keu-stat-sub">Butuh +${fmtRp(PAGU.barang*.5-latestAkum)}</div><div class="keu-stat-badge keu-badge-a">Dalam Proses</div></div>
     </div>
-
     <div class="keu-g2">
       <div>
-        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#2563eb"></span>Progres Realisasi vs Target Triwulanan</div>
+        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#2563eb"></span>Realisasi Akumulatif vs Target Triwulanan — Highlight Utama</div>
         <div style="position:relative;height:220px"><canvas id="keuChartTrend"></canvas></div>
-        <div class="chart-note">
-          📌 <strong>Cara membaca:</strong> Garis biru = realisasi yang terus naik. Segitiga oranye = target wajib per triwulan.
-          Selama garis biru <em>di atas</em> segitiga, kita aman. Target TW II (Jun) = 50% dari pagu.
-        </div>
+        <div class="chart-note">📌 Garis biru = realisasi yang terus naik. Segitiga oranye = target wajib per triwulan. Selama garis biru <em>di atas</em> segitiga, kita aman. Target TW II (Juni) = 50% dari pagu.</div>
         <div class="keu-div"></div>
-        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#059669"></span>Realisasi Bulanan (Rp juta)</div>
+        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#059669"></span>Realisasi Belanja per Bulan (Rp juta)</div>
         <div style="position:relative;height:155px"><canvas id="keuChartMonthly"></canvas></div>
-        <div class="chart-note">📌 <strong>Cara membaca:</strong> Setiap batang = total belanja UP bulan tersebut. Bulan dengan batang tinggi berarti pengeluaran besar — wajar jika diikuti pengajuan GUP.</div>
+        <div class="chart-note">📌 Setiap batang = total belanja UP bulan tersebut. Bulan dengan batang tinggi berarti pengeluaran besar — wajar jika diikuti pengajuan GUP.</div>
       </div>
       <div>
-        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#ea580c"></span>Komposisi Realisasi per Kategori</div>
+        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#ea580c"></span>Komposisi Realisasi per Kategori (Nilai)</div>
         <div style="position:relative;height:200px"><canvas id="keuChartDonut"></canvas></div>
-        <div class="chart-note">📌 <strong>Cara membaca:</strong> Setiap irisan = proporsi pengeluaran. Semakin besar irisan, semakin besar porsi belanja di kategori tersebut.</div>
+        <div class="chart-note">📌 Setiap irisan = proporsi pengeluaran. Makin besar irisan, makin besar porsi belanja di kategori tersebut.</div>
         <div class="keu-div"></div>
-        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#7c3aed"></span>Jumlah Transaksi per Kategori</div>
+        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#7c3aed"></span>Frekuensi Transaksi per Kategori</div>
         <div style="position:relative;height:180px"><canvas id="keuChartTxBar"></canvas></div>
-        <div class="chart-note">📌 <strong>Cara membaca:</strong> Bukan nilai uang, tapi <em>frekuensi</em> transaksi. Kategori dengan bar panjang = paling sering dibeli.</div>
+        <div class="chart-note">📌 Bukan nilai uang, tapi <em>berapa kali</em> transaksi terjadi. Bar panjang = kategori yang paling sering dibeli.</div>
       </div>
     </div>
     ${keuCatatanHTML('panel1')}`;
 
-    document.getElementById('keuBody1').innerHTML = html;
-
-    // Draw charts
     keuDestroyChart('keuChartTrend');
     keuDestroyChart('keuChartMonthly');
     keuDestroyChart('keuChartDonut');
     keuDestroyChart('keuChartTxBar');
 
-    // 1. Trend chart (highlight)
     keuCharts['keuChartTrend'] = new Chart(document.getElementById('keuChartTrend'), {
-      type: 'line',
-      data: {
-        labels: chartLabels,
-        datasets: [
-          {
-            label: 'Realisasi Akumulatif (Rp juta)',
-            data: chartData,
-            borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,.10)',
-            fill: true, tension: .4, pointRadius: 6,
-            pointBackgroundColor: '#2563eb', pointBorderColor: '#fff', pointBorderWidth: 3,
-            spanGaps: false
-          },
-          {
-            label: `Target TW I (${tw1Pct}%)`,
-            data: chartLabels.map((l,i) => i===2 ? tw1Val : null),
-            type: 'scatter', pointRadius: 11, pointStyle: 'triangle',
-            pointBackgroundColor: '#f59e0b', borderColor: 'transparent', fill: false
-          },
-          {
-            label: `Target TW II (${tw2Pct}%)`,
-            data: chartLabels.map((l,i) => i===5 ? tw2Val : null),
-            type: 'scatter', pointRadius: 11, pointStyle: 'triangle',
-            pointBackgroundColor: '#ea580c', borderColor: 'transparent', fill: false
-          },
-          {
-            label: 'Proyeksi menuju TW II',
-            data: chartLabels.map((l,i) => {
-              const idx = sortedMonths.length - 1;
-              if (i === idx) return +(latestAkum/1e6).toFixed(1);
-              if (i === 5) return +tw2Val.toFixed(1);
-              return null;
-            }),
-            borderColor: '#ea580c', borderDash: [6,4], borderWidth: 2,
-            pointRadius: 0, fill: false, tension: .3
-          }
-        ]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { display: true, labels: { font: {size:11,weight:'600'}, boxWidth:16, boxHeight:3, padding:12 }},
-          tooltip: { callbacks: { label: c => c.raw != null ? ` Rp ${c.raw} juta` : '' }}
-        },
-        scales: {
-          x: { grid: { color: 'rgba(0,0,0,.05)' }, ticks: { color: '#64748b', font:{weight:'600'} }, border:{display:false} },
-          y: { grid: { color: 'rgba(0,0,0,.05)' }, ticks: { color: '#64748b', callback: v => v+' jt' }, border:{display:false} }
-        }
-      }
+      type:'line', data:{labels:allLabels, datasets:[
+        {label:'Realisasi Akumulatif',data:trendData,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.10)',fill:true,tension:.4,pointRadius:6,pointBackgroundColor:'#2563eb',pointBorderColor:'#fff',pointBorderWidth:3,spanGaps:false},
+        {label:`Target TW I (${PAGU.twTarget.barang.tw1}%)`,data:allKeys.map((_,i)=>i===2?tw1Val:null),type:'scatter',pointRadius:12,pointStyle:'triangle',pointBackgroundColor:'#f59e0b',borderColor:'transparent',fill:false},
+        {label:`Target TW II (${PAGU.twTarget.barang.tw2}%)`,data:allKeys.map((_,i)=>i===5?tw2Val:null),type:'scatter',pointRadius:12,pointStyle:'triangle',pointBackgroundColor:'#ea580c',borderColor:'transparent',fill:false},
+        {label:'Proyeksi → TW II',data:allKeys.map((_,i)=>{if(i===sortedMK.length-1)return+(latestAkum/1e6).toFixed(1);if(i===5)return+tw2Val.toFixed(1);return null;}),borderColor:'#ea580c',borderDash:[6,4],borderWidth:2,pointRadius:0,fill:false,tension:.3}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{font:{size:11,weight:'600'},boxWidth:16,boxHeight:3,padding:10}},tooltip:{callbacks:{label:c=>c.raw!=null?` Rp ${c.raw} juta`:''}}},scales:{x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',font:{weight:'700'}},border:{display:false}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',callback:v=>v+' jt'},border:{display:false}}}}
     });
 
-    // 2. Monthly bar
-    const monthlyVals = sortedMonths.map(mk => +(monthly[mk]/1e6).toFixed(1));
-    const monthlyLabels = sortedMonths.map(mk => {
-      const [y,m] = mk.split('-');
-      return BULAN_ID[+m-1].substring(0,3);
-    });
-    const barColors = ['#BAE6FF','#6EE7B7','#A5B4FC','#FED7AA','#F0ABFC','#BBF7D0'];
+    const monthlyVals = sortedMK.map(mk=>+(monthly[mk]/1e6).toFixed(1));
+    const monthlyLabels = sortedMK.map(mk=>BULAN_ID[+mk.split('-')[1]-1].substring(0,3));
+    const bColors = ['#BAE6FF','#6EE7B7','#A5B4FC','#FED7AA','#F0ABFC','#BBF7D0'];
     keuCharts['keuChartMonthly'] = new Chart(document.getElementById('keuChartMonthly'), {
-      type: 'bar',
-      data: {
-        labels: monthlyLabels,
-        datasets: [{ label: 'Belanja (jt)', data: monthlyVals, backgroundColor: barColors.slice(0, monthlyVals.length), borderRadius: 6, borderSkipped: false }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend:{display:false}, tooltip:{callbacks:{label:c=>` Rp ${c.raw} juta`}} },
-        scales: {
-          x: { grid:{display:false}, ticks:{color:'#64748b',font:{weight:'700'}}, border:{display:false} },
-          y: { grid:{color:'rgba(0,0,0,.05)'}, ticks:{color:'#64748b',callback:v=>v+' jt'}, border:{display:false} }
-        }
-      }
+      type:'bar', data:{labels:monthlyLabels,datasets:[{label:'Belanja (jt)',data:monthlyVals,backgroundColor:bColors,borderRadius:6,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` Rp ${c.raw} juta`}}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{weight:'700'}},border:{display:false}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',callback:v=>v+' jt'},border:{display:false}}}}
     });
 
-    // 3. Donut
-    const PALETTE = ['#1B3A6B','#059669','#ea580c','#7c3aed','#d97706','#0ea5e9','#db2777','#65a30d'];
     keuCharts['keuChartDonut'] = new Chart(document.getElementById('keuChartDonut'), {
-      type: 'doughnut',
-      data: {
-        labels: katSorted.map(k=>k[0]),
-        datasets: [{ data: katSorted.map(k=>k[1]), backgroundColor: PALETTE, borderWidth:3, borderColor:'#fff', hoverOffset:6 }]
-      },
-      options: {
-        responsive:true, maintainAspectRatio:false, cutout:'60%',
-        plugins: {
-          legend: { display:true, position:'right', labels:{font:{size:10,weight:'600'},boxWidth:10,boxHeight:10,padding:7} },
-          tooltip: { callbacks: { label: c => ` ${c.label}: ${fmtRp(c.raw)} (${(c.raw/grandTotal*100).toFixed(0)}%)` }}
-        }
-      }
+      type:'doughnut', data:{labels:katSorted.map(k=>k[0]),datasets:[{data:katSorted.map(k=>k[1]),backgroundColor:PALETTE,borderWidth:3,borderColor:'#fff',hoverOffset:6}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'right',labels:{font:{size:11,weight:'600'},boxWidth:10,boxHeight:10,padding:7}},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmtRp(c.raw)} (${grand?Math.round(c.raw/grand*100):0}%)`}}}}
     });
 
-    // 4. TX bar (count)
     keuCharts['keuChartTxBar'] = new Chart(document.getElementById('keuChartTxBar'), {
-      type: 'bar',
-      data: {
-        labels: katSorted.map(k=>k[0]),
-        datasets: [{ label:'Transaksi', data: katSorted.map(k=>katCount[k[0]]||0), backgroundColor: PALETTE, borderRadius:5, borderSkipped:false }]
-      },
-      options: {
-        indexAxis: 'y', responsive:true, maintainAspectRatio:false,
-        plugins: { legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.raw} transaksi`}} },
-        scales: {
-          x: { grid:{color:'rgba(0,0,0,.05)'}, ticks:{color:'#64748b'}, border:{display:false} },
-          y: { grid:{display:false}, ticks:{color:'#374364',font:{size:10,weight:'700'}}, border:{display:false} }
-        }
-      }
+      type:'bar', data:{labels:katSorted.map(k=>k[0]),datasets:[{label:'Transaksi',data:katSorted.map(k=>katCount[k[0]]||0),backgroundColor:PALETTE,borderRadius:5,borderSkipped:false}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw} transaksi`}}},scales:{x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b'},border:{display:false}},y:{grid:{display:false},ticks:{color:'#374364',font:{size:11,weight:'700'}},border:{display:false}}}}
     });
   }
 
-  // ── PANEL 02: GUP ─────────────────────────────────────────────
+  /* ── PANEL 02 ── */
   function renderKeuPanel2(realRows, gupRows) {
     const totalGUP = gupRows.reduce((s,g)=>s+g.nilai,0);
-    const gupCount = gupRows.length;
-    const lastGUP = gupRows.length ? gupRows[gupRows.length-1] : null;
+    const sortedGUP = [...gupRows].filter(g=>g.tgl).sort((a,b)=>new Date(a.tgl)-new Date(b.tgl));
+    const lastGUP = sortedGUP[sortedGUP.length-1];
+    const cycles = buildGUPCycles(sortedGUP, realRows);
 
-    // Build GUP cycles: group transactions between GUP dates
-    const gupDates = gupRows.map(g => g.tgl ? new Date(g.tgl) : null);
-    const cycles = buildGUPCycles(gupRows, realRows);
+    const monthly={};
+    realRows.filter(t=>t.tgl).forEach(t=>{ const mk=t.tgl.substring(0,7); monthly[mk]=(monthly[mk]||0)+t.nilai; });
+    const sortedMK=Object.keys(monthly).sort();
+    let akum=0; const akumPct=[]; const akumLabels=[];
+    sortedMK.forEach(mk=>{ akum+=monthly[mk]; akumPct.push(+(akum/PAGU.barang*100).toFixed(1)); akumLabels.push(BULAN_ID[+mk.split('-')[1]-1].substring(0,3)); });
 
-    // Monthly GUP totals for chart
-    const gupByMonth = {};
-    gupRows.forEach(g => {
-      if (g.tgl) {
-        const dt = new Date(g.tgl);
-        const mk = BULAN_ID[dt.getMonth()].substring(0,3);
-        gupByMonth[mk] = (gupByMonth[mk]||0) + g.nilai;
-      }
-    });
-
-    // Monthly realisasi % of pagu barang
-    const monthly = {};
-    let akum = 0;
-    realRows.filter(t=>t.tgl).sort((a,b)=>new Date(a.tgl)-new Date(b.tgl)).forEach(t=>{
-      const dt = new Date(t.tgl);
-      const mk = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
-      monthly[mk] = (monthly[mk]||0) + t.nilai;
-    });
-    const sortedMK = Object.keys(monthly).sort();
-    const akumPct = [];
-    const akumLabels = [];
-    let runAkum = 0;
-    sortedMK.forEach(mk => {
-      runAkum += monthly[mk];
-      akumPct.push(+(runAkum/PAGU.barang*100).toFixed(1));
-      akumLabels.push(BULAN_ID[+mk.split('-')[1]-1].substring(0,3));
-    });
-
-    const html = `
+    document.getElementById('keuBody2').innerHTML = `
     <div class="keu-stats">
-      <div class="keu-stat keu-stat-green">
-        <span class="keu-stat-ico">🔄</span>
-        <div class="keu-stat-lbl">Total GUP TA 2026</div>
-        <div class="keu-stat-val">${gupCount} kali</div>
-        <div class="keu-stat-sub">${fmtRp(totalGUP)}</div>
-      </div>
-      <div class="keu-stat keu-stat-blue">
-        <span class="keu-stat-ico">📅</span>
-        <div class="keu-stat-lbl">GUP Terakhir</div>
-        <div class="keu-stat-val" style="font-size:16px">${lastGUP && lastGUP.tgl ? fmtDate(new Date(lastGUP.tgl)) : '—'}</div>
-        <div class="keu-stat-sub">${lastGUP ? fmtRp(lastGUP.nilai) : '—'}</div>
-      </div>
-      <div class="keu-stat keu-stat-amber">
-        <span class="keu-stat-ico">⚡</span>
-        <div class="keu-stat-lbl">Rata-rata per GUP</div>
-        <div class="keu-stat-val">${fmtRp(gupCount ? totalGUP/gupCount : 0)}</div>
-        <div class="keu-stat-sub">dari UP Tunai ${fmtRp(PAGU.upTunai)}</div>
-      </div>
-      <div class="keu-stat keu-stat-teal">
-        <span class="keu-stat-ico">🏁</span>
-        <div class="keu-stat-lbl">Target TW II (Jun 50%)</div>
-        <div class="keu-stat-val">${fmtRp(PAGU.barang*0.5)}</div>
-        <div class="keu-stat-sub">Saat ini ${akumPct[akumPct.length-1]||0}% dari pagu</div>
-        <div class="keu-stat-badge keu-badge-a">Dalam Proses</div>
-      </div>
+      <div class="keu-stat keu-stat-green"><span class="keu-stat-ico">🔄</span><div class="keu-stat-lbl">Total GUP TA 2026</div><div class="keu-stat-val">${gupRows.length} kali</div><div class="keu-stat-sub">${fmtRp(totalGUP)}</div></div>
+      <div class="keu-stat keu-stat-blue"><span class="keu-stat-ico">📅</span><div class="keu-stat-lbl">GUP Terakhir</div><div class="keu-stat-val" style="font-size:17px">${lastGUP?fmtDate(new Date(lastGUP.tgl)):'—'}</div><div class="keu-stat-sub">${lastGUP?fmtRp(lastGUP.nilai):'—'}</div></div>
+      <div class="keu-stat keu-stat-amber"><span class="keu-stat-ico">⚡</span><div class="keu-stat-lbl">Rata-rata per GUP</div><div class="keu-stat-val">${fmtRp(gupRows.length?totalGUP/gupRows.length:0)}</div><div class="keu-stat-sub">UP Tunai max ${fmtRp(PAGU.upTunai)}</div></div>
+      <div class="keu-stat keu-stat-teal"><span class="keu-stat-ico">🏁</span><div class="keu-stat-lbl">Target TW II (50%)</div><div class="keu-stat-val">${fmtRp(PAGU.barang*.5)}</div><div class="keu-stat-sub">Saat ini ${akumPct[akumPct.length-1]||0}%</div><div class="keu-stat-badge keu-badge-a">Dalam Proses</div></div>
     </div>
 
-    <!-- GUP Progress highlight -->
-    <div style="background:var(--bg-secondary);border:1px solid var(--border-light);border-radius:var(--radius-md);padding:1rem 1.1rem;margin-bottom:1.25rem">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-        <span style="font-size:14px;font-weight:700;color:var(--text-primary)">Progres GUP s.d. Saat Ini</span>
-        <span style="font-size:13px;font-family:monospace;font-weight:700;color:#059669">${gupCount} kali · ${fmtRp(totalGUP)}</span>
+    <div style="background:var(--bg-secondary);border:1px solid var(--border-light);border-radius:var(--radius-md);padding:1.1rem 1.25rem;margin-bottom:1.25rem">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px">
+        <span style="font-size:15px;font-weight:700;color:var(--text-primary)">Progres GUP s.d. Saat Ini</span>
+        <span style="font-size:14px;font-family:monospace;font-weight:700;color:#059669">${gupRows.length} siklus · ${fmtRpFull(totalGUP)}</span>
       </div>
-      <div class="keu-gup-progress-bar">
-        <div class="keu-gup-progress-fill" style="width:${Math.min(100, totalGUP/PAGU.barang*100*3).toFixed(1)}%"></div>
-      </div>
-      <div class="chart-note" style="margin-top:.5rem">
-        📌 <strong>GUP (Ganti Uang Persediaan)</strong> adalah proses pengisian ulang uang kas kantor. Setiap kali uang habis digunakan, Bendahara mengajukan GUP agar kas kembali terisi. Makin sering GUP = makin aktif belanja berjalan.
-      </div>
+      <div class="keu-gup-progress-bar"><div class="keu-gup-progress-fill" style="width:${Math.min(100,totalGUP/PAGU.barang*300).toFixed(0)}%"></div></div>
+      <div class="chart-note" style="margin-top:.6rem">📌 <strong>GUP (Ganti Uang Persediaan)</strong> = pengisian ulang kas kantor. Setiap kali uang hampir habis, Bendahara ajukan GUP agar kas kembali terisi. Makin sering GUP = belanja berjalan aktif.</div>
     </div>
 
     <div class="keu-g2">
       <div>
         <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#059669"></span>Realisasi Akumulatif vs Target TW (%)</div>
         <div style="position:relative;height:200px"><canvas id="keuChartGupTarget"></canvas></div>
-        <div class="chart-note">📌 <strong>Cara membaca:</strong> Batang = persen serapan bulanan yang terus bertambah. Garis putus-putus = target TW I (15%) dan TW II (50%). Pastikan batang selalu mengejar garis target.</div>
+        <div class="chart-note">📌 Batang = persen serapan bulanan yang terus bertambah. Garis putus = target TW I (15%) dan TW II (50%). Pastikan batang mengejar garis target.</div>
         <div class="keu-div"></div>
-        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#2563eb"></span>Nilai GUP per Pengajuan (Rp juta)</div>
+        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#2563eb"></span>Nilai per Pengajuan GUP (Rp juta)</div>
         <div style="position:relative;height:150px"><canvas id="keuChartGupBar"></canvas></div>
-        <div class="chart-note">📌 <strong>Cara membaca:</strong> Setiap batang = satu pengajuan GUP. GUP yang mendekati Rp 30 juta berarti nyaris seluruh UP habis digunakan — tanda belanja berjalan lancar.</div>
+        <div class="chart-note">📌 Setiap batang = satu pengajuan GUP. Mendekati Rp 30 juta = nyaris seluruh UP habis digunakan — tanda belanja berjalan lancar.</div>
       </div>
       <div>
-        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#7c3aed"></span>Detail Siklus GUP — klik untuk lihat transaksi</div>
+        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#7c3aed"></span>Siklus GUP &amp; Detail Transaksi (klik untuk buka)</div>
         <div id="keuGUPCycles">${buildGUPCyclesHTML(cycles)}</div>
         <div class="keu-gup-summary">
-          <div class="keu-gup-sum-i"><div class="keu-gup-sum-l">Total GUP</div><div class="keu-gup-sum-v" style="color:var(--text-primary)">${fmtRpFull(totalGUP)}</div></div>
-          <div class="keu-gup-sum-i"><div class="keu-gup-sum-l">Jumlah Siklus</div><div class="keu-gup-sum-v" style="color:#059669">${gupCount} kali</div></div>
-          <div class="keu-gup-sum-i"><div class="keu-gup-sum-l">Rata-rata</div><div class="keu-gup-sum-v" style="color:#2563eb">${fmtRp(gupCount?totalGUP/gupCount:0)}</div></div>
+          <div class="keu-gup-sum-i"><div class="keu-gup-sum-l">Total GUP</div><div class="keu-gup-sum-v">${fmtRpFull(totalGUP)}</div></div>
+          <div class="keu-gup-sum-i"><div class="keu-gup-sum-l">Jumlah Siklus</div><div class="keu-gup-sum-v" style="color:#059669">${gupRows.length}×</div></div>
+          <div class="keu-gup-sum-i"><div class="keu-gup-sum-l">Rata-rata</div><div class="keu-gup-sum-v" style="color:#2563eb">${fmtRp(gupRows.length?totalGUP/gupRows.length:0)}</div></div>
         </div>
       </div>
     </div>
     ${keuCatatanHTML('panel2')}`;
 
-    document.getElementById('keuBody2').innerHTML = html;
-
     keuDestroyChart('keuChartGupTarget');
     keuDestroyChart('keuChartGupBar');
 
-    // GUP target chart
-    const tw1 = PAGU.twTarget.barang.tw1;
-    const tw2 = PAGU.twTarget.barang.tw2;
     keuCharts['keuChartGupTarget'] = new Chart(document.getElementById('keuChartGupTarget'), {
-      type: 'bar',
-      data: {
-        labels: akumLabels,
-        datasets: [
-          { label: 'Realisasi Akumulatif (%)', data: akumPct,
-            backgroundColor: akumPct.map((v,i)=>i===akumPct.length-1?'#059669':'#A7F3D0'),
-            borderRadius: 8, borderSkipped: false, order: 2 },
-          { label: `Target TW I (${tw1}%)`, data: akumLabels.map(()=>tw1),
-            type:'line', borderColor:'#f59e0b', borderDash:[6,4], borderWidth:2, pointRadius:0, fill:false, order:1 },
-          { label: `Target TW II (${tw2}%)`, data: akumLabels.map(()=>tw2),
-            type:'line', borderColor:'#ea580c', borderDash:[5,4], borderWidth:2, pointRadius:0, fill:false, order:1 }
-        ]
-      },
-      options: {
-        responsive:true, maintainAspectRatio:false,
-        plugins: { legend:{display:true,labels:{font:{size:11,weight:'600'},boxWidth:14,boxHeight:2,padding:10}}, tooltip:{callbacks:{label:c=>` ${c.raw}%`}} },
-        scales: {
-          x:{grid:{display:false},ticks:{color:'#374364',font:{weight:'700'}},border:{display:false}},
-          y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',callback:v=>v+'%'},border:{display:false}}
-        }
-      }
+      type:'bar', data:{labels:akumLabels, datasets:[
+        {label:'Realisasi Akumulatif (%)',data:akumPct,backgroundColor:akumPct.map((_,i)=>i===akumPct.length-1?'#059669':'#A7F3D0'),borderRadius:8,borderSkipped:false,order:2},
+        {label:'Target TW I (15%)',data:akumLabels.map(()=>15),type:'line',borderColor:'#f59e0b',borderDash:[6,4],borderWidth:2.5,pointRadius:0,fill:false,order:1},
+        {label:'Target TW II (50%)',data:akumLabels.map(()=>50),type:'line',borderColor:'#ea580c',borderDash:[5,4],borderWidth:2.5,pointRadius:0,fill:false,order:1}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{font:{size:11,weight:'600'},boxWidth:14,boxHeight:2,padding:10}},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},scales:{x:{grid:{display:false},ticks:{color:'#374364',font:{weight:'700'}},border:{display:false}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',callback:v=>v+'%'},border:{display:false}}}}
     });
 
-    // GUP bar chart
-    const gupBarData = gupRows.map(g=>+(g.nilai/1e6).toFixed(2));
-    const gupBarLabels = gupRows.map((g,i)=>{
-      if (!g.tgl) return `GUP ${i+1}`;
-      const d = new Date(g.tgl);
-      return fmtDate(d);
-    });
-    const gupColors = ['#BAE6FF','#6EE7B7','#6EE7B7','#A5B4FC','#FED7AA','#FED7AA'];
+    const gupLabels = sortedGUP.map((g,i)=>{ const d=new Date(g.tgl); return `${BULAN_ID[d.getMonth()].substring(0,3)} (${i+1})`; });
+    const gupVals   = sortedGUP.map(g=>+(g.nilai/1e6).toFixed(2));
+    const gupColors = sortedGUP.map((_,i)=>['#BAE6FF','#6EE7B7','#6EE7B7','#A5B4FC','#FED7AA','#FED7AA'][i]||'#e2e8f0');
     keuCharts['keuChartGupBar'] = new Chart(document.getElementById('keuChartGupBar'), {
-      type: 'bar',
-      data: {
-        labels: gupBarLabels,
-        datasets: [{ label:'Nilai GUP (jt)', data: gupBarData, backgroundColor: gupColors, borderRadius: 5, borderSkipped:false }]
-      },
-      options: {
-        responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>` Rp ${c.raw} juta`}} },
-        scales:{
-          x:{grid:{display:false},ticks:{color:'#64748b',font:{size:10,weight:'600'},maxRotation:30},border:{display:false}},
-          y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',callback:v=>v+' jt'},border:{display:false},suggestedMax:35}
-        }
-      }
+      type:'bar', data:{labels:gupLabels,datasets:[{label:'Nilai GUP (jt)',data:gupVals,backgroundColor:gupColors,borderRadius:5,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` Rp ${c.raw} juta`}}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:11,weight:'600'},maxRotation:30},border:{display:false}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',callback:v=>v+' jt'},border:{display:false},suggestedMax:33}}}
     });
   }
 
-  // Build GUP Cycles
-  function buildGUPCycles(gupRows, realRows) {
-    const cycles = [];
-    const sortedGUP = [...gupRows].filter(g=>g.tgl).sort((a,b)=>new Date(a.tgl)-new Date(b.tgl));
-    const sortedTx  = [...realRows].filter(t=>t.tgl).sort((a,b)=>new Date(a.tgl)-new Date(b.tgl));
-
-    sortedGUP.forEach((g,i) => {
-      const gdt = new Date(g.tgl);
-      const prevGdt = i === 0 ? new Date('2026-01-01') : new Date(sortedGUP[i-1].tgl);
-      const txs = sortedTx.filter(t => {
-        const d = new Date(t.tgl);
-        return d >= prevGdt && d < gdt;
-      });
-      cycles.push({ gup: g, txs, isCurrent: false });
-    });
-
-    // Current (after last GUP)
-    if (sortedGUP.length) {
-      const lastGdt = new Date(sortedGUP[sortedGUP.length-1].tgl);
-      const currentTxs = sortedTx.filter(t => new Date(t.tgl) >= lastGdt);
-      cycles.push({ gup: null, txs: currentTxs, isCurrent: true });
-    }
-    return cycles;
+  function buildGUPCycles(sortedGUP, realRows) {
+    const sorted = [...realRows].filter(t=>t.tgl).sort((a,b)=>new Date(a.tgl)-new Date(b.tgl));
+    return sortedGUP.map((g,i) => {
+      const gdt   = new Date(g.tgl);
+      const prev  = i===0 ? new Date('2026-01-01') : new Date(sortedGUP[i-1].tgl);
+      const txs   = sorted.filter(t=>{ const d=new Date(t.tgl); return d>=prev && d<gdt; });
+      return {gup:g, txs, isCurrent:false};
+    }).concat([{
+      gup:null, txs: sorted.filter(t=>{ const lastGdt=sortedGUP.length?new Date(sortedGUP[sortedGUP.length-1].tgl):new Date('2026-01-01'); return new Date(t.tgl)>=lastGdt; }), isCurrent:true
+    }]);
   }
 
   function buildGUPCyclesHTML(cycles) {
-    return cycles.map((c, i) => {
-      const pct = c.gup ? (c.gup.nilai / PAGU.upTunai * 100).toFixed(1) : null;
-      const pillCls = pct >= 95 ? 'high' : pct >= 80 ? '' : 'warn';
-      const label = c.isCurrent
-        ? '📍 Siklus Berjalan (belum GUP berikutnya)'
-        : `GUP ke-${i+1} — ${c.gup.tgl ? fmtDate(new Date(c.gup.tgl)) : '—'}`;
-      const totalTx = c.txs.reduce((s,t)=>s+t.nilai,0);
-      const id = `keuGupDet${i}`;
-
-      const txRows = c.txs.slice(0,30).map(t=>`
+    return cycles.map((c,i)=>{
+      const pct  = c.gup ? (c.gup.nilai/PAGU.upTunai*100).toFixed(1) : null;
+      const pill = pct>=95?'high':pct>=80?'':'warn';
+      const lbl  = c.isCurrent ? '📍 Siklus Berjalan (belum GUP berikutnya)'
+                                : `GUP ke-${i+1} — ${fmtDate(new Date(c.gup.tgl))}`;
+      const totTx = c.txs.reduce((s,t)=>s+t.nilai,0);
+      const id    = `keuGupDet${i}`;
+      const txRows = c.txs.slice(0,40).map(t=>`
         <tr>
-          <td class="keu-gup-detail-table td-uraian">${t.uraian||'—'}</td>
-          <td class="keu-gup-detail-table td-mek">${t.mek||'—'}</td>
-          <td style="font-size:11px;color:var(--text-secondary)">${t.tgl?fmtDate(new Date(t.tgl)):'—'}</td>
-          <td class="keu-gup-detail-table td-amt">${fmtRpFull(t.nilai)}</td>
+          <td style="max-width:180px;word-break:break-word;white-space:normal;font-size:12px;color:var(--text-primary)">${esc(t.uraian||'—')}</td>
+          <td style="font-size:12px;color:var(--text-secondary);white-space:nowrap">${esc(t.mek||'—')}</td>
+          <td style="font-size:12px;color:var(--text-secondary);white-space:nowrap">${t.tgl?fmtDate(new Date(t.tgl)):'—'}</td>
+          <td style="font-family:monospace;font-weight:600;font-size:12px;text-align:right;white-space:nowrap">${fmtRpFull(t.nilai)}</td>
         </tr>`).join('');
-
       return `
-      <div class="keu-gup-cycle ${c.isCurrent?'current':''}" style="margin-bottom:.6rem">
+      <div class="keu-gup-cycle ${c.isCurrent?'current':''}" style="margin-bottom:.55rem">
         <div class="keu-gup-cycle-hdr" onclick="keuToggleGUP('${id}',this)">
           <div class="keu-gup-cycle-left">
-            <span class="keu-gup-date">${label}</span>
-            ${c.gup ? `<span class="keu-gup-amount">${fmtRpFull(c.gup.nilai)}</span>
-            <span class="keu-gup-pct-pill ${pillCls}">${pct}% UP</span>` : `<span style="font-size:12px;color:var(--text-secondary)">${c.txs.length} transaksi · ${fmtRp(totalTx)}</span>`}
+            <span class="keu-gup-date">${lbl}</span>
+            ${c.gup?`<span class="keu-gup-amount">${fmtRpFull(c.gup.nilai)}</span><span class="keu-gup-pct-pill ${pill}">${pct}% UP</span>`
+                    :`<span style="font-size:13px;color:var(--text-secondary)">${c.txs.length} txn · ${fmtRp(totTx)}</span>`}
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:11px;color:var(--text-secondary)">${c.txs.length} transaksi</span>
+            <span style="font-size:12px;color:var(--text-secondary)">${c.txs.length} transaksi</span>
             <span class="keu-gup-toggle" id="${id}Arr">▼</span>
           </div>
         </div>
         <div class="keu-gup-detail" id="${id}">
-          <table class="keu-gup-detail-table" style="width:100%">
-            <thead><tr><th>Uraian</th><th>Mekanisme</th><th>Tanggal</th><th style="text-align:right">Nilai</th></tr></thead>
-            <tbody>${txRows || '<tr><td colspan="4" style="text-align:center;padding:1rem;color:var(--text-secondary)">Tidak ada transaksi tercatat di periode ini</td></tr>'}</tbody>
-            ${c.txs.length ? `<tfoot><tr style="background:var(--bg-secondary)"><td colspan="3" style="padding:7px 12px;font-weight:700;font-size:12px">Total ${c.txs.length} transaksi</td><td style="padding:7px 12px;font-weight:700;font-family:monospace;text-align:right">${fmtRpFull(totalTx)}</td></tr></tfoot>` : ''}
+          <table style="width:100%;border-collapse:collapse;table-layout:auto">
+            <thead><tr style="background:var(--bg-secondary);border-bottom:1px solid var(--border-light)">
+              <th style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);padding:7px 12px;text-align:left">Uraian</th>
+              <th style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);padding:7px 12px;text-align:left">Mekanisme</th>
+              <th style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);padding:7px 12px;text-align:left">Tanggal</th>
+              <th style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);padding:7px 12px;text-align:right">Nilai</th>
+            </tr></thead>
+            <tbody>${txRows||`<tr><td colspan="4" style="text-align:center;padding:1rem;color:var(--text-secondary)">Tidak ada transaksi di periode ini</td></tr>`}</tbody>
+            ${c.txs.length?`<tfoot><tr style="background:var(--bg-secondary)"><td colspan="3" style="padding:7px 12px;font-weight:700;font-size:13px">Total ${c.txs.length} transaksi</td><td style="padding:7px 12px;font-family:monospace;font-weight:700;text-align:right;font-size:13px">${fmtRpFull(totTx)}</td></tr></tfoot>`:''}
           </table>
         </div>
       </div>`;
     }).join('');
   }
 
-  function keuToggleGUP(id, hdr) {
-    const det = document.getElementById(id);
-    const arr = document.getElementById(id+'Arr');
+  function keuToggleGUP(id) {
+    const det=document.getElementById(id); const arr=document.getElementById(id+'Arr');
     if (!det) return;
-    const open = det.classList.toggle('open');
-    if (arr) arr.classList.toggle('open', open);
+    const open=det.classList.toggle('open');
+    if (arr) arr.classList.toggle('open',open);
   }
 
-  // ── PANEL 03: PAGU BAHAN ──────────────────────────────────────
+  /* ── PANEL 03 ── */
   function renderKeuPanel3(paguBahan, realRows) {
-    const totalPagu = paguBahan.reduce((s,p)=>s+p.pagu,0);
-    const totalReal = paguBahan.reduce((s,p)=>s+(p.realisasi||0),0);
-    const pct = totalPagu ? (totalReal/totalPagu*100) : 0;
-    const zeroPagu = paguBahan.filter(p=>!(p.realisasi||0)).length;
+    // Safety: ignore negative pagu
+    const safe = paguBahan.map(p=>({...p, pagu:Math.max(0,p.pagu||0), realisasi:Math.max(0,p.realisasi||0)}));
+    const totalPagu = safe.reduce((s,p)=>s+p.pagu,0);
+    const totalReal = safe.reduce((s,p)=>s+p.realisasi,0);
+    const pct  = totalPagu ? totalReal/totalPagu*100 : 0;
+    const zero = safe.filter(p=>!p.realisasi).length;
 
-    const html = `
+    document.getElementById('keuBody3').innerHTML = `
     <div class="keu-stats">
-      <div class="keu-stat keu-stat-amber">
-        <span class="keu-stat-ico">📋</span>
-        <div class="keu-stat-lbl">Total Pagu</div>
-        <div class="keu-stat-val">${fmtRp(totalPagu)}</div>
-        <div class="keu-stat-sub">${paguBahan.length} kegiatan</div>
-      </div>
-      <div class="keu-stat keu-stat-green">
-        <span class="keu-stat-ico">💸</span>
-        <div class="keu-stat-lbl">Realisasi</div>
-        <div class="keu-stat-val">${fmtRp(totalReal)}</div>
-        <div class="keu-stat-sub">${pct.toFixed(1)}% terserap</div>
-        <div class="keu-stat-badge keu-badge-a">Perlu Akselerasi</div>
-      </div>
-      <div class="keu-stat keu-stat-blue">
-        <span class="keu-stat-ico">🏦</span>
-        <div class="keu-stat-lbl">Sisa Pagu</div>
-        <div class="keu-stat-val">${fmtRp(totalPagu-totalReal)}</div>
-        <div class="keu-stat-sub">${(100-pct).toFixed(1)}% belum terserap</div>
-      </div>
-      <div class="keu-stat keu-stat-red">
-        <span class="keu-stat-ico">⚠️</span>
-        <div class="keu-stat-lbl">Kegiatan 0%</div>
-        <div class="keu-stat-val">${zeroPagu} keg.</div>
-        <div class="keu-stat-sub">dari ${paguBahan.length} kegiatan total</div>
-        <div class="keu-stat-badge keu-badge-r">Perlu Perhatian</div>
-      </div>
+      <div class="keu-stat keu-stat-amber"><span class="keu-stat-ico">📋</span><div class="keu-stat-lbl">Total Pagu</div><div class="keu-stat-val">${fmtRp(totalPagu)}</div><div class="keu-stat-sub">${safe.length} kegiatan</div></div>
+      <div class="keu-stat keu-stat-green"><span class="keu-stat-ico">💸</span><div class="keu-stat-lbl">Realisasi</div><div class="keu-stat-val">${fmtRp(totalReal)}</div><div class="keu-stat-sub">${pct.toFixed(1)}% terserap</div><div class="keu-stat-badge keu-badge-a">Butuh Akselerasi</div></div>
+      <div class="keu-stat keu-stat-blue"><span class="keu-stat-ico">🏦</span><div class="keu-stat-lbl">Sisa Pagu</div><div class="keu-stat-val">${fmtRp(totalPagu-totalReal)}</div><div class="keu-stat-sub">${(100-pct).toFixed(1)}% belum terserap</div></div>
+      <div class="keu-stat keu-stat-red"><span class="keu-stat-ico">⚠️</span><div class="keu-stat-lbl">Kegiatan 0%</div><div class="keu-stat-val">${zero} keg.</div><div class="keu-stat-sub">dari ${safe.length} kegiatan</div><div class="keu-stat-badge keu-badge-r">Perlu Perhatian</div></div>
     </div>
-
     <div class="keu-total-bar">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
-        <span style="font-size:14px;font-weight:700">Total Pagu ${fmtRpFull(totalPagu)}</span>
-        <span style="font-size:13px;font-family:monospace;font-weight:700;color:#d97706">${pct.toFixed(1)}% · Sisa ${fmtRpFull(totalPagu-totalReal)}</span>
+        <span style="font-size:15px;font-weight:700">Total Pagu ${fmtRpFull(totalPagu)}</span>
+        <span style="font-size:14px;font-family:monospace;font-weight:700;color:#d97706">${pct.toFixed(1)}% · Sisa ${fmtRpFull(totalPagu-totalReal)}</span>
       </div>
       <div style="height:13px;background:var(--border-light);border-radius:99px;overflow:hidden">
-        <div style="width:${pct.toFixed(1)}%;height:100%;border-radius:99px;background:linear-gradient(90deg,#ea580c,#fcd34d);transition:width .8s"></div>
+        <div style="width:${Math.min(100,pct).toFixed(1)}%;height:100%;border-radius:99px;background:linear-gradient(90deg,#ea580c,#fcd34d);transition:width .8s"></div>
       </div>
-      <div class="chart-note" style="margin-top:.5rem">📌 <strong>Belanja Bahan (Konsumsi)</strong> adalah anggaran untuk kegiatan seperti sosialisasi, pelatihan, FGD — yang membutuhkan konsumsi/bahan. Serapan rendah bisa berarti kegiatan belum terlaksana.</div>
+      <div class="chart-note" style="margin-top:.6rem">📌 <strong>Belanja Bahan (Konsumsi Akun 521211)</strong> = anggaran untuk kegiatan seperti sosialisasi, pelatihan, FGD. Serapan rendah bisa berarti kegiatan belum terlaksana.</div>
     </div>
-
     <div class="keu-g2">
       <div>
         <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#ea580c"></span>Realisasi per Kegiatan</div>
-        ${paguBahan.map(p => {
-          const r = p.realisasi||0;
-          const pp = p.pagu ? (r/p.pagu*100) : 0;
-          const isZero = !r;
-          const colors = ['#059669','#2563eb','#7c3aed','#0ea5e9','#db2777'];
-          const ci = paguBahan.indexOf(p) % colors.length;
+        ${safe.map((p,pi)=>{
+          const r=p.realisasi, pp=p.pagu?(r/p.pagu*100):0, iz=!r;
+          const clrs=['#059669','#2563eb','#7c3aed','#0ea5e9','#db2777'];
           return `<div class="keu-pagu-item">
             <div class="keu-pagu-top">
-              <span class="keu-pagu-name">${p.kegiatan}${isZero?'<span class="keu-zero-tag">0%</span>':''}</span>
-              <span class="keu-pagu-nums"><span class="keu-pagu-real" ${isZero?'style="color:#b91c1c"':''}>${fmtRpFull(r)}</span> / ${fmtRpFull(p.pagu)}</span>
+              <span class="keu-pagu-name">${esc(p.kegiatan)}${iz?'<span class="keu-zero-tag">0%</span>':''}</span>
+              <span class="keu-pagu-nums"><span class="keu-pagu-real" ${iz?'style="color:#b91c1c"':''}>${fmtRpFull(r)}</span> / ${fmtRpFull(p.pagu)}</span>
             </div>
-            <div style="height:9px;background:var(--border-light);border-radius:99px;overflow:hidden">
-              <div style="width:${pp.toFixed(1)}%;height:100%;border-radius:99px;background:${isZero?'linear-gradient(90deg,#dc2626,#fca5a5)':isZero?'':colors[ci]};transition:width .8s"></div>
+            <div style="height:10px;background:var(--border-light);border-radius:99px;overflow:hidden">
+              <div style="width:${Math.min(100,pp).toFixed(1)}%;height:100%;border-radius:99px;background:${iz?'linear-gradient(90deg,#dc2626,#fca5a5)':clrs[pi%clrs.length]};transition:width .8s"></div>
             </div>
-            <div class="keu-pagu-pct" ${isZero?'style="color:#b91c1c;font-weight:700"':''}>${isZero?'Belum terealisasi':pp.toFixed(1)+'% terserap'}</div>
+            <div class="keu-pagu-pct" ${iz?'style="color:#b91c1c;font-weight:700"':''}>${iz?'Belum terealisasi':pp.toFixed(1)+'% terserap'}</div>
           </div>`;
         }).join('')}
       </div>
       <div>
-        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#d97706"></span>Pagu vs Realisasi per Kegiatan (Rp)</div>
-        <div style="position:relative;height:${Math.max(250, paguBahan.length*38)}px"><canvas id="keuChartPagu"></canvas></div>
-        <div class="chart-note" style="margin-top:.5rem">📌 <strong>Cara membaca:</strong> Batang <span style="color:#059669;font-weight:600">hijau</span> = sudah terpakai. Batang <span style="color:#94a3b8;font-weight:600">abu</span> = sisa pagu. Idealnya batang hijau makin panjang setiap bulan.</div>
+        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#d97706"></span>Pagu vs Realisasi per Kegiatan</div>
+        <div style="position:relative;height:${Math.max(250,safe.length*38)}px"><canvas id="keuChartPagu"></canvas></div>
+        <div class="chart-note" style="margin-top:.5rem">📌 Batang <span style="color:#059669;font-weight:600">hijau</span> = sudah terpakai. Batang <span style="color:#94a3b8;font-weight:600">abu</span> = sisa pagu. Idealnya hijau makin panjang tiap bulan.</div>
         <div style="display:flex;gap:1rem;margin-top:.75rem">
-          <span style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--text-secondary)"><span style="width:12px;height:12px;border-radius:3px;background:#059669;display:inline-block"></span>Realisasi</span>
-          <span style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--text-secondary)"><span style="width:12px;height:12px;border-radius:3px;background:#cbd5e1;display:inline-block"></span>Sisa Pagu</span>
+          <span style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--text-secondary)"><span style="width:13px;height:13px;border-radius:3px;background:#059669;display:inline-block"></span>Realisasi</span>
+          <span style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--text-secondary)"><span style="width:13px;height:13px;border-radius:3px;background:#cbd5e1;display:inline-block"></span>Sisa Pagu</span>
         </div>
       </div>
     </div>
     ${keuCatatanHTML('panel3')}`;
 
-    document.getElementById('keuBody3').innerHTML = html;
-
     keuDestroyChart('keuChartPagu');
-
-    if (!paguBahan.length) return;
+    if (!safe.length) return;
     keuCharts['keuChartPagu'] = new Chart(document.getElementById('keuChartPagu'), {
-      type: 'bar',
-      data: {
-        labels: paguBahan.map(p => p.kegiatan.length > 20 ? p.kegiatan.substring(0,18)+'…' : p.kegiatan),
-        datasets: [
-          { label:'Realisasi', data: paguBahan.map(p=>p.realisasi||0), backgroundColor:'#059669', borderRadius:3, borderSkipped:false, stack:'s' },
-          { label:'Sisa Pagu', data: paguBahan.map(p=>p.pagu-(p.realisasi||0)), backgroundColor:'#CBD5E1', borderRadius:0, stack:'s' }
+      type:'bar',
+      data:{
+        labels:safe.map(p=>p.kegiatan.length>22?p.kegiatan.substring(0,20)+'…':p.kegiatan),
+        datasets:[
+          {label:'Realisasi',data:safe.map(p=>p.realisasi||0),backgroundColor:'#059669',borderRadius:3,borderSkipped:false,stack:'s'},
+          {label:'Sisa Pagu',data:safe.map(p=>Math.max(0,p.pagu-(p.realisasi||0))),backgroundColor:'#CBD5E1',borderRadius:0,stack:'s'}
         ]
       },
-      options: {
-        indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins: { legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmtRpFull(c.raw)}`}} },
-        scales: {
-          x:{stacked:true,grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',callback:v=>v>=1e6?+(v/1e6).toFixed(0)+'jt':v,maxRotation:0},border:{display:false}},
-          y:{stacked:true,grid:{display:false},ticks:{color:'#374364',font:{size:10,weight:'600'},autoSkip:false},border:{display:false}}
-        }
-      }
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmtRpFull(c.raw)}`}}},scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',maxRotation:0},border:{display:false}},y:{stacked:true,grid:{display:false},ticks:{color:'#374364',font:{size:11,weight:'600'},autoSkip:false},border:{display:false}}}}
     });
   }
 
-  // ── CATATAN RAPAT ─────────────────────────────────────────────
+  /* ── CATATAN RAPAT ── */
   function keuCatatanHTML(panelId) {
-    const today = new Date();
-    const monday = new Date(today); monday.setDate(today.getDate() - (today.getDay()||7) + 1);
-    const rapatDate = monday.toISOString().split('T')[0];
-    return `
-    <div class="keu-catatan-panel">
+    const today=new Date(), mn=new Date(today);
+    mn.setDate(today.getDate()-(today.getDay()||7)+1);
+    const rapatDate=mn.toISOString().split('T')[0];
+    return `<div class="keu-catatan-panel">
       <div class="keu-catatan-header">
         <div class="keu-catatan-title">📝 Catatan Rapat</div>
-        <div class="keu-catatan-date">Minggu: ${monday.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})}</div>
+        <div class="keu-catatan-date">Minggu: ${mn.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})}</div>
       </div>
-      <textarea class="keu-catatan-ta" id="keuCatatan_${panelId}"
-        placeholder="Tulis catatan hasil rapat, tindak lanjut, atau keputusan yang perlu dicatat..."
-        oninput="keuCatatanUnsaved('${panelId}')"></textarea>
+      <textarea class="keu-catatan-ta" id="keuCatatan_${panelId}" placeholder="Tulis catatan hasil rapat, tindak lanjut, atau keputusan..." oninput="keuCatatanUnsaved('${panelId}')"></textarea>
       <div class="keu-catatan-footer">
         <button class="keu-catatan-save" onclick="keuSaveCatatan('${panelId}','${rapatDate}')">💾 Simpan Catatan</button>
         <span class="keu-catatan-status" id="keuCatatanStatus_${panelId}"></span>
       </div>
     </div>`;
   }
-
-  function keuCatatanUnsaved(panelId) {
-    const el = document.getElementById('keuCatatanStatus_'+panelId);
-    if (el) { el.textContent = 'Belum disimpan...'; el.className = 'keu-catatan-status'; }
+  function keuCatatanUnsaved(p) { const el=document.getElementById('keuCatatanStatus_'+p); if(el){el.textContent='Belum disimpan...';el.className='keu-catatan-status';} }
+  async function keuSaveCatatan(panelId, date) {
+    const ta=document.getElementById('keuCatatan_'+panelId); const el=document.getElementById('keuCatatanStatus_'+panelId);
+    if (!ta||!el) return; el.textContent='Menyimpan...'; el.className='keu-catatan-status';
+    try { await getDb().ref(`${FB_KEU}/catatan/${date}/${panelId}`).set(ta.value); el.textContent='✓ Tersimpan · '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); el.className='keu-catatan-status saved'; }
+    catch(e) { el.textContent='✗ '+e.message; el.className='keu-catatan-status'; }
   }
-
-  async function keuSaveCatatan(panelId, rapatDate) {
-    const ta = document.getElementById('keuCatatan_'+panelId);
-    const el = document.getElementById('keuCatatanStatus_'+panelId);
-    if (!ta || !el) return;
-    el.textContent = 'Menyimpan...'; el.className = 'keu-catatan-status';
-    try {
-      await getDb().ref(`${FB_KEU}/catatan/${rapatDate}/${panelId}`).set(ta.value);
-      el.textContent = '✓ Tersimpan · ' + new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
-      el.className = 'keu-catatan-status saved';
-    } catch(e) {
-      el.textContent = '✗ Gagal: ' + e.message; el.className = 'keu-catatan-status';
-    }
-  }
-
   function renderAllCatatan(catatan) {
+    const today=new Date(), mn=new Date(today); mn.setDate(today.getDate()-(today.getDay()||7)+1);
+    const date=mn.toISOString().split('T')[0]; const d=catatan[date]||{};
+    ['panel1','panel2','panel3'].forEach(p=>{ const ta=document.getElementById('keuCatatan_'+p); if(ta&&d[p])ta.value=d[p]; });
+  }
+
+  /* ── PDF REKAP KEGIATAN ── */
+  function downloadKegiatanPDF() {
+    if (!kegiatanList || !kegiatanList.length) { alert('Belum ada jadwal kegiatan untuk direkap.'); return; }
     const today = new Date();
-    const monday = new Date(today); monday.setDate(today.getDate() - (today.getDay()||7) + 1);
-    const rapatDate = monday.toISOString().split('T')[0];
-    const todayData = catatan[rapatDate] || {};
-    ['panel1','panel2','panel3'].forEach(pid => {
-      const ta = document.getElementById('keuCatatan_'+pid);
-      if (ta && todayData[pid]) ta.value = todayData[pid];
-    });
-  }
+    const sorted = [...kegiatanList].sort((a,b)=>new Date(a.waktu)-new Date(b.waktu));
 
-  // ── HELPERS ───────────────────────────────────────────────────
-  function keuDestroyChart(id) {
-    if (keuCharts[id]) { keuCharts[id].destroy(); delete keuCharts[id]; }
-    const el = document.getElementById(id);
-    if (el) { const p = el.parentNode; p.innerHTML = `<canvas id="${id}"></canvas>`; }
-  }
+    const rows = sorted.map((k,i)=>{
+      const d = new Date(k.waktu);
+      const waktu = d.toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})+' · '+d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+      const isLewat = d < today;
+      const status = isLewat ? '✓ Selesai' : 'Akan Datang';
+      const statusColor = isLewat ? '#6b7280' : '#059669';
+      const rowBg = isLewat ? '#f9fafb' : '#ffffff';
+      return `<tr style="background:${rowBg}">
+        <td style="padding:10px 14px;text-align:center;font-weight:700;color:#6b7280;font-size:13px">${i+1}</td>
+        <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#0f172a;min-width:180px">${waktu}</td>
+        <td style="padding:10px 14px;font-size:13px;font-weight:700;color:#1e3a8a;max-width:220px">${k.nama||'-'}</td>
+        <td style="padding:10px 14px;text-align:center">
+          <span style="background:${k.tipe==='Daring'?'#dbeafe':'#dcfce7'};color:${k.tipe==='Daring'?'#1d4ed8':'#15803d'};font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px">${k.tipe||'-'}</span>
+        </td>
+        <td style="padding:10px 14px;font-size:12px;color:#64748b;max-width:160px;word-break:break-word">${k.link?`<span style="color:#2563eb;font-weight:600">${k.link}</span>`:'-'}</td>
+        <td style="padding:10px 14px;font-size:12px;color:#374151;max-width:200px;word-break:break-word">${k.ket||'-'}</td>
+        <td style="padding:10px 14px;text-align:center;font-weight:700;font-size:12px;color:${statusColor}">${status}</td>
+      </tr>`;
+    }).join('');
 
-  function keuKat(u) {
-    if (!u) return 'Lainnya';
-    u = u.toLowerCase();
-    if (u.includes('bbm')||u.includes('bahan bakar')) return 'BBM';
-    if (u.includes('pemeliharaan')&&(u.includes('gedung')||u.includes('bangunan')||u.includes('halaman')||u.includes('rumah')||u.includes('kantor'))) return 'Pmliharaan Gedung';
-    if (u.includes('pemeliharaan')&&(u.includes('peralatan')||u.includes('mesin')||u.includes('kendaraan')||u.includes('roda'))) return 'Pmliharaan Mesin';
-    if (u.includes('perjalanan')||u.includes('uang harian')||u.includes('akomodasi')||u.includes('transport')||u.includes('tiket')) return 'Perjalanan Dinas';
-    if (u.includes('bahan')||u.includes('konsumsi')||u.includes('makan')||u.includes('minum')||u.includes('snack')||u.includes('catering')) return 'Belanja Bahan';
-    if (u.includes('keperluan')||u.includes('atk')||u.includes('alat tulis')||u.includes('cetak')||u.includes('tinta')||u.includes('kertas')||u.includes('materai')) return 'Keperluan Kantor';
-    if (u.includes('honor')) return 'Honor';
-    return 'Lainnya';
+    const upcoming = sorted.filter(k=>new Date(k.waktu)>=today).length;
+    const done     = sorted.length - upcoming;
+
+    const win = window.open('','_blank','width=1100,height=800');
+    win.document.write(`<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"/>
+    <title>Rekap Kegiatan — KPPN Masohi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8faff;padding:0;min-height:100vh}
+      .cover{
+        background:linear-gradient(135deg,#1B3A6B 0%,#2563EB 50%,#7C3AED 100%);
+        padding:2.5rem 3rem 2rem;position:relative;overflow:hidden;
+      }
+      .cover::before{content:'';position:absolute;right:-80px;top:-80px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,.06)}
+      .cover::after{content:'';position:absolute;left:40%;bottom:-100px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.04)}
+      .cover-tag{display:inline-block;background:rgba(255,255,255,.18);color:#fff;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;border-radius:99px;margin-bottom:14px}
+      .cover-title{font-size:30px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.15;margin-bottom:6px}
+      .cover-sub{font-size:15px;color:rgba(255,255,255,.75);margin-bottom:1.5rem}
+      .cover-chips{display:flex;gap:10px;flex-wrap:wrap}
+      .chip{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:12px;font-weight:600;padding:5px 14px;border-radius:99px}
+      .stats-bar{display:flex;gap:1px;background:#e2e8f0;margin:0;border-radius:0}
+      .stat{flex:1;background:#fff;padding:1.1rem 1.5rem;text-align:center}
+      .stat-n{font-size:32px;font-weight:800;letter-spacing:-.02em;margin-bottom:3px}
+      .stat-l{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#64748b}
+      .s1 .stat-n{color:#2563eb} .s2 .stat-n{color:#059669} .s3 .stat-n{color:#7c3aed}
+      .table-wrap{padding:1.5rem 2rem 2rem}
+      table{width:100%;border-collapse:separate;border-spacing:0 3px;font-family:'Plus Jakarta Sans',sans-serif}
+      thead tr{background:linear-gradient(135deg,#1B3A6B,#2563EB)}
+      thead th{color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:11px 14px;text-align:left}
+      tbody tr{border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+      tbody tr:hover{filter:brightness(.97)}
+      .footer{text-align:center;padding:1.5rem;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0}
+      .print-btn{position:fixed;bottom:1.5rem;right:1.5rem;background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border:none;border-radius:12px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(124,58,237,.35);font-family:'Plus Jakarta Sans',sans-serif}
+      @media print{.print-btn{display:none}body{background:white}}
+    </style></head><body>
+    <div class="cover">
+      <div class="cover-tag">KPPN Masohi · TA 2026</div>
+      <div class="cover-title">📅 Rekap Jadwal Kegiatan</div>
+      <div class="cover-sub">List Kegiatan Online &amp; Offline — Monitoring Aktif</div>
+      <div class="cover-chips">
+        <span class="chip">📆 Dicetak: ${today.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})}</span>
+        <span class="chip">📋 Total ${sorted.length} Kegiatan</span>
+      </div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat s1"><div class="stat-n">${sorted.length}</div><div class="stat-l">Total Kegiatan</div></div>
+      <div class="stat s2"><div class="stat-n">${upcoming}</div><div class="stat-l">Akan Datang</div></div>
+      <div class="stat s3"><div class="stat-n">${done}</div><div class="stat-l">Sudah Selesai</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:40px;text-align:center">No</th>
+          <th>Waktu Pelaksanaan</th><th>Nama Kegiatan</th>
+          <th style="text-align:center">Tipe</th><th>Link</th>
+          <th>Keterangan</th><th style="text-align:center">Status</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="footer">Rekap otomatis dari sistem I Love Monday KPPN Masohi · Dicetak ${today.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})}</div>
+    <button class="print-btn" onclick="window.print()">🖨️ Print / Simpan PDF</button>
+    </body></html>`);
+    win.document.close();
   }
 
 
