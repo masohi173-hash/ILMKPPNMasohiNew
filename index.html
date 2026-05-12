@@ -1489,18 +1489,10 @@
       <div class="header-title">💹 Dashboard Keuangan KPPN Masohi sebagai Satker</div>
       <div class="header-sub">Monitoring penyerapan anggaran, GUP, dan belanja bahan — TA 2026</div>
     </div>
-    <div class="keu-upload-bar">
-      <div class="keu-upload-left">
-        <div>
-          <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:3px">📂 Upload File Excel untuk Update Data</div>
-          <div class="keu-last-updated" id="keuLastUpdated">Belum ada data — upload file xlsx untuk memulai</div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span class="keu-upload-status" id="keuUploadStatus"></span>
-        <button class="keu-upload-btn" onclick="document.getElementById('keuFileInput').click()">⬆ Upload File Excel</button>
-        <input type="file" id="keuFileInput" class="keu-upload-input" accept=".xlsx,.xls" onchange="handleKeuanganUpload(event)"/>
-      </div>
+    <!-- Last updated info only at top -->
+    <div style="background:var(--bg-secondary);border:1px solid var(--border-light);border-radius:var(--radius-lg);padding:.75rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div class="keu-last-updated" id="keuLastUpdated" style="font-size:13px">⏳ Belum ada data — upload file Excel di bagian bawah halaman</div>
+      <span style="font-size:12px;color:var(--text-secondary)">📊 KPPN Masohi · TA 2026</span>
     </div>
     <div class="keu-panel" id="keuPanel1">
       <div class="keu-panel-banner keu-banner-1">
@@ -1525,6 +1517,24 @@
         <div class="keu-panel-desc">Realisasi per kegiatan · Pagu Belanja Bahan Akun 521211</div>
       </div>
       <div class="keu-panel-body" id="keuBody3"><div style="text-align:center;padding:2.5rem;color:var(--text-secondary);font-size:15px">Upload file Excel untuk menampilkan data</div></div>
+    </div>
+
+    <!-- BOTTOM UPLOAD SECTION -->
+    <div style="background:linear-gradient(135deg,#1B3A6B,#2563eb);border-radius:var(--radius-lg);padding:1.4rem 1.75rem;margin-top:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;box-shadow:0 4px 20px rgba(37,99,235,.25)">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px">📂 Update Data Dashboard</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.75)">Upload file Excel terbaru setiap kali ingin memperbarui data. Semua panel akan otomatis terupdate.</div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span class="keu-upload-status" id="keuUploadStatus" style="color:rgba(255,255,255,.85);font-size:13px"></span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <button class="keu-upload-btn" onclick="document.getElementById('keuFileInput').click()" style="background:#fff;color:#1B3A6B;font-size:14px;padding:11px 24px;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.15)">
+          ⬆ Upload File Excel
+        </button>
+        <input type="file" id="keuFileInput" class="keu-upload-input" accept=".xlsx,.xls" onchange="handleKeuanganUpload(event)"/>
+        <span style="font-size:11px;color:rgba(255,255,255,.55)">Format: .xlsx — Sheet Transaksi, Pagu Belanja Bahan, Penyerapan Angaran</span>
+      </div>
     </div>
   </div><!-- /section-keuangan -->
 
@@ -3149,16 +3159,14 @@
   const FB_KEU = 'keuangan_v1';
   let keuData = null, keuCharts = {}, keuLoaded = false;
 
-  const PAGU = {
-    pegawai: 150901000, barang: 942922000, upTunai: 30000000,
-    twTarget: { barang: {tw1:15,tw2:50,tw3:70,tw4:90}, pegawai: {tw1:20,tw2:50,tw3:75,tw4:95} }
-  };
-  const BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni',
+                    'Juli','Agustus','September','Oktober','November','Desember'];
 
+  /* ── HELPERS ── */
   function parseKeuDate(v) {
     if (!v) return null;
     if (v instanceof Date) return v;
-    if (typeof v === 'number') return new Date(Math.round((v - 25569) * 86400000));
+    if (typeof v === 'number') return new Date(Math.round((v-25569)*86400000));
     const s = String(v).trim();
     const m = s.match(/^(\d{1,2})\s+(\w+)\s+(\d{4})/i);
     if (m) {
@@ -3167,34 +3175,46 @@
     }
     const d = new Date(s); return isNaN(d) ? null : d;
   }
-
   function fmtDate(dt) { return dt ? dt.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) : '—'; }
   function fmtRp(n) {
-    if (n == null) return '—';
-    if (n >= 1e9) return 'Rp '+(n/1e9).toFixed(2)+' M';
-    if (n >= 1e6) return 'Rp '+(n/1e6).toFixed(1)+' jt';
+    if (n==null) return '—';
+    if (n>=1e9) return 'Rp '+(n/1e9).toFixed(2)+' M';
+    if (n>=1e6) return 'Rp '+(n/1e6).toFixed(1)+' jt';
     return 'Rp '+n.toLocaleString('id-ID');
   }
   function fmtRpFull(n) { return n==null ? '—' : 'Rp '+n.toLocaleString('id-ID'); }
+  function fmtPct(v) { return v!=null ? v.toFixed(2)+'%' : '—'; }
+  function parseIDNum(v) {
+    if (typeof v === 'number') return v;
+    if (!v) return 0;
+    return parseFloat(String(v).replace(/\./g,'').replace(',','.')) || 0;
+  }
 
   /* ── UPLOAD ── */
   async function handleKeuanganUpload(e) {
     const file = e.target.files[0]; if (!file) return;
     const st = document.getElementById('keuUploadStatus');
-    st.textContent = '⏳ Membaca file...'; st.className = 'keu-upload-status';
+    const lu = document.getElementById('keuLastUpdated');
+    if (st) { st.textContent = '⏳ Membaca file...'; }
     try {
       const buf = await file.arrayBuffer();
       const wb  = XLSX.read(buf, {type:'array', cellDates:true});
-      const transaksi = parseKeuTransaksi(wb);
-      const paguBahan = parseKeuPaguBahan(wb);
-      const payload = { lastUpdated: new Date().toISOString(), fileName: file.name, transaksi, paguBahan };
-      st.textContent = '☁ Menyimpan...'; 
+      const transaksi     = parseKeuTransaksi(wb);
+      const paguBahan     = parseKeuPaguBahan(wb);
+      const penyerapan    = parseKeuPenyerapan(wb);
+      const payload = {
+        lastUpdated: new Date().toISOString(),
+        fileName: file.name,
+        transaksi, paguBahan, penyerapan
+      };
+      if (st) st.textContent = '☁ Menyimpan ke server...';
       await getDb().ref(FB_KEU).set(payload);
-      st.textContent = `✓ Berhasil — ${transaksi.filter(t=>!t.isGUP).length} transaksi, ${paguBahan.length} kegiatan`;
-      st.className = 'keu-upload-status success';
+      if (st) { st.textContent = `✓ Berhasil diupdate — ${transaksi.filter(t=>!t.isGUP).length} transaksi · ${penyerapan.length} periode penyerapan`; }
+      if (lu) lu.innerHTML = `<span class="keu-live-dot"></span> Terakhir diupdate: <strong>${new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})} pukul ${new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</strong> · ${file.name}`;
       e.target.value = '';
     } catch(err) {
-      st.textContent = '✗ Gagal: '+err.message; st.className = 'keu-upload-status error';
+      console.error(err);
+      if (st) { st.textContent = '✗ Gagal: '+err.message; }
     }
   }
 
@@ -3212,30 +3232,80 @@
         result.push({isGUP:true, tgl: dt?dt.toISOString():null, nilai});
       } else if (typeof no==='number' && uraian) {
         const dt = parseKeuDate(tgl);
-        result.push({isGUP:false, no, uraian:String(uraian), nilai, mek:String(mek||''),
-          tgl: dt?dt.toISOString():null, bukti:r[5]?String(r[5]):'', sakti:r[6]?String(r[6]):''});
+        result.push({isGUP:false, no, uraian:String(uraian), nilai,
+          mek:String(mek||''), tgl: dt?dt.toISOString():null,
+          bukti:r[5]?String(r[5]):'', sakti:r[6]?String(r[6]):''});
       }
     }
     return result;
   }
 
-  /* ── PARSE PAGU BELANJA BAHAN — baca E7:E17 untuk pagu, kolom realisasi sebelahnya ── */
+  /* ── PARSE PAGU BELANJA BAHAN — E7:E17 pagu, O7:O17 realisasi, C7:C17 nama ── */
   function parseKeuPaguBahan(wb) {
     const ws = wb.Sheets['Pagu Belanja Bahan']; if (!ws) return [];
     const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
     const result = [];
-    // E = index 4, data mulai baris 7 (index 6) s.d. 17 (index 16)
     for (let i=6; i<=16 && i<rows.length; i++) {
       const r = rows[i];
-      // Cari nama kegiatan di kolom A/B/C
-      const nama = r[0] || r[1] || r[2];
-      // Pagu di kolom E (index 4)
-      const pagu = r[4];
-      // Realisasi di kolom F atau G (index 5 atau 6) — cari yang numeric
-      const real = (typeof r[5]==='number' ? r[5] : 0) || (typeof r[6]==='number' ? r[6] : 0) || 0;
-      if (nama && typeof pagu==='number' && pagu > 0) {
-        result.push({kegiatan: String(nama).trim(), pagu, realisasi: Math.max(0, real)});
+      const nama  = r[2] || r[1] || r[0];   // Kolom C → B → A
+      const pagu  = r[4];                     // Kolom E
+      const real  = r[14];                    // Kolom O
+      if (nama && typeof pagu==='number' && pagu>0) {
+        result.push({
+          kegiatan: String(nama).trim(),
+          pagu: Math.max(0, pagu),
+          realisasi: Math.max(0, typeof real==='number' ? real : 0)
+        });
       }
+    }
+    return result;
+  }
+
+  /* ── PARSE PENYERAPAN ANGGARAN — sheet "Penyerapan Angaran" ── */
+  function parseKeuPenyerapan(wb) {
+    // Sheet name has typo: "Penyerapan Angaran" (missing 'g')
+    const sheetName = wb.SheetNames.find(n => n.toLowerCase().includes('penyerapan')) || 'Penyerapan Angaran';
+    const ws = wb.Sheets[sheetName];
+    if (!ws) { console.warn('Sheet Penyerapan tidak ditemukan'); return []; }
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+
+    const result = [];
+    const BLOCK = 11;  // 11 rows per periode block
+    const START = 4;   // Index 4 = Row 5
+
+    for (let i = START; i < rows.length; i += BLOCK) {
+      const hdr = rows[i];  // PAGU JENIS BELANJA row
+      if (!hdr) continue;
+      const no = typeof hdr[0]==='number' ? hdr[0] : parseInt(hdr[0]);
+      if (isNaN(no) || no < 1) continue;
+
+      // Realisasi dari header row (col J=9, K=10)
+      const real51 = parseIDNum(hdr[9]);
+      const real52 = parseIDNum(hdr[10]);
+      // IKPA — col N=13 or O=14
+      const ikpaRaw = hdr[14] || hdr[13];
+      const ikpa = typeof ikpaRaw==='number' ? ikpaRaw : parseFloat(String(ikpaRaw||'0').replace(',','.'));
+
+      // PAGU NETTO row (i+4): col E=4, F=5
+      const nRow = rows[i+4] || [];
+      const paguNetto51 = parseIDNum(nRow[4]);
+      const paguNetto52 = parseIDNum(nRow[5]);
+
+      // TARGET row (i+10): col E=4, F=5 — stored as decimal (0.1 = 10%)
+      const tRow = rows[i+10] || [];
+      const tgt51Raw = tRow[4]; const tgt52Raw = tRow[5];
+      const target51 = typeof tgt51Raw==='number' ? +(tgt51Raw*100).toFixed(1) : parseFloat(String(tgt51Raw||'0').replace(',','.'))*100;
+      const target52 = typeof tgt52Raw==='number' ? +(tgt52Raw*100).toFixed(1) : parseFloat(String(tgt52Raw||'0').replace(',','.'))*100;
+
+      // Calculate % vs pagu netto
+      const pct51 = paguNetto51>0 ? +(real51/paguNetto51*100).toFixed(2) : 0;
+      const pct52 = paguNetto52>0 ? +(real52/paguNetto52*100).toFixed(2) : 0;
+
+      result.push({
+        no, bulan: BULAN_ID[no-1] || `P${no}`,
+        real51, real52, paguNetto51, paguNetto52,
+        pct51, pct52, target51, target52, ikpa: +ikpa.toFixed(2)
+      });
     }
     return result;
   }
@@ -3250,147 +3320,231 @@
     });
   }
 
-  /* ── MAIN RENDER ── */
+  /* ── MAIN RENDERER ── */
   function renderKeuanganDashboard(data) {
     if (!data || !data.transaksi) return;
-    const el = document.getElementById('keuLastUpdated');
-    if (el && data.lastUpdated) {
+    const lu = document.getElementById('keuLastUpdated');
+    if (lu && data.lastUpdated) {
       const d = new Date(data.lastUpdated);
-      el.innerHTML = `<span class="keu-live-dot"></span> Terakhir diupdate: <strong>${d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})} pukul ${d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</strong> · ${data.fileName||''}`;
+      lu.innerHTML = `<span class="keu-live-dot"></span> Terakhir diupdate: <strong>${d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})} pukul ${d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</strong> &nbsp;·&nbsp; ${data.fileName||''}`;
     }
     const gupRows  = data.transaksi.filter(t=>t.isGUP);
     const realRows = data.transaksi.filter(t=>!t.isGUP);
-    renderKeuPanel1(realRows, gupRows);
+    const penyerapan = data.penyerapan || [];
+    const paguBahan  = data.paguBahan  || [];
+
+    renderKeuPanel1(penyerapan);
     renderKeuPanel2(realRows, gupRows);
-    renderKeuPanel3(data.paguBahan||[], realRows);
+    renderKeuPanel3(paguBahan);
     renderAllCatatan(data.catatan||{});
   }
 
-  /* ── KATEGORI ── */
-  function keuKat(u) {
-    if (!u) return 'Lainnya'; u = u.toLowerCase();
-    if (u.includes('bbm')||u.includes('bahan bakar')) return 'BBM';
-    if (u.includes('pemeliharaan')&&(u.includes('gedung')||u.includes('bangunan')||u.includes('halaman')||u.includes('rumah')||u.includes('kantor'))) return 'Pmliharaan Gedung';
-    if (u.includes('pemeliharaan')&&(u.includes('peralatan')||u.includes('mesin')||u.includes('kendaraan')||u.includes('roda'))) return 'Pmliharaan Mesin';
-    if (u.includes('perjalanan')||u.includes('uang harian')||u.includes('akomodasi')||u.includes('transport')) return 'Perjalanan Dinas';
-    if (u.includes('bahan')||u.includes('konsumsi')||u.includes('makan')||u.includes('minum')||u.includes('snack')) return 'Belanja Bahan';
-    if (u.includes('keperluan')||u.includes('atk')||u.includes('alat tulis')||u.includes('cetak')||u.includes('tinta')||u.includes('kertas')||u.includes('materai')) return 'Keperluan Kantor';
-    if (u.includes('honor')) return 'Honor'; return 'Lainnya';
-  }
+  /* ══════════════════════════════════════════════════════════════
+     PANEL 01 — PENYERAPAN ANGGARAN (dari sheet Penyerapan Angaran)
+     ══════════════════════════════════════════════════════════════ */
+  function renderKeuPanel1(penyerapan) {
+    const el = document.getElementById('keuBody1');
+    if (!penyerapan || !penyerapan.length) {
+      el.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-secondary)">Data Penyerapan Anggaran belum tersedia — pastikan sheet "Penyerapan Angaran" ada di file Excel</div>';
+      return;
+    }
 
-  function keuDestroyChart(id) {
-    if (keuCharts[id]) { keuCharts[id].destroy(); delete keuCharts[id]; }
-    const el = document.getElementById(id);
-    if (el) { const p=el.parentNode; p.innerHTML=`<canvas id="${id}"></canvas>`; }
-  }
+    // Latest period
+    const latest = penyerapan[penyerapan.length-1];
+    const latestPaguNetto51 = latest.paguNetto51;
+    const latestPaguNetto52 = latest.paguNetto52;
+    const latestReal51 = latest.real51;
+    const latestReal52 = latest.real52;
+    const latestPct51  = latest.pct51;
+    const latestPct52  = latest.pct52;
 
-  /* ── PANEL 01 ── */
-  function renderKeuPanel1(realRows, gupRows) {
-    const monthly={}, katTotal={}, katCount={};
-    let grand=0;
-    realRows.forEach(t=>{
-      grand += t.nilai;
-      const k = keuKat(t.uraian);
-      katTotal[k]=(katTotal[k]||0)+t.nilai; katCount[k]=(katCount[k]||0)+1;
-      if (t.tgl) { const mk=t.tgl.substring(0,7); monthly[mk]=(monthly[mk]||0)+t.nilai; }
-    });
-    const noDate = realRows.filter(t=>!t.tgl).reduce((s,t)=>s+t.nilai,0);
-    const sortedMK = Object.keys(monthly).sort();
-    let akum=0; const akumMap={};
-    sortedMK.forEach(mk=>{akum+=monthly[mk]; akumMap[mk]=akum;});
-    if (sortedMK.length) akumMap[sortedMK[sortedMK.length-1]]+=noDate;
-    const latestAkum = Object.values(akumMap).pop()||0;
-    const pctBar = latestAkum/PAGU.barang*100;
-    const tw1Val = PAGU.barang*PAGU.twTarget.barang.tw1/100/1e6;
-    const tw2Val = PAGU.barang*PAGU.twTarget.barang.tw2/100/1e6;
-    const allLabels = ['Jan','Feb','Mar','Apr','Mei','Jun'];
-    const allKeys   = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06'];
-    const trendData = allKeys.map(mk=>akumMap[mk]?+(akumMap[mk]/1e6).toFixed(1):null);
-    const katSorted = Object.entries(katTotal).sort((a,b)=>b[1]-a[1]);
-    const PALETTE = ['#1B3A6B','#059669','#ea580c','#7c3aed','#d97706','#0ea5e9','#db2777','#65a30d'];
+    // Labels & chart data
+    const labels  = penyerapan.map(p => p.bulan.substring(0,3));
+    const data51  = penyerapan.map(p => p.pct51);
+    const data52  = penyerapan.map(p => p.pct52);
+    const tgt51   = penyerapan.map(p => p.target51);
+    const tgt52   = penyerapan.map(p => p.target52);
+    const ikpaArr = penyerapan.map(p => p.ikpa);
 
-    document.getElementById('keuBody1').innerHTML = `
+    // Status vs TW target
+    const lastTgt51 = latest.target51;
+    const lastTgt52 = latest.target52;
+    const ok51 = latestPct51 >= lastTgt51;
+    const ok52 = latestPct52 >= lastTgt52;
+
+    el.innerHTML = `
     <div class="keu-stats">
-      <div class="keu-stat keu-stat-blue"><span class="keu-stat-ico">📊</span><div class="keu-stat-lbl">Total Pagu B.Barang</div><div class="keu-stat-val">Rp 942,9 jt</div><div class="keu-stat-sub">+ B.Pegawai Rp 150,9 jt</div></div>
-      <div class="keu-stat keu-stat-green"><span class="keu-stat-ico">✅</span><div class="keu-stat-lbl">Realisasi (dari Transaksi)</div><div class="keu-stat-val">${fmtRp(latestAkum)}</div><div class="keu-stat-sub">${realRows.length} transaksi</div><div class="keu-stat-badge keu-badge-${pctBar>=PAGU.twTarget.barang.tw1?'g':'a'}">${pctBar.toFixed(1)}%</div></div>
-      <div class="keu-stat keu-stat-amber"><span class="keu-stat-ico">🎯</span><div class="keu-stat-lbl">Target TW I (Mar 15%)</div><div class="keu-stat-val">Rp ${(PAGU.barang*.15/1e6).toFixed(0)} jt</div><div class="keu-stat-sub">= ${PAGU.twTarget.barang.tw1}% dari pagu</div><div class="keu-stat-badge keu-badge-${pctBar>=15?'g':'r'}">${pctBar>=15?'Terlampaui ✓':'Belum'}</div></div>
-      <div class="keu-stat keu-stat-blue"><span class="keu-stat-ico">🏁</span><div class="keu-stat-lbl">Target TW II (Jun 50%)</div><div class="keu-stat-val">Rp ${(PAGU.barang*.5/1e6).toFixed(0)} jt</div><div class="keu-stat-sub">Butuh +${fmtRp(PAGU.barang*.5-latestAkum)}</div><div class="keu-stat-badge keu-badge-a">Dalam Proses</div></div>
-    </div>
-    <div class="keu-g2">
-      <div>
-        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#2563eb"></span>Realisasi Akumulatif vs Target Triwulanan — Highlight Utama</div>
-        <div style="position:relative;height:220px"><canvas id="keuChartTrend"></canvas></div>
-        <div class="chart-note">📌 Garis biru = realisasi yang terus naik. Segitiga oranye = target wajib per triwulan. Selama garis biru <em>di atas</em> segitiga, kita aman. Target TW II (Juni) = 50% dari pagu.</div>
-        <div class="keu-div"></div>
-        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#059669"></span>Realisasi Belanja per Bulan (Rp juta)</div>
-        <div style="position:relative;height:155px"><canvas id="keuChartMonthly"></canvas></div>
-        <div class="chart-note">📌 Setiap batang = total belanja UP bulan tersebut. Bulan dengan batang tinggi berarti pengeluaran besar — wajar jika diikuti pengajuan GUP.</div>
+      <div class="keu-stat keu-stat-blue">
+        <span class="keu-stat-ico">👔</span>
+        <div class="keu-stat-lbl">Pagu Netto B.Pegawai (51)</div>
+        <div class="keu-stat-val">${fmtRp(latestPaguNetto51)}</div>
+        <div class="keu-stat-sub">Realisasi s.d. ${latest.bulan}: ${fmtRp(latestReal51)}</div>
+        <div class="keu-stat-badge ${ok51?'keu-badge-g':'keu-badge-a'}">${latestPct51.toFixed(1)}% ${ok51?'✓ TW aman':'⚠ Monitor'}</div>
       </div>
+      <div class="keu-stat keu-stat-teal">
+        <span class="keu-stat-ico">🛒</span>
+        <div class="keu-stat-lbl">Pagu Netto B.Barang (52)</div>
+        <div class="keu-stat-val">${fmtRp(latestPaguNetto52)}</div>
+        <div class="keu-stat-sub">Realisasi s.d. ${latest.bulan}: ${fmtRp(latestReal52)}</div>
+        <div class="keu-stat-badge ${ok52?'keu-badge-g':'keu-badge-r'}">${latestPct52.toFixed(1)}% ${ok52?'✓ TW aman':'✗ Perlu Akselerasi'}</div>
+      </div>
+      <div class="keu-stat keu-stat-amber">
+        <span class="keu-stat-ico">🎯</span>
+        <div class="keu-stat-lbl">Target Periode ${latest.bulan}</div>
+        <div class="keu-stat-val">${lastTgt51}% / ${lastTgt52}%</div>
+        <div class="keu-stat-sub">B.Pegawai / B.Barang</div>
+      </div>
+      <div class="keu-stat keu-stat-purple">
+        <span class="keu-stat-ico">📈</span>
+        <div class="keu-stat-lbl">IKPA Terakhir</div>
+        <div class="keu-stat-val" style="color:${latest.ikpa>=90?'#059669':latest.ikpa>=75?'#d97706':'#dc2626'}">${latest.ikpa.toFixed(2)}</div>
+        <div class="keu-stat-sub">Periode ${latest.bulan}</div>
+        <div class="keu-stat-badge ${latest.ikpa>=90?'keu-badge-g':latest.ikpa>=75?'keu-badge-a':'keu-badge-r'}">${latest.ikpa>=90?'Baik':'latest.ikpa>=75?''Cukup':'Perlu Perhatian'}</div>
+      </div>
+    </div>
+
+    <div class="keu-g2">
+      <!-- B.PEGAWAI CHART -->
       <div>
-        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#ea580c"></span>Komposisi Realisasi per Kategori (Nilai)</div>
-        <div style="position:relative;height:200px"><canvas id="keuChartDonut"></canvas></div>
-        <div class="chart-note">📌 Setiap irisan = proporsi pengeluaran. Makin besar irisan, makin besar porsi belanja di kategori tersebut.</div>
+        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#2563eb"></span>Belanja Pegawai (51) — Realisasi vs Target Triwulanan</div>
+        <div style="position:relative;height:210px"><canvas id="keuChartPeg"></canvas></div>
+        <div class="chart-note">📌 Garis biru = realisasi akumulatif B.Pegawai per bulan. Garis putus = target resmi IKPA per triwulan. B.Pegawai meliputi gaji, tunjangan, dan honorarium.</div>
+
         <div class="keu-div"></div>
-        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#7c3aed"></span>Frekuensi Transaksi per Kategori</div>
-        <div style="position:relative;height:180px"><canvas id="keuChartTxBar"></canvas></div>
-        <div class="chart-note">📌 Bukan nilai uang, tapi <em>berapa kali</em> transaksi terjadi. Bar panjang = kategori yang paling sering dibeli.</div>
+        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#f59e0b"></span>Nilai IKPA per Periode</div>
+        <div style="position:relative;height:150px"><canvas id="keuChartIKPA"></canvas></div>
+        <div class="chart-note">📌 IKPA (Indikator Kinerja Pelaksanaan Anggaran) adalah skor kinerja penyerapan. Skala 0–100. Nilai ≥90 = Baik. Skor turun di April karena target TW II naik tajam.</div>
+      </div>
+
+      <!-- B.BARANG CHART -->
+      <div>
+        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#059669"></span>Belanja Barang (52) — Realisasi vs Target Triwulanan</div>
+        <div style="position:relative;height:210px"><canvas id="keuChartBar"></canvas></div>
+        <div class="chart-note">📌 Garis hijau = realisasi akumulatif B.Barang per bulan. Garis putus = target resmi IKPA. B.Barang lebih rendah dari B.Pegawai karena banyak kegiatan belum terlaksana.</div>
+
+        <div class="keu-div"></div>
+        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#7c3aed"></span>Ringkasan Realisasi per Bulan (%)</div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:400px">
+            <thead>
+              <tr style="background:var(--bg-secondary)">
+                <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);border-bottom:1.5px solid var(--border-light)">Bulan</th>
+                <th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);border-bottom:1.5px solid var(--border-light)">B.Peg (%)</th>
+                <th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);border-bottom:1.5px solid var(--border-light)">Target</th>
+                <th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);border-bottom:1.5px solid var(--border-light)">B.Bar (%)</th>
+                <th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);border-bottom:1.5px solid var(--border-light)">Target</th>
+                <th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);border-bottom:1.5px solid var(--border-light)">IKPA</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${penyerapan.map((p,i)=>{
+                const okPeg = p.pct51 >= p.target51;
+                const okBar = p.pct52 >= p.target52;
+                return `<tr style="border-bottom:1px solid var(--border-light);${i===penyerapan.length-1?'background:var(--bg-secondary);font-weight:700':''}">
+                  <td style="padding:8px 12px;font-weight:600;color:var(--text-primary)">${p.bulan}</td>
+                  <td style="padding:8px 12px;text-align:right;font-family:monospace;color:${okPeg?'#059669':'#d97706'};font-weight:600">${p.pct51.toFixed(2)}%</td>
+                  <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--text-secondary)">${p.target51}%</td>
+                  <td style="padding:8px 12px;text-align:right;font-family:monospace;color:${okBar?'#059669':'#dc2626'};font-weight:600">${p.pct52.toFixed(2)}%</td>
+                  <td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--text-secondary)">${p.target52}%</td>
+                  <td style="padding:8px 12px;text-align:center;font-weight:700;color:${p.ikpa>=90?'#059669':p.ikpa>=75?'#d97706':'#dc2626'}">${p.ikpa.toFixed(2)}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
     ${keuCatatanHTML('panel1')}`;
 
-    keuDestroyChart('keuChartTrend');
-    keuDestroyChart('keuChartMonthly');
-    keuDestroyChart('keuChartDonut');
-    keuDestroyChart('keuChartTxBar');
+    // Destroy & redraw
+    ['keuChartPeg','keuChartBar','keuChartIKPA'].forEach(id => keuDestroyChart(id));
 
-    keuCharts['keuChartTrend'] = new Chart(document.getElementById('keuChartTrend'), {
-      type:'line', data:{labels:allLabels, datasets:[
-        {label:'Realisasi Akumulatif',data:trendData,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.10)',fill:true,tension:.4,pointRadius:6,pointBackgroundColor:'#2563eb',pointBorderColor:'#fff',pointBorderWidth:3,spanGaps:false},
-        {label:`Target TW I (${PAGU.twTarget.barang.tw1}%)`,data:allKeys.map((_,i)=>i===2?tw1Val:null),type:'scatter',pointRadius:12,pointStyle:'triangle',pointBackgroundColor:'#f59e0b',borderColor:'transparent',fill:false},
-        {label:`Target TW II (${PAGU.twTarget.barang.tw2}%)`,data:allKeys.map((_,i)=>i===5?tw2Val:null),type:'scatter',pointRadius:12,pointStyle:'triangle',pointBackgroundColor:'#ea580c',borderColor:'transparent',fill:false},
-        {label:'Proyeksi → TW II',data:allKeys.map((_,i)=>{if(i===sortedMK.length-1)return+(latestAkum/1e6).toFixed(1);if(i===5)return+tw2Val.toFixed(1);return null;}),borderColor:'#ea580c',borderDash:[6,4],borderWidth:2,pointRadius:0,fill:false,tension:.3}
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{font:{size:11,weight:'600'},boxWidth:16,boxHeight:3,padding:10}},tooltip:{callbacks:{label:c=>c.raw!=null?` Rp ${c.raw} juta`:''}}},scales:{x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',font:{weight:'700'}},border:{display:false}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',callback:v=>v+' jt'},border:{display:false}}}}
+    // Chart B.Pegawai
+    keuCharts['keuChartPeg'] = new Chart(document.getElementById('keuChartPeg'), {
+      type:'line',
+      data:{
+        labels,
+        datasets:[
+          {label:'Realisasi B.Pegawai (%)',data:data51,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.10)',fill:true,tension:.4,pointRadius:6,pointBackgroundColor:'#2563eb',pointBorderColor:'#fff',pointBorderWidth:3},
+          {label:'Target (%)',data:tgt51,borderColor:'#f59e0b',borderDash:[7,4],borderWidth:2.5,pointRadius:0,fill:false,tension:0}
+        ]
+      },
+      options:keuChartOpts('%', 'B.Pegawai vs Target')
     });
 
-    const monthlyVals = sortedMK.map(mk=>+(monthly[mk]/1e6).toFixed(1));
-    const monthlyLabels = sortedMK.map(mk=>BULAN_ID[+mk.split('-')[1]-1].substring(0,3));
-    const bColors = ['#BAE6FF','#6EE7B7','#A5B4FC','#FED7AA','#F0ABFC','#BBF7D0'];
-    keuCharts['keuChartMonthly'] = new Chart(document.getElementById('keuChartMonthly'), {
-      type:'bar', data:{labels:monthlyLabels,datasets:[{label:'Belanja (jt)',data:monthlyVals,backgroundColor:bColors,borderRadius:6,borderSkipped:false}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` Rp ${c.raw} juta`}}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{weight:'700'}},border:{display:false}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',callback:v=>v+' jt'},border:{display:false}}}}
+    // Chart B.Barang
+    keuCharts['keuChartBar'] = new Chart(document.getElementById('keuChartBar'), {
+      type:'line',
+      data:{
+        labels,
+        datasets:[
+          {label:'Realisasi B.Barang (%)',data:data52,borderColor:'#059669',backgroundColor:'rgba(5,150,105,.10)',fill:true,tension:.4,pointRadius:6,pointBackgroundColor:'#059669',pointBorderColor:'#fff',pointBorderWidth:3},
+          {label:'Target (%)',data:tgt52,borderColor:'#ea580c',borderDash:[7,4],borderWidth:2.5,pointRadius:0,fill:false,tension:0}
+        ]
+      },
+      options:keuChartOpts('%', 'B.Barang vs Target')
     });
 
-    keuCharts['keuChartDonut'] = new Chart(document.getElementById('keuChartDonut'), {
-      type:'doughnut', data:{labels:katSorted.map(k=>k[0]),datasets:[{data:katSorted.map(k=>k[1]),backgroundColor:PALETTE,borderWidth:3,borderColor:'#fff',hoverOffset:6}]},
-      options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'right',labels:{font:{size:11,weight:'600'},boxWidth:10,boxHeight:10,padding:7}},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmtRp(c.raw)} (${grand?Math.round(c.raw/grand*100):0}%)`}}}}
-    });
-
-    keuCharts['keuChartTxBar'] = new Chart(document.getElementById('keuChartTxBar'), {
-      type:'bar', data:{labels:katSorted.map(k=>k[0]),datasets:[{label:'Transaksi',data:katSorted.map(k=>katCount[k[0]]||0),backgroundColor:PALETTE,borderRadius:5,borderSkipped:false}]},
-      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw} transaksi`}}},scales:{x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b'},border:{display:false}},y:{grid:{display:false},ticks:{color:'#374364',font:{size:11,weight:'700'}},border:{display:false}}}}
+    // IKPA Chart
+    keuCharts['keuChartIKPA'] = new Chart(document.getElementById('keuChartIKPA'), {
+      type:'bar',
+      data:{
+        labels,
+        datasets:[{
+          label:'Nilai IKPA',
+          data:ikpaArr,
+          backgroundColor: ikpaArr.map(v=>v>=90?'#059669':v>=75?'#d97706':'#dc2626'),
+          borderRadius:7, borderSkipped:false
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` IKPA: ${c.raw}`}}},
+        scales:{
+          x:{grid:{display:false},ticks:{color:'#64748b',font:{weight:'700'}},border:{display:false}},
+          y:{min:0,max:110,grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b'},border:{display:false},
+             afterDataLimits(axis){axis.max=110;}}
+        }
+      }
     });
   }
 
-  /* ── PANEL 02 ── */
+  function keuChartOpts(unit, title) {
+    return {
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,labels:{font:{size:11,weight:'600'},boxWidth:16,boxHeight:3,padding:10}},
+        tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}${unit}`}}
+      },
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',font:{weight:'700'}},border:{display:false}},
+        y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',callback:v=>v+unit},border:{display:false},beginAtZero:true}
+      }
+    };
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     PANEL 02 — GUP (tidak berubah)
+     ══════════════════════════════════════════════════════════════ */
   function renderKeuPanel2(realRows, gupRows) {
     const totalGUP = gupRows.reduce((s,g)=>s+g.nilai,0);
     const sortedGUP = [...gupRows].filter(g=>g.tgl).sort((a,b)=>new Date(a.tgl)-new Date(b.tgl));
-    const lastGUP = sortedGUP[sortedGUP.length-1];
-    const cycles = buildGUPCycles(sortedGUP, realRows);
+    const lastGUP   = sortedGUP[sortedGUP.length-1];
+    const cycles    = buildGUPCycles(sortedGUP, realRows);
+    const UP_TUNAI  = 30000000;
 
     const monthly={};
     realRows.filter(t=>t.tgl).forEach(t=>{ const mk=t.tgl.substring(0,7); monthly[mk]=(monthly[mk]||0)+t.nilai; });
     const sortedMK=Object.keys(monthly).sort();
     let akum=0; const akumPct=[]; const akumLabels=[];
-    sortedMK.forEach(mk=>{ akum+=monthly[mk]; akumPct.push(+(akum/PAGU.barang*100).toFixed(1)); akumLabels.push(BULAN_ID[+mk.split('-')[1]-1].substring(0,3)); });
+    sortedMK.forEach(mk=>{ akum+=monthly[mk]; akumPct.push(+(akum/942922000*100).toFixed(1)); akumLabels.push(BULAN_ID[+mk.split('-')[1]-1].substring(0,3)); });
 
     document.getElementById('keuBody2').innerHTML = `
     <div class="keu-stats">
       <div class="keu-stat keu-stat-green"><span class="keu-stat-ico">🔄</span><div class="keu-stat-lbl">Total GUP TA 2026</div><div class="keu-stat-val">${gupRows.length} kali</div><div class="keu-stat-sub">${fmtRp(totalGUP)}</div></div>
       <div class="keu-stat keu-stat-blue"><span class="keu-stat-ico">📅</span><div class="keu-stat-lbl">GUP Terakhir</div><div class="keu-stat-val" style="font-size:17px">${lastGUP?fmtDate(new Date(lastGUP.tgl)):'—'}</div><div class="keu-stat-sub">${lastGUP?fmtRp(lastGUP.nilai):'—'}</div></div>
-      <div class="keu-stat keu-stat-amber"><span class="keu-stat-ico">⚡</span><div class="keu-stat-lbl">Rata-rata per GUP</div><div class="keu-stat-val">${fmtRp(gupRows.length?totalGUP/gupRows.length:0)}</div><div class="keu-stat-sub">UP Tunai max ${fmtRp(PAGU.upTunai)}</div></div>
-      <div class="keu-stat keu-stat-teal"><span class="keu-stat-ico">🏁</span><div class="keu-stat-lbl">Target TW II (50%)</div><div class="keu-stat-val">${fmtRp(PAGU.barang*.5)}</div><div class="keu-stat-sub">Saat ini ${akumPct[akumPct.length-1]||0}%</div><div class="keu-stat-badge keu-badge-a">Dalam Proses</div></div>
+      <div class="keu-stat keu-stat-amber"><span class="keu-stat-ico">⚡</span><div class="keu-stat-lbl">Rata-rata per GUP</div><div class="keu-stat-val">${fmtRp(gupRows.length?totalGUP/gupRows.length:0)}</div><div class="keu-stat-sub">UP Tunai max ${fmtRp(UP_TUNAI)}</div></div>
+      <div class="keu-stat keu-stat-teal"><span class="keu-stat-ico">📊</span><div class="keu-stat-lbl">Serapan UP (Transaksi)</div><div class="keu-stat-val">${fmtRp(akum)}</div><div class="keu-stat-sub">${akumPct[akumPct.length-1]||0}% dari pagu B.Barang satker</div></div>
     </div>
 
     <div style="background:var(--bg-secondary);border:1px solid var(--border-light);border-radius:var(--radius-md);padding:1.1rem 1.25rem;margin-bottom:1.25rem">
@@ -3398,68 +3552,55 @@
         <span style="font-size:15px;font-weight:700;color:var(--text-primary)">Progres GUP s.d. Saat Ini</span>
         <span style="font-size:14px;font-family:monospace;font-weight:700;color:#059669">${gupRows.length} siklus · ${fmtRpFull(totalGUP)}</span>
       </div>
-      <div class="keu-gup-progress-bar"><div class="keu-gup-progress-fill" style="width:${Math.min(100,totalGUP/PAGU.barang*300).toFixed(0)}%"></div></div>
-      <div class="chart-note" style="margin-top:.6rem">📌 <strong>GUP (Ganti Uang Persediaan)</strong> = pengisian ulang kas kantor. Setiap kali uang hampir habis, Bendahara ajukan GUP agar kas kembali terisi. Makin sering GUP = belanja berjalan aktif.</div>
+      <div class="keu-gup-progress-bar"><div class="keu-gup-progress-fill" style="width:${Math.min(100,totalGUP/942922000*300).toFixed(0)}%"></div></div>
+      <div class="chart-note" style="margin-top:.6rem">📌 <strong>GUP (Ganti Uang Persediaan)</strong> = pengisian ulang kas kantor. Makin sering GUP = belanja berjalan aktif. Nilai GUP mendekati Rp 30 juta berarti hampir seluruh UP Tunai terpakai sebelum diisi ulang.</div>
     </div>
 
     <div class="keu-g2">
       <div>
-        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#059669"></span>Realisasi Akumulatif vs Target TW (%)</div>
-        <div style="position:relative;height:200px"><canvas id="keuChartGupTarget"></canvas></div>
-        <div class="chart-note">📌 Batang = persen serapan bulanan yang terus bertambah. Garis putus = target TW I (15%) dan TW II (50%). Pastikan batang mengejar garis target.</div>
+        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#059669"></span>Nilai GUP per Pengajuan (Rp juta)</div>
+        <div style="position:relative;height:190px"><canvas id="keuChartGupBar"></canvas></div>
+        <div class="chart-note">📌 Setiap batang = satu pengajuan GUP. Mendekati Rp 30 juta = nyaris seluruh UP Tunai habis digunakan sebelum diisi ulang.</div>
         <div class="keu-div"></div>
-        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#2563eb"></span>Nilai per Pengajuan GUP (Rp juta)</div>
-        <div style="position:relative;height:150px"><canvas id="keuChartGupBar"></canvas></div>
-        <div class="chart-note">📌 Setiap batang = satu pengajuan GUP. Mendekati Rp 30 juta = nyaris seluruh UP habis digunakan — tanda belanja berjalan lancar.</div>
-      </div>
-      <div>
-        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#7c3aed"></span>Siklus GUP &amp; Detail Transaksi (klik untuk buka)</div>
-        <div id="keuGUPCycles">${buildGUPCyclesHTML(cycles)}</div>
         <div class="keu-gup-summary">
           <div class="keu-gup-sum-i"><div class="keu-gup-sum-l">Total GUP</div><div class="keu-gup-sum-v">${fmtRpFull(totalGUP)}</div></div>
           <div class="keu-gup-sum-i"><div class="keu-gup-sum-l">Jumlah Siklus</div><div class="keu-gup-sum-v" style="color:#059669">${gupRows.length}×</div></div>
           <div class="keu-gup-sum-i"><div class="keu-gup-sum-l">Rata-rata</div><div class="keu-gup-sum-v" style="color:#2563eb">${fmtRp(gupRows.length?totalGUP/gupRows.length:0)}</div></div>
         </div>
       </div>
+      <div>
+        <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#7c3aed"></span>Siklus GUP &amp; Detail Transaksi (klik untuk buka)</div>
+        <div id="keuGUPCycles">${buildGUPCyclesHTML(cycles)}</div>
+      </div>
     </div>
     ${keuCatatanHTML('panel2')}`;
 
-    keuDestroyChart('keuChartGupTarget');
     keuDestroyChart('keuChartGupBar');
-
-    keuCharts['keuChartGupTarget'] = new Chart(document.getElementById('keuChartGupTarget'), {
-      type:'bar', data:{labels:akumLabels, datasets:[
-        {label:'Realisasi Akumulatif (%)',data:akumPct,backgroundColor:akumPct.map((_,i)=>i===akumPct.length-1?'#059669':'#A7F3D0'),borderRadius:8,borderSkipped:false,order:2},
-        {label:'Target TW I (15%)',data:akumLabels.map(()=>15),type:'line',borderColor:'#f59e0b',borderDash:[6,4],borderWidth:2.5,pointRadius:0,fill:false,order:1},
-        {label:'Target TW II (50%)',data:akumLabels.map(()=>50),type:'line',borderColor:'#ea580c',borderDash:[5,4],borderWidth:2.5,pointRadius:0,fill:false,order:1}
-      ]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{font:{size:11,weight:'600'},boxWidth:14,boxHeight:2,padding:10}},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},scales:{x:{grid:{display:false},ticks:{color:'#374364',font:{weight:'700'}},border:{display:false}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',callback:v=>v+'%'},border:{display:false}}}}
-    });
-
-    const gupLabels = sortedGUP.map((g,i)=>{ const d=new Date(g.tgl); return `${BULAN_ID[d.getMonth()].substring(0,3)} (${i+1})`; });
+    const sortedGUPLabels = sortedGUP.map((g,i)=>{ const d=new Date(g.tgl); return `${BULAN_ID[d.getMonth()].substring(0,3)} (${i+1})`; });
     const gupVals   = sortedGUP.map(g=>+(g.nilai/1e6).toFixed(2));
-    const gupColors = sortedGUP.map((_,i)=>['#BAE6FF','#6EE7B7','#6EE7B7','#A5B4FC','#FED7AA','#FED7AA'][i]||'#e2e8f0');
+    const gupColors = ['#BAE6FF','#6EE7B7','#6EE7B7','#A5B4FC','#FED7AA','#FED7AA'];
     keuCharts['keuChartGupBar'] = new Chart(document.getElementById('keuChartGupBar'), {
-      type:'bar', data:{labels:gupLabels,datasets:[{label:'Nilai GUP (jt)',data:gupVals,backgroundColor:gupColors,borderRadius:5,borderSkipped:false}]},
+      type:'bar', data:{labels:sortedGUPLabels,datasets:[{label:'Nilai GUP (jt)',data:gupVals,backgroundColor:gupColors,borderRadius:7,borderSkipped:false}]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` Rp ${c.raw} juta`}}},scales:{x:{grid:{display:false},ticks:{color:'#64748b',font:{size:11,weight:'600'},maxRotation:30},border:{display:false}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',callback:v=>v+' jt'},border:{display:false},suggestedMax:33}}}
     });
   }
 
   function buildGUPCycles(sortedGUP, realRows) {
     const sorted = [...realRows].filter(t=>t.tgl).sort((a,b)=>new Date(a.tgl)-new Date(b.tgl));
-    return sortedGUP.map((g,i) => {
-      const gdt   = new Date(g.tgl);
-      const prev  = i===0 ? new Date('2026-01-01') : new Date(sortedGUP[i-1].tgl);
-      const txs   = sorted.filter(t=>{ const d=new Date(t.tgl); return d>=prev && d<gdt; });
-      return {gup:g, txs, isCurrent:false};
-    }).concat([{
-      gup:null, txs: sorted.filter(t=>{ const lastGdt=sortedGUP.length?new Date(sortedGUP[sortedGUP.length-1].tgl):new Date('2026-01-01'); return new Date(t.tgl)>=lastGdt; }), isCurrent:true
-    }]);
+    const cycles = sortedGUP.map((g,i) => {
+      const gdt  = new Date(g.tgl);
+      const prev = i===0 ? new Date('2026-01-01') : new Date(sortedGUP[i-1].tgl);
+      return {gup:g, txs:sorted.filter(t=>{ const d=new Date(t.tgl); return d>=prev&&d<gdt; }), isCurrent:false};
+    });
+    const lastGdt = sortedGUP.length ? new Date(sortedGUP[sortedGUP.length-1].tgl) : new Date('2026-01-01');
+    cycles.push({gup:null, txs:sorted.filter(t=>new Date(t.tgl)>=lastGdt), isCurrent:true});
+    return cycles;
   }
 
   function buildGUPCyclesHTML(cycles) {
     return cycles.map((c,i)=>{
-      const pct  = c.gup ? (c.gup.nilai/PAGU.upTunai*100).toFixed(1) : null;
+      const UP_TUNAI = 30000000;
+      const pct  = c.gup ? (c.gup.nilai/UP_TUNAI*100).toFixed(1) : null;
       const pill = pct>=95?'high':pct>=80?'':'warn';
       const lbl  = c.isCurrent ? '📍 Siklus Berjalan (belum GUP berikutnya)'
                                 : `GUP ke-${i+1} — ${fmtDate(new Date(c.gup.tgl))}`;
@@ -3467,14 +3608,14 @@
       const id    = `keuGupDet${i}`;
       const txRows = c.txs.slice(0,40).map(t=>`
         <tr>
-          <td style="max-width:180px;word-break:break-word;white-space:normal;font-size:12px;color:var(--text-primary)">${esc(t.uraian||'—')}</td>
-          <td style="font-size:12px;color:var(--text-secondary);white-space:nowrap">${esc(t.mek||'—')}</td>
-          <td style="font-size:12px;color:var(--text-secondary);white-space:nowrap">${t.tgl?fmtDate(new Date(t.tgl)):'—'}</td>
-          <td style="font-family:monospace;font-weight:600;font-size:12px;text-align:right;white-space:nowrap">${fmtRpFull(t.nilai)}</td>
+          <td style="max-width:180px;word-break:break-word;white-space:normal;font-size:12px;color:var(--text-primary);padding:7px 12px">${esc(t.uraian||'—')}</td>
+          <td style="font-size:12px;color:var(--text-secondary);white-space:nowrap;padding:7px 12px">${esc(t.mek||'—')}</td>
+          <td style="font-size:12px;color:var(--text-secondary);white-space:nowrap;padding:7px 12px">${t.tgl?fmtDate(new Date(t.tgl)):'—'}</td>
+          <td style="font-family:monospace;font-weight:600;font-size:12px;text-align:right;white-space:nowrap;padding:7px 12px">${fmtRpFull(t.nilai)}</td>
         </tr>`).join('');
       return `
       <div class="keu-gup-cycle ${c.isCurrent?'current':''}" style="margin-bottom:.55rem">
-        <div class="keu-gup-cycle-hdr" onclick="keuToggleGUP('${id}',this)">
+        <div class="keu-gup-cycle-hdr" onclick="keuToggleGUP('${id}')">
           <div class="keu-gup-cycle-left">
             <span class="keu-gup-date">${lbl}</span>
             ${c.gup?`<span class="keu-gup-amount">${fmtRpFull(c.gup.nilai)}</span><span class="keu-gup-pct-pill ${pill}">${pct}% UP</span>`
@@ -3503,21 +3644,23 @@
 
   function keuToggleGUP(id) {
     const det=document.getElementById(id); const arr=document.getElementById(id+'Arr');
-    if (!det) return;
-    const open=det.classList.toggle('open');
-    if (arr) arr.classList.toggle('open',open);
+    if (!det) return; const open=det.classList.toggle('open'); if (arr) arr.classList.toggle('open',open);
   }
 
-  /* ── PANEL 03 ── */
-  function renderKeuPanel3(paguBahan, realRows) {
-    // Safety: ignore negative pagu
-    const safe = paguBahan.map(p=>({...p, pagu:Math.max(0,p.pagu||0), realisasi:Math.max(0,p.realisasi||0)}));
+  /* ══════════════════════════════════════════════════════════════
+     PANEL 03 — BELANJA BAHAN
+     ══════════════════════════════════════════════════════════════ */
+  function renderKeuPanel3(paguBahan) {
+    const safe = (paguBahan||[]).map(p=>({...p, pagu:Math.max(0,p.pagu||0), realisasi:Math.max(0,p.realisasi||0)}));
     const totalPagu = safe.reduce((s,p)=>s+p.pagu,0);
     const totalReal = safe.reduce((s,p)=>s+p.realisasi,0);
     const pct  = totalPagu ? totalReal/totalPagu*100 : 0;
     const zero = safe.filter(p=>!p.realisasi).length;
+    const el   = document.getElementById('keuBody3');
 
-    document.getElementById('keuBody3').innerHTML = `
+    if (!safe.length) { el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text-secondary)">Data Pagu Belanja Bahan tidak ditemukan</div>'; return; }
+
+    el.innerHTML = `
     <div class="keu-stats">
       <div class="keu-stat keu-stat-amber"><span class="keu-stat-ico">📋</span><div class="keu-stat-lbl">Total Pagu</div><div class="keu-stat-val">${fmtRp(totalPagu)}</div><div class="keu-stat-sub">${safe.length} kegiatan</div></div>
       <div class="keu-stat keu-stat-green"><span class="keu-stat-ico">💸</span><div class="keu-stat-lbl">Realisasi</div><div class="keu-stat-val">${fmtRp(totalReal)}</div><div class="keu-stat-sub">${pct.toFixed(1)}% terserap</div><div class="keu-stat-badge keu-badge-a">Butuh Akselerasi</div></div>
@@ -3532,7 +3675,7 @@
       <div style="height:13px;background:var(--border-light);border-radius:99px;overflow:hidden">
         <div style="width:${Math.min(100,pct).toFixed(1)}%;height:100%;border-radius:99px;background:linear-gradient(90deg,#ea580c,#fcd34d);transition:width .8s"></div>
       </div>
-      <div class="chart-note" style="margin-top:.6rem">📌 <strong>Belanja Bahan (Konsumsi Akun 521211)</strong> = anggaran untuk kegiatan seperti sosialisasi, pelatihan, FGD. Serapan rendah bisa berarti kegiatan belum terlaksana.</div>
+      <div class="chart-note" style="margin-top:.6rem">📌 <strong>Belanja Bahan (Akun 521211)</strong> = anggaran untuk konsumsi kegiatan (sosialisasi, pelatihan, FGD). Data diambil dari kolom E (pagu) dan O (realisasi) sheet Pagu Belanja Bahan.</div>
     </div>
     <div class="keu-g2">
       <div>
@@ -3554,25 +3697,25 @@
       </div>
       <div>
         <div class="keu-slbl"><span class="keu-slbl-dot" style="background:#d97706"></span>Pagu vs Realisasi per Kegiatan</div>
-        <div style="position:relative;height:${Math.max(250,safe.length*38)}px"><canvas id="keuChartPagu"></canvas></div>
-        <div class="chart-note" style="margin-top:.5rem">📌 Batang <span style="color:#059669;font-weight:600">hijau</span> = sudah terpakai. Batang <span style="color:#94a3b8;font-weight:600">abu</span> = sisa pagu. Idealnya hijau makin panjang tiap bulan.</div>
-        <div style="display:flex;gap:1rem;margin-top:.75rem">
-          <span style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--text-secondary)"><span style="width:13px;height:13px;border-radius:3px;background:#059669;display:inline-block"></span>Realisasi</span>
-          <span style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--text-secondary)"><span style="width:13px;height:13px;border-radius:3px;background:#cbd5e1;display:inline-block"></span>Sisa Pagu</span>
+        <div style="position:relative;height:${Math.max(260,safe.length*40)}px"><canvas id="keuChartPagu"></canvas></div>
+        <div class="chart-note" style="margin-top:.5rem">📌 Batang <span style="color:#059669;font-weight:600">hijau</span> = sudah terpakai. Batang <span style="color:#94a3b8;font-weight:600">abu</span> = sisa pagu yang harus dikejar sebelum akhir tahun.</div>
+        <div class="keu-gup-summary" style="margin-top:1rem">
+          <div class="keu-gup-sum-i"><div class="keu-gup-sum-l">Sudah Jalan</div><div class="keu-gup-sum-v" style="color:#059669">${safe.length-zero} keg.</div></div>
+          <div class="keu-gup-sum-i"><div class="keu-gup-sum-l">Belum Jalan</div><div class="keu-gup-sum-v" style="color:#dc2626">${zero} keg.</div></div>
+          <div class="keu-gup-sum-i"><div class="keu-gup-sum-l">Pagu Idle</div><div class="keu-gup-sum-v" style="color:#d97706">${fmtRp(safe.filter(p=>!p.realisasi).reduce((s,p)=>s+p.pagu,0))}</div></div>
         </div>
       </div>
     </div>
     ${keuCatatanHTML('panel3')}`;
 
     keuDestroyChart('keuChartPagu');
-    if (!safe.length) return;
     keuCharts['keuChartPagu'] = new Chart(document.getElementById('keuChartPagu'), {
       type:'bar',
       data:{
         labels:safe.map(p=>p.kegiatan.length>22?p.kegiatan.substring(0,20)+'…':p.kegiatan),
         datasets:[
-          {label:'Realisasi',data:safe.map(p=>p.realisasi||0),backgroundColor:'#059669',borderRadius:3,borderSkipped:false,stack:'s'},
-          {label:'Sisa Pagu',data:safe.map(p=>Math.max(0,p.pagu-(p.realisasi||0))),backgroundColor:'#CBD5E1',borderRadius:0,stack:'s'}
+          {label:'Realisasi',data:safe.map(p=>p.realisasi),backgroundColor:'#059669',borderRadius:3,borderSkipped:false,stack:'s'},
+          {label:'Sisa Pagu',data:safe.map(p=>Math.max(0,p.pagu-p.realisasi)),backgroundColor:'#CBD5E1',borderRadius:0,stack:'s'}
         ]
       },
       options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmtRpFull(c.raw)}`}}},scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,.05)'},ticks:{color:'#64748b',maxRotation:0},border:{display:false}},y:{stacked:true,grid:{display:false},ticks:{color:'#374364',font:{size:11,weight:'600'},autoSkip:false},border:{display:false}}}}
@@ -3581,8 +3724,7 @@
 
   /* ── CATATAN RAPAT ── */
   function keuCatatanHTML(panelId) {
-    const today=new Date(), mn=new Date(today);
-    mn.setDate(today.getDate()-(today.getDay()||7)+1);
+    const today=new Date(), mn=new Date(today); mn.setDate(today.getDate()-(today.getDay()||7)+1);
     const rapatDate=mn.toISOString().split('T')[0];
     return `<div class="keu-catatan-panel">
       <div class="keu-catatan-header">
@@ -3596,18 +3738,38 @@
       </div>
     </div>`;
   }
-  function keuCatatanUnsaved(p) { const el=document.getElementById('keuCatatanStatus_'+p); if(el){el.textContent='Belum disimpan...';el.className='keu-catatan-status';} }
-  async function keuSaveCatatan(panelId, date) {
-    const ta=document.getElementById('keuCatatan_'+panelId); const el=document.getElementById('keuCatatanStatus_'+panelId);
-    if (!ta||!el) return; el.textContent='Menyimpan...'; el.className='keu-catatan-status';
-    try { await getDb().ref(`${FB_KEU}/catatan/${date}/${panelId}`).set(ta.value); el.textContent='✓ Tersimpan · '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); el.className='keu-catatan-status saved'; }
-    catch(e) { el.textContent='✗ '+e.message; el.className='keu-catatan-status'; }
+  function keuCatatanUnsaved(p){const el=document.getElementById('keuCatatanStatus_'+p);if(el){el.textContent='Belum disimpan...';el.className='keu-catatan-status';}}
+  async function keuSaveCatatan(panelId,date){
+    const ta=document.getElementById('keuCatatan_'+panelId),el=document.getElementById('keuCatatanStatus_'+panelId);
+    if(!ta||!el)return; el.textContent='Menyimpan...'; el.className='keu-catatan-status';
+    try{await getDb().ref(`${FB_KEU}/catatan/${date}/${panelId}`).set(ta.value); el.textContent='✓ Tersimpan · '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); el.className='keu-catatan-status saved';}
+    catch(e){el.textContent='✗ '+e.message; el.className='keu-catatan-status';}
   }
-  function renderAllCatatan(catatan) {
-    const today=new Date(), mn=new Date(today); mn.setDate(today.getDate()-(today.getDay()||7)+1);
+  function renderAllCatatan(catatan){
+    const today=new Date(),mn=new Date(today); mn.setDate(today.getDate()-(today.getDay()||7)+1);
     const date=mn.toISOString().split('T')[0]; const d=catatan[date]||{};
-    ['panel1','panel2','panel3'].forEach(p=>{ const ta=document.getElementById('keuCatatan_'+p); if(ta&&d[p])ta.value=d[p]; });
+    ['panel1','panel2','panel3'].forEach(p=>{const ta=document.getElementById('keuCatatan_'+p);if(ta&&d[p])ta.value=d[p];});
   }
+
+  /* ── CHART DESTROY ── */
+  function keuDestroyChart(id){
+    if(keuCharts[id]){keuCharts[id].destroy();delete keuCharts[id];}
+    const el=document.getElementById(id); if(el){const p=el.parentNode;p.innerHTML=`<canvas id="${id}"></canvas>`;}
+  }
+
+  /* ── KATEGORI ── */
+  function keuKat(u){
+    if(!u)return'Lainnya'; u=u.toLowerCase();
+    if(u.includes('bbm')||u.includes('bahan bakar'))return'BBM';
+    if(u.includes('pemeliharaan')&&(u.includes('gedung')||u.includes('bangunan')||u.includes('halaman')||u.includes('rumah')||u.includes('kantor')))return'Pmliharaan Gedung';
+    if(u.includes('pemeliharaan')&&(u.includes('peralatan')||u.includes('mesin')||u.includes('kendaraan')||u.includes('roda')))return'Pmliharaan Mesin';
+    if(u.includes('perjalanan')||u.includes('uang harian')||u.includes('akomodasi')||u.includes('transport'))return'Perjalanan Dinas';
+    if(u.includes('bahan')||u.includes('konsumsi')||u.includes('makan')||u.includes('minum')||u.includes('snack'))return'Belanja Bahan';
+    if(u.includes('keperluan')||u.includes('atk')||u.includes('alat tulis')||u.includes('cetak')||u.includes('tinta')||u.includes('kertas')||u.includes('materai'))return'Keperluan Kantor';
+    if(u.includes('honor'))return'Honor'; return'Lainnya';
+  }
+
+
 
   /* ── PDF REKAP KEGIATAN ── */
   function downloadKegiatanPDF() {
