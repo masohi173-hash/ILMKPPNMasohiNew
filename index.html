@@ -3399,7 +3399,7 @@
         <div class="keu-stat-lbl">IKPA Terakhir</div>
         <div class="keu-stat-val" style="color:${latest.ikpa>=90?'#059669':latest.ikpa>=75?'#d97706':'#dc2626'}">${latest.ikpa.toFixed(2)}</div>
         <div class="keu-stat-sub">Periode ${latest.bulan}</div>
-        <div class="keu-stat-badge ${latest.ikpa>=90?'keu-badge-g':latest.ikpa>=75?'keu-badge-a':'keu-badge-r'}">${latest.ikpa>=90?'Baik':'latest.ikpa>=75?''Cukup':'Perlu Perhatian'}</div>
+        <div class="keu-stat-badge ${latest.ikpa>=90?'keu-badge-g':latest.ikpa>=75?'keu-badge-a':'keu-badge-r'}">${latest.ikpa>=90?'Baik':latest.ikpa>=75?'Cukup':'Perlu Perhatian'}</div>
       </div>
     </div>
 
