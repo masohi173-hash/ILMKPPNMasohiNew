@@ -1770,7 +1770,7 @@
     if (rekapOpen && typeof renderActivePanel === 'function') renderActivePanel();
     
     // 4. Handle Gaji state (Auto load sheets list if opening Gaji)
-    if (sectionId === 'keuangan') { loadKeuanganRealtime(); }
+    if (sectionId === 'keuangan') { keuLoaded = false; loadKeuanganRealtime(); }
     if (sectionId === 'gaji') {
         if (typeof loadSheetList === 'function' && document.getElementById('sheetsTabSelect').options.length <= 1) {
             loadSheetList();
@@ -3199,9 +3199,22 @@
     try {
       const buf = await file.arrayBuffer();
       const wb  = XLSX.read(buf, {type:'array', cellDates:true});
+
+      // Tampilkan nama sheet yang ditemukan untuk bantu debugging
+      console.log('[Upload] Sheet names di file Excel:', wb.SheetNames);
+      if (st) { st.textContent = `⏳ Sheet ditemukan: ${wb.SheetNames.join(', ')} — Memproses...`; }
+
       const transaksi     = parseKeuTransaksi(wb);
       const paguBahan     = parseKeuPaguBahan(wb);
       const penyerapan    = parseKeuPenyerapan(wb);
+
+      console.log('[Upload] Hasil parse — transaksi:', transaksi.length, '| paguBahan:', paguBahan.length, '| penyerapan:', penyerapan.length);
+
+      if (penyerapan.length === 0) {
+        const namaSheet = wb.SheetNames.find(n => n.toLowerCase().replace(/\s/g,'').includes('penyerapan')) || '(tidak ditemukan)';
+        if (st) st.textContent = `⚠️ PERINGATAN: Data penyerapan tidak terbaca (sheet: "${namaSheet}"). Cek posisi kolom di Excel. Transaksi berhasil (${transaksi.length} baris).`;
+      }
+
       const rawPayload = {
         lastUpdated: new Date().toISOString(),
         fileName: file.name,
@@ -3210,11 +3223,11 @@
       const payload = sanitizeForFirebase(rawPayload);
       if (st) st.textContent = '☁ Menyimpan ke server...';
       await getDb().ref(FB_KEU).set(payload);
-      if (st) { st.textContent = `✓ Berhasil diupdate — ${transaksi.filter(t=>!t.isGUP).length} transaksi · ${penyerapan.length} periode penyerapan`; }
+      if (st) { st.textContent = `✓ Berhasil diupdate — ${transaksi.filter(t=>!t.isGUP).length} transaksi · ${penyerapan.length} periode penyerapan · ${paguBahan.length} item pagu bahan`; }
       if (lu) lu.innerHTML = `<span class="keu-live-dot"></span> Terakhir diupdate: <strong>${new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})} pukul ${new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</strong> · ${file.name}`;
       e.target.value = '';
     } catch(err) {
-      console.error(err);
+      console.error('[Upload] Error:', err);
       if (st) { st.textContent = '✗ Gagal: '+err.message; }
     }
   }
@@ -3293,11 +3306,18 @@
 
   /* ── PARSE PENYERAPAN ANGGARAN — sheet "Penyerapan Angaran" ── */
   function parseKeuPenyerapan(wb) {
-    const sheetName = wb.SheetNames.find(n => n.toLowerCase().includes('penyerapan')) || 'Penyerapan Angaran';
+    // Cari sheet yang mengandung kata 'penyerapan' (case-insensitive, toleran typo)
+    const sheetName = wb.SheetNames.find(n => n.toLowerCase().replace(/\s/g,'').includes('penyerapan'));
+    if (!sheetName) {
+      console.warn('[Penyerapan] Sheet tidak ditemukan. Sheet yang ada:', wb.SheetNames);
+      return [];
+    }
+    console.log('[Penyerapan] Menggunakan sheet:', sheetName);
     const ws = wb.Sheets[sheetName];
-    if (!ws) { console.warn('Sheet Penyerapan tidak ditemukan'); return []; }
+    if (!ws) { console.warn('[Penyerapan] Sheet ada tapi tidak bisa dibaca'); return []; }
     // Read as raw objects to preserve cell types
     const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, raw:true});
+    console.log('[Penyerapan] Total rows:', rows.length);
 
     const result = [];
     const BLOCK = 11;
@@ -3345,6 +3365,8 @@
       const pct51 = paguNetto51 > 0 ? safeNum(real51/paguNetto51, 100) : 0;
       const pct52 = paguNetto52 > 0 ? safeNum(real52/paguNetto52, 100) : 0;
 
+      console.log(`[Penyerapan] Bulan ${no}: paguNetto51=${paguNetto51}, real51=${real51}, pct51=${pct51}, target51=${target51}`);
+
       result.push({
         no, bulan: BULAN_ID[no-1] || `P${no}`,
         real51: +real51.toFixed(0), real52: +real52.toFixed(0),
@@ -3354,22 +3376,70 @@
         ikpa: +ikpa.toFixed(2)
       });
     }
+    console.log('[Penyerapan] Total periode terbaca:', result.length);
     return result;
   }
 
   /* ── FIREBASE REALTIME ── */
   function loadKeuanganRealtime() {
-    if (keuLoaded) return; keuLoaded = true;
-    getDb().ref(FB_KEU).on('value', snap => {
-      if (!snap.exists()) return;
-      keuData = snap.val();
-      renderKeuanganDashboard(keuData);
+    if (keuLoaded) return;
+    keuLoaded = true;
+
+    // Tampilkan status loading di semua panel body
+    ['keuBody1','keuBody2','keuBody3'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<div style="text-align:center;padding:2.5rem;color:var(--text-secondary);font-size:15px">⏳ Memuat data dari server...</div>';
     });
+
+    try {
+      getDb().ref(FB_KEU).on('value',
+        function(snap) {
+          if (!snap.exists()) {
+            // Data belum ada di Firebase — tampilkan panduan upload
+            ['keuBody1','keuBody2','keuBody3'].forEach(id => {
+              const el = document.getElementById(id);
+              if (el) el.innerHTML = '<div style="text-align:center;padding:2.5rem;color:#d97706;font-size:15px;background:#fffbeb;border-radius:10px;border:1px solid #fcd34d;margin:1rem 0">⚠️ <strong>Data keuangan belum tersedia.</strong><br><br>Silakan upload file Excel menggunakan tombol <strong>"Upload & Update Data Excel"</strong> di atas.</div>';
+            });
+            return;
+          }
+          keuData = snap.val();
+          renderKeuanganDashboard(keuData);
+        },
+        function(err) {
+          console.error('[Keuangan] Firebase error:', err);
+          keuLoaded = false; // reset agar bisa retry
+          ['keuBody1','keuBody2','keuBody3'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '<div style="text-align:center;padding:2rem;color:#dc2626;font-size:14px;background:#fef2f2;border-radius:10px;border:1px solid #fca5a5;margin:1rem 0">❌ Gagal memuat data: ' + err.message + '<br><br><button onclick="keuLoaded=false;loadKeuanganRealtime()" style="margin-top:10px;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:14px;cursor:pointer;font-weight:600">🔄 Coba Lagi</button></div>';
+          });
+        }
+      );
+    } catch(e) {
+      console.error('[Keuangan] getDb() error:', e);
+      keuLoaded = false;
+      ['keuBody1','keuBody2','keuBody3'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<div style="text-align:center;padding:2rem;color:#dc2626;font-size:14px;background:#fef2f2;border-radius:10px;border:1px solid #fca5a5;margin:1rem 0">❌ Koneksi Firebase gagal: ' + e.message + '<br><br><button onclick="keuLoaded=false;loadKeuanganRealtime()" style="margin-top:10px;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:14px;cursor:pointer;font-weight:600">🔄 Coba Lagi</button></div>';
+      });
+    }
   }
 
   /* ── MAIN RENDERER ── */
   function renderKeuanganDashboard(data) {
-    if (!data || !data.transaksi) return;
+    if (!data) {
+      ['keuBody1','keuBody2','keuBody3'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<div style="text-align:center;padding:2rem;color:#d97706">⚠️ Data kosong — silakan upload ulang file Excel.</div>';
+      });
+      return;
+    }
+    if (!data.transaksi) {
+      ['keuBody1','keuBody2','keuBody3'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<div style="text-align:center;padding:2rem;color:#d97706;background:#fffbeb;border-radius:10px;border:1px solid #fcd34d;margin:1rem 0">⚠️ <strong>Sheet "Transaksi" tidak ditemukan di file Excel.</strong><br><br>Pastikan file Excel memiliki sheet bernama <strong>Transaksi</strong>, <strong>Penyerapan Angaran</strong>, dan <strong>Pagu Belanja Bahan</strong>.</div>';
+      });
+      return;
+    }
     const lu = document.getElementById('keuLastUpdated');
     if (lu && data.lastUpdated) {
       const d = new Date(data.lastUpdated);
@@ -3377,8 +3447,8 @@
     }
     const gupRows  = data.transaksi.filter(t=>t.isGUP);
     const realRows = data.transaksi.filter(t=>!t.isGUP);
-    const penyerapan = data.penyerapan || [];
-    const paguBahan  = data.paguBahan  || [];
+    const penyerapan = Array.isArray(data.penyerapan) ? data.penyerapan : (data.penyerapan ? Object.values(data.penyerapan) : []);
+    const paguBahan  = Array.isArray(data.paguBahan)  ? data.paguBahan  : (data.paguBahan  ? Object.values(data.paguBahan)  : []);
 
     renderKeuPanel1(penyerapan);
     renderKeuPanel2(realRows, gupRows);
@@ -3392,7 +3462,7 @@
   function renderKeuPanel1(penyerapan) {
     const el = document.getElementById('keuBody1');
     if (!penyerapan || !penyerapan.length) {
-      el.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-secondary)">Data Penyerapan Anggaran belum tersedia — pastikan sheet "Penyerapan Angaran" ada di file Excel</div>';
+      el.innerHTML = '<div style="text-align:center;padding:2rem;color:#d97706;background:#fffbeb;border-radius:10px;border:1px solid #fcd34d;margin:1rem 0">⚠️ <strong>Data Penyerapan Anggaran tidak terbaca.</strong><br><br>Kemungkinan penyebab:<br>1. Nama sheet di Excel bukan <strong>"Penyerapan Angaran"</strong> (periksa typo)<br>2. Posisi kolom data tidak sesuai (kolom J/K untuk realisasi, E/F untuk pagu)<br>3. Belum ada data di sheet tersebut<br><br>Silakan upload ulang file Excel dan pastikan nama sheet sudah benar.</div>';
       return;
     }
 
