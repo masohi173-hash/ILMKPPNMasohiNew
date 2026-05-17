@@ -3202,11 +3202,12 @@
       const transaksi     = parseKeuTransaksi(wb);
       const paguBahan     = parseKeuPaguBahan(wb);
       const penyerapan    = parseKeuPenyerapan(wb);
-      const payload = {
+      const rawPayload = {
         lastUpdated: new Date().toISOString(),
         fileName: file.name,
         transaksi, paguBahan, penyerapan
       };
+      const payload = sanitizeForFirebase(rawPayload);
       if (st) st.textContent = '☁ Menyimpan ke server...';
       await getDb().ref(FB_KEU).set(payload);
       if (st) { st.textContent = `✓ Berhasil diupdate — ${transaksi.filter(t=>!t.isGUP).length} transaksi · ${penyerapan.length} periode penyerapan`; }
@@ -3261,50 +3262,96 @@
     return result;
   }
 
+  /* ── SAFE NUMBER HELPERS ── */
+  function safeNum(v, multiplier) {
+    if (v === null || v === undefined) return 0;
+    let n;
+    if (typeof v === 'number') {
+      n = v;
+    } else {
+      // Strip non-numeric chars except dot/comma/minus, then parse
+      const s = String(v).replace(/[^0-9,.\-]/g, '').replace(',', '.');
+      n = parseFloat(s);
+    }
+    if (isNaN(n) || !isFinite(n)) return 0;
+    const result = multiplier ? n * multiplier : n;
+    return isNaN(result) || !isFinite(result) ? 0 : +result.toFixed(4);
+  }
+
+  function sanitizeForFirebase(obj) {
+    if (obj === null || obj === undefined) return null;
+    if (typeof obj === 'number') return (isNaN(obj) || !isFinite(obj)) ? 0 : obj;
+    if (typeof obj === 'string' || typeof obj === 'boolean') return obj;
+    if (Array.isArray(obj)) return obj.map(sanitizeForFirebase);
+    if (typeof obj === 'object') {
+      const clean = {};
+      Object.keys(obj).forEach(k => { clean[k] = sanitizeForFirebase(obj[k]); });
+      return clean;
+    }
+    return obj;
+  }
+
   /* ── PARSE PENYERAPAN ANGGARAN — sheet "Penyerapan Angaran" ── */
   function parseKeuPenyerapan(wb) {
-    // Sheet name has typo: "Penyerapan Angaran" (missing 'g')
     const sheetName = wb.SheetNames.find(n => n.toLowerCase().includes('penyerapan')) || 'Penyerapan Angaran';
     const ws = wb.Sheets[sheetName];
     if (!ws) { console.warn('Sheet Penyerapan tidak ditemukan'); return []; }
-    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+    // Read as raw objects to preserve cell types
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, raw:true});
 
     const result = [];
-    const BLOCK = 11;  // 11 rows per periode block
-    const START = 4;   // Index 4 = Row 5
+    const BLOCK = 11;
+    const START = 4;  // Row 5 = index 4
 
     for (let i = START; i < rows.length; i += BLOCK) {
-      const hdr = rows[i];  // PAGU JENIS BELANJA row
+      const hdr = rows[i];
       if (!hdr) continue;
-      const no = typeof hdr[0]==='number' ? hdr[0] : parseInt(hdr[0]);
-      if (isNaN(no) || no < 1) continue;
+      const no = safeNum(hdr[0]);
+      if (!no || no < 1 || no > 12) continue;
 
-      // Realisasi dari header row (col J=9, K=10)
-      const real51 = parseIDNum(hdr[9]);
-      const real52 = parseIDNum(hdr[10]);
-      // IKPA — col N=13 or O=14
-      const ikpaRaw = hdr[14] || hdr[13];
-      const ikpa = typeof ikpaRaw==='number' ? ikpaRaw : parseFloat(String(ikpaRaw||'0').replace(',','.'));
+      // Realisasi: kolom J=9 (B.Peg/51), K=10 (B.Bar/52)
+      const real51 = safeNum(hdr[9]);
+      const real52 = safeNum(hdr[10]);
 
-      // PAGU NETTO row (i+4): col E=4, F=5
+      // IKPA: kolom O=14 atau N=13
+      const ikpa = safeNum(hdr[14] !== null ? hdr[14] : hdr[13]);
+
+      // PAGU NETTO row (base + 4): kolom E=4, F=5
       const nRow = rows[i+4] || [];
-      const paguNetto51 = parseIDNum(nRow[4]);
-      const paguNetto52 = parseIDNum(nRow[5]);
+      const paguNetto51 = safeNum(nRow[4]);
+      const paguNetto52 = safeNum(nRow[5]);
 
-      // TARGET row (i+10): col E=4, F=5 — stored as decimal (0.1 = 10%)
+      // TARGET row (base + 10): kolom E=4, F=5 — nilai desimal (0.15 = 15%)
       const tRow = rows[i+10] || [];
-      const tgt51Raw = tRow[4]; const tgt52Raw = tRow[5];
-      const target51 = typeof tgt51Raw==='number' ? +(tgt51Raw*100).toFixed(1) : parseFloat(String(tgt51Raw||'0').replace(',','.'))*100;
-      const target52 = typeof tgt52Raw==='number' ? +(tgt52Raw*100).toFixed(1) : parseFloat(String(tgt52Raw||'0').replace(',','.'))*100;
+      // Coba kolom E dulu, fallback ke D atau F
+      const tgt51Raw = tRow[4] != null ? tRow[4] : null;
+      const tgt52Raw = tRow[5] != null ? tRow[5] : null;
 
-      // Calculate % vs pagu netto
-      const pct51 = paguNetto51>0 ? +(real51/paguNetto51*100).toFixed(2) : 0;
-      const pct52 = paguNetto52>0 ? +(real52/paguNetto52*100).toFixed(2) : 0;
+      // Konversi ke persen: 0.15 → 15
+      let target51 = 0, target52 = 0;
+      if (tgt51Raw !== null) {
+        const v = safeNum(tgt51Raw);
+        target51 = v <= 1 ? safeNum(v, 100) : v; // jika <= 1 berarti format desimal
+      }
+      if (tgt52Raw !== null) {
+        const v = safeNum(tgt52Raw);
+        target52 = v <= 1 ? safeNum(v, 100) : v;
+      }
+
+      // Fallback: jika masih 0, tebak dari periode (TW I=15%, TW II=50%)
+      if (!target52) target52 = no <= 3 ? 15 : no <= 6 ? 50 : no <= 9 ? 70 : 90;
+      if (!target51) target51 = no <= 3 ? 10 : no <= 6 ? 40 : no <= 9 ? 65 : 90;
+
+      const pct51 = paguNetto51 > 0 ? safeNum(real51/paguNetto51, 100) : 0;
+      const pct52 = paguNetto52 > 0 ? safeNum(real52/paguNetto52, 100) : 0;
 
       result.push({
         no, bulan: BULAN_ID[no-1] || `P${no}`,
-        real51, real52, paguNetto51, paguNetto52,
-        pct51, pct52, target51, target52, ikpa: +ikpa.toFixed(2)
+        real51: +real51.toFixed(0), real52: +real52.toFixed(0),
+        paguNetto51: +paguNetto51.toFixed(0), paguNetto52: +paguNetto52.toFixed(0),
+        pct51: +pct51.toFixed(2), pct52: +pct52.toFixed(2),
+        target51: +target51.toFixed(1), target52: +target52.toFixed(1),
+        ikpa: +ikpa.toFixed(2)
       });
     }
     return result;
