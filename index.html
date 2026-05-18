@@ -3264,11 +3264,12 @@
       const nama  = r[2] || r[1] || r[0];   // Kolom C → B → A
       const pagu  = r[4];                     // Kolom E
       const real  = r[14];                    // Kolom O
-      if (nama && typeof pagu==='number' && pagu>0) {
+      const paguNum = safeNum(pagu);
+      if (nama && paguNum > 0) {
         result.push({
           kegiatan: String(nama).trim(),
-          pagu: Math.max(0, pagu),
-          realisasi: Math.max(0, typeof real==='number' ? real : 0)
+          pagu: Math.max(0, paguNum),
+          realisasi: Math.max(0, safeNum(real))
         });
       }
     }
@@ -3282,8 +3283,26 @@
     if (typeof v === 'number') {
       n = v;
     } else {
-      // Strip non-numeric chars except dot/comma/minus, then parse
-      const s = String(v).replace(/[^0-9,.\-]/g, '').replace(',', '.');
+      // Handle format angka Indonesia: "150.901.000" (titik=ribuan, koma=desimal)
+      let s = String(v).trim().replace(/[^0-9,.\-]/g, '');
+      if (!s) return 0;
+      const dotCount   = (s.match(/\./g) || []).length;
+      const commaCount = (s.match(/,/g)   || []).length;
+      if (dotCount > 1) {
+        // "150.901.000" => titik adalah pemisah ribuan
+        s = s.replace(/\./g, '').replace(',', '.');
+      } else if (commaCount === 1 && dotCount === 0) {
+        // "17,88" => koma adalah desimal
+        s = s.replace(',', '.');
+      } else if (dotCount === 1 && commaCount === 1) {
+        const dotPos   = s.lastIndexOf('.');
+        const commaPos = s.lastIndexOf(',');
+        if (commaPos > dotPos) {
+          s = s.replace('.', '').replace(',', '.'); // "1.234,56"
+        } else {
+          s = s.replace(',', ''); // "1,234.56"
+        }
+      }
       n = parseFloat(s);
     }
     if (isNaN(n) || !isFinite(n)) return 0;
@@ -3329,23 +3348,22 @@
       const no = safeNum(hdr[0]);
       if (!no || no < 1 || no > 12) continue;
 
-      // Realisasi: kolom J=9 (B.Peg/51), K=10 (B.Bar/52)
-      const real51 = safeNum(hdr[9]);
-      const real52 = safeNum(hdr[10]);
+      // Realisasi: kolom L=12 (B.Peg/51), M=13 (B.Bar/52) — 1-based di Excel, 0-based di js
+      const real51 = safeNum(hdr[11]);
+      const real52 = safeNum(hdr[12]);
 
-      // IKPA: kolom O=14 atau N=13
-      const ikpa = safeNum(hdr[14] !== null ? hdr[14] : hdr[13]);
+      // IKPA: kolom P=16 (index 15)
+      const ikpa = safeNum(hdr[15] !== null ? hdr[15] : hdr[14]);
 
-      // PAGU NETTO row (base + 4): kolom E=4, F=5
+      // PAGU NETTO row (base + 4): kolom G=7, H=8 (0-based: 6, 7)
       const nRow = rows[i+4] || [];
-      const paguNetto51 = safeNum(nRow[4]);
-      const paguNetto52 = safeNum(nRow[5]);
+      const paguNetto51 = safeNum(nRow[6]);
+      const paguNetto52 = safeNum(nRow[7]);
 
-      // TARGET row (base + 10): kolom E=4, F=5 — nilai desimal (0.15 = 15%)
+      // TARGET row (base + 10): kolom G=7, H=8 (0-based: 6, 7) — nilai desimal (0.15 = 15%)
       const tRow = rows[i+10] || [];
-      // Coba kolom E dulu, fallback ke D atau F
-      const tgt51Raw = tRow[4] != null ? tRow[4] : null;
-      const tgt52Raw = tRow[5] != null ? tRow[5] : null;
+      const tgt51Raw = tRow[6] != null ? tRow[6] : null;
+      const tgt52Raw = tRow[7] != null ? tRow[7] : null;
 
       // Konversi ke persen: 0.15 → 15
       let target51 = 0, target52 = 0;
