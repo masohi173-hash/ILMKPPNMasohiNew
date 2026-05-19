@@ -1547,13 +1547,16 @@
     <div class="sheets-controls">
       <div class="rc-field">
         <label>Pilih Sheet / Tab</label>
-        <select id="sheetsTabSelect" class="sheets-tab-select" onchange="onSheetTabChange()">
-          <option value="">— Memuat daftar sheet... —</option>
-        </select>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="sheetsTabSelect" class="sheets-tab-select" onchange="onSheetTabChange()" style="flex:1">
+            <option value="">⏳ Memuat daftar sheet...</option>
+          </select>
+          <button title="Refresh daftar sheet" onclick="loadSheetList()" style="height:42px;padding:0 12px;background:var(--bg-card);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:16px;color:var(--text-secondary);transition:.2s" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">🔃</button>
+        </div>
       </div>
       <div class="rc-field" style="justify-content:flex-end">
         <label>&nbsp;</label>
-        <button class="btn-add" style="height:42px;padding:0 20px" onclick="loadSheetsPreview()">🔄 Tampilkan Data</button>
+        <button class="btn-add" style="height:42px;padding:0 20px" onclick="loadSheetsPreview()">▶ Tampilkan Data</button>
       </div>
     </div>
 
@@ -1772,9 +1775,7 @@
     // 4. Handle Gaji state (Auto load sheets list if opening Gaji)
     if (sectionId === 'keuangan') { keuLoaded = false; loadKeuanganRealtime(); }
     if (sectionId === 'gaji') {
-        if (typeof loadSheetList === 'function' && document.getElementById('sheetsTabSelect').options.length <= 1) {
-            loadSheetList();
-        }
+        if (typeof loadSheetList === 'function') loadSheetList();
     }
   }
 
@@ -2123,8 +2124,8 @@
     const btn = document.getElementById('btnMonitoringGaji');
     section.style.display = monitoringGajiOpen ? 'block' : 'none';
     btn.classList.toggle('active', monitoringGajiOpen);
-    if (monitoringGajiOpen && !sheetsListLoaded) {
-      sheetsListLoaded = true;
+    if (monitoringGajiOpen) {
+      // Selalu refresh list setiap buka agar sheet baru langsung muncul
       loadSheetList();
     }
   }
@@ -2157,33 +2158,76 @@
 
   async function loadSheetList() {
     const sel = document.getElementById('sheetsTabSelect');
-    const defaultSheets = [
-      'Januari 2026', 'Februari 2026', 'Maret 2026',
-      'April 2026', 'Mei 2026', 'Juni 2026',
-      'Juli 2026', 'Agustus 2026', 'September 2026',
-      'Oktober 2026', 'November 2026', 'Desember 2026'
-    ];
+    const statusEl = document.getElementById('sheetsStatus');
 
+    // Reset dropdown ke loading state
+    sel.innerHTML = '<option value="">⏳ Memuat daftar sheet...</option>';
+    sel.disabled = true;
+    statusEl.className = 'sheets-status info';
+    statusEl.style.display = 'block';
+    statusEl.textContent = '⏳ Mengambil daftar sheet dari Google Sheets...';
+
+    try {
+      // Ambil semua nama sheet via GViz — request sheet kosong akan return daftar sheet di error info
+      // Cara andal: fetch sheet pertama lalu parse semua sheet dari metadata
+      const metaUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&tq=SELECT%201%20LIMIT%200`;
+      const res = await fetch(metaUrl);
+      const text = await res.text();
+
+      // GViz menyertakan nama-nama sheet di dalam response JSON meski query kosong
+      // Parse blok JSON dari response
+      const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+      const json = JSON.parse(jsonStr);
+
+      // Coba ekstrak dari json.table.parsedNumHeaders atau signature lainnya
+      // Cara paling andal: ambil via feeds API spreadsheet
+      throw new Error('fallback'); // Paksa ke cara alternatif
+    } catch(_) {
+      // Cara alternatif: fetch setiap sheet yang mungkin ada menggunakan
+      // Google Sheets Feeds API (public, tidak butuh OAuth)
+      try {
+        const feedUrl = `https://spreadsheets.google.com/feeds/worksheets/${SHEET_ID}/public/basic?alt=json`;
+        const res2 = await fetch(feedUrl);
+        if (!res2.ok) throw new Error('Feed tidak dapat diakses');
+        const json2 = await res2.json();
+        const entries = json2.feed.entry || [];
+        const sheetNames = entries.map(e => e.title.$t);
+
+        if (sheetNames.length === 0) throw new Error('Tidak ada sheet ditemukan');
+
+        populateSheetDropdown(sel, sheetNames, statusEl);
+      } catch(e2) {
+        // Fallback terakhir: tampilkan pesan & beri opsi manual reload
+        console.warn('[SheetList] Gagal otomatis:', e2.message);
+        sel.innerHTML = '<option value="">— Gagal memuat —</option>';
+        sel.disabled = false;
+        statusEl.className = 'sheets-status error';
+        statusEl.textContent = '⚠️ Gagal membaca daftar sheet otomatis. Pastikan Google Sheet sudah di-share "Anyone with the link can view", lalu klik Refresh.';
+      }
+    }
+  }
+
+  function populateSheetDropdown(sel, sheetNames, statusEl) {
     sel.innerHTML = '<option value="">— Pilih Sheet —</option>';
-    defaultSheets.forEach(name => {
+    sheetNames.forEach(name => {
       const opt = document.createElement('option');
       opt.value = name;
       opt.textContent = name;
       sel.appendChild(opt);
     });
+    sel.disabled = false;
 
-    // Auto-select current month
-    const now = new Date();
+    // Auto-select: coba cocokkan bulan ini, lalu sheet terakhir
     const bulanNama = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const now = new Date();
     const targetName = bulanNama[now.getMonth()] + ' ' + now.getFullYear();
-    
-    let match = defaultSheets.find(s => s === targetName) || defaultSheets[0];
-    sel.value = match;
-    
-    // Jangan langsung load data agar user bisa milih dulu
-    document.getElementById('sheetsStatus').className = 'sheets-status info';
-    document.getElementById('sheetsStatus').style.display = 'block';
-    document.getElementById('sheetsStatus').textContent = 'Silakan pilih bulan, lalu klik "Tampilkan Data".';
+    const match = sheetNames.find(s => s === targetName);
+    if (match) sel.value = match;
+    // Tidak auto-select jika tidak cocok — biarkan user pilih sendiri
+
+    statusEl.className = 'sheets-status info';
+    statusEl.style.display = 'block';
+    statusEl.textContent = `✅ ${sheetNames.length} sheet ditemukan. Silakan pilih sheet lalu klik "Tampilkan Data".`;
   }
 
   async function loadSheetsPreview() {
