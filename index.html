@@ -2160,51 +2160,56 @@
     const sel = document.getElementById('sheetsTabSelect');
     const statusEl = document.getElementById('sheetsStatus');
 
-    // Reset dropdown ke loading state
     sel.innerHTML = '<option value="">⏳ Memuat daftar sheet...</option>';
     sel.disabled = true;
     statusEl.className = 'sheets-status info';
     statusEl.style.display = 'block';
-    statusEl.textContent = '⏳ Mengambil daftar sheet dari Google Sheets...';
+    statusEl.textContent = '⏳ Mendeteksi sheet dari Google Sheets...';
 
-    try {
-      // Ambil semua nama sheet via GViz — request sheet kosong akan return daftar sheet di error info
-      // Cara andal: fetch sheet pertama lalu parse semua sheet dari metadata
-      const metaUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&tq=SELECT%201%20LIMIT%200`;
-      const res = await fetch(metaUrl);
-      const text = await res.text();
+    // Daftar kandidat sheet yang akan dicek keberadaannya via GViz
+    // Urutan: bulan reguler 2026, sheet khusus, lalu bulan berikutnya
+    const BULAN = ['Januari','Februari','Maret','April','Mei','Juni',
+                   'Juli','Agustus','September','Oktober','November','Desember'];
+    const TAHUN = [2025, 2026, 2027];
+    const KHUSUS = [
+      'Gaji 13', 'Gaji 14', 'Gaji 15',
+      'THR', 'Rapel', 'Susulan',
+      'Gaji Susulan', 'Uang Makan', 'Lembur'
+    ];
 
-      // GViz menyertakan nama-nama sheet di dalam response JSON meski query kosong
-      // Parse blok JSON dari response
-      const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-      const json = JSON.parse(jsonStr);
+    // Bangun daftar kandidat lengkap
+    const candidates = [];
+    TAHUN.forEach(th => BULAN.forEach(bl => candidates.push(`${bl} ${th}`)));
+    KHUSUS.forEach(k => candidates.push(k));
 
-      // Coba ekstrak dari json.table.parsedNumHeaders atau signature lainnya
-      // Cara paling andal: ambil via feeds API spreadsheet
-      throw new Error('fallback'); // Paksa ke cara alternatif
-    } catch(_) {
-      // Cara alternatif: fetch setiap sheet yang mungkin ada menggunakan
-      // Google Sheets Feeds API (public, tidak butuh OAuth)
-      try {
-        const feedUrl = `https://spreadsheets.google.com/feeds/worksheets/${SHEET_ID}/public/basic?alt=json`;
-        const res2 = await fetch(feedUrl);
-        if (!res2.ok) throw new Error('Feed tidak dapat diakses');
-        const json2 = await res2.json();
-        const entries = json2.feed.entry || [];
-        const sheetNames = entries.map(e => e.title.$t);
+    // Cek setiap kandidat: fetch GViz dengan LIMIT 0 (sangat cepat)
+    // Jika sheet ada → status OK; jika tidak ada → GViz return error
+    const found = [];
+    const checks = candidates.map(name =>
+      fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&tq=SELECT%201%20LIMIT%200&sheet=${encodeURIComponent(name)}`)
+        .then(r => r.text())
+        .then(txt => {
+          // GViz return status "ok" jika sheet ada, "error" jika tidak
+          if (txt.includes('"status":"ok"') || txt.includes('"status": "ok"')) {
+            found.push(name);
+          }
+        })
+        .catch(() => {}) // abaikan network error per-sheet
+    );
 
-        if (sheetNames.length === 0) throw new Error('Tidak ada sheet ditemukan');
+    await Promise.all(checks);
 
-        populateSheetDropdown(sel, sheetNames, statusEl);
-      } catch(e2) {
-        // Fallback terakhir: tampilkan pesan & beri opsi manual reload
-        console.warn('[SheetList] Gagal otomatis:', e2.message);
-        sel.innerHTML = '<option value="">— Gagal memuat —</option>';
-        sel.disabled = false;
-        statusEl.className = 'sheets-status error';
-        statusEl.textContent = '⚠️ Gagal membaca daftar sheet otomatis. Pastikan Google Sheet sudah di-share "Anyone with the link can view", lalu klik Refresh.';
-      }
+    if (found.length === 0) {
+      sel.innerHTML = '<option value="">— Sheet tidak ditemukan —</option>';
+      sel.disabled = false;
+      statusEl.className = 'sheets-status error';
+      statusEl.textContent = '⚠️ Tidak ada sheet yang terdeteksi. Pastikan Google Sheet sudah di-share "Anyone with the link can view".';
+      return;
     }
+
+    // Urutkan: bulan reguler (urut kronologis) dulu, lalu sheet khusus
+    const ordered = candidates.filter(c => found.includes(c));
+    populateSheetDropdown(sel, ordered, statusEl);
   }
 
   function populateSheetDropdown(sel, sheetNames, statusEl) {
@@ -2217,13 +2222,13 @@
     });
     sel.disabled = false;
 
-    // Auto-select: coba cocokkan bulan ini, lalu sheet terakhir
-    const bulanNama = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    // Auto-select bulan berjalan jika ada
+    const BULAN = ['Januari','Februari','Maret','April','Mei','Juni',
+                   'Juli','Agustus','September','Oktober','November','Desember'];
     const now = new Date();
-    const targetName = bulanNama[now.getMonth()] + ' ' + now.getFullYear();
+    const targetName = `${BULAN[now.getMonth()]} ${now.getFullYear()}`;
     const match = sheetNames.find(s => s === targetName);
     if (match) sel.value = match;
-    // Tidak auto-select jika tidak cocok — biarkan user pilih sendiri
 
     statusEl.className = 'sheets-status info';
     statusEl.style.display = 'block';
